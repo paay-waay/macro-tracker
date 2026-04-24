@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Macro Tracker</title>
+<meta name="description" content="支持离线使用的每日饮食与体重记录工具" />
+<meta name="theme-color" content="#5f6f6a" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Macro Tracker" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="stylesheet" href="styles.css" />
+<script defer src="app.js"></script>
+</head>
+<body>
+<div class="app">
+  <div class="sticky">
+    <div class="topbar">
+      <div>
+        <div class="title">Macro Tracker</div>
+        <div class="sub" id="appSubtitle">iPhone 极简离线版 V16</div>
+      </div>
+      <div class="row">
+        <button class="icon-btn" id="settingsBtn" type="button" aria-label="打开设置" title="设置">⚙</button>
+        <button class="icon-btn" id="helpBtn" type="button" aria-label="打开使用说明" title="使用说明">?</button>
+        <div class="chip chip-static" aria-hidden="true">
+          <div class="v">4 餐</div>
+        </div>
+      </div>
+    </div>
+    <div class="chips" id="summaryChips" aria-live="polite"></div>
+    <div class="status-line" id="statusLine" aria-live="polite"></div>
+    <div id="noticeBox" aria-live="polite" aria-atomic="true"></div>
+  </div>
+  <div id="view"></div>
+</div>
+
+<nav class="bottom" aria-label="主导航">
+  <div class="bottom-inner">
+    <button class="nav-btn" type="button" data-view="today" aria-label="切换到今天">
+      <span class="nav-label">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 3v7"/><path d="M20 3v7"/><path d="M2 10h20"/><path d="M7 15h10"/><path d="M8 21l8-12"/></svg>
+        </span>
+        <span>今天</span>
+      </span>
+    </button>
+    <button class="nav-btn" type="button" data-view="history" aria-label="切换到历史">
+      <span class="nav-label">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        </span>
+        <span>历史</span>
+      </span>
+    </button>
+    <button class="nav-btn" type="button" data-view="overview" aria-label="切换到总览">
+      <span class="nav-label">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>
+        </span>
+        <span>总览</span>
+      </span>
+    </button>
+    <button class="save-btn nav-btn" type="button" id="saveDayBtn" aria-label="保存当天记录">
+      <span class="nav-label">
+        <span class="nav-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V7.8a2 2 0 0 1 .6-1.4l3.8-3.8A2 2 0 0 1 8.8 2H19a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2Z"/><path d="M8 2v6h8V2"/><path d="M8 21v-7h8v7"/></svg>
+        </span>
+        <span>保存</span>
+      </span>
+    </button>
+  </div>
+</nav>
+
+<div class="modal" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
+  <div class="modal-card settings-card">
+    <div class="modal-head">
+      <h3 id="settingsModalTitle">设置</h3>
+      <button class="icon-btn" id="closeSettingsBtn" type="button" aria-label="关闭设置">×</button>
+    </div>
+    <div id="settingsBody"></div>
+    <div class="item-actions">
+      <button class="btn dark" id="saveSettingsBtn" type="button">保存设置并生成未来目标</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 id="helpModalTitle">简易使用说明</h3>
+      <button class="icon-btn" id="closeHelpBtn" type="button" aria-label="关闭使用说明">×</button>
+    </div>
+    <div class="steps">
+      <div class="step">1. 在“今天”页选择日期、训练日/休息日，并填写晨起体重。</div>
+      <div class="step">2. 每一餐默认有 1 个输入板块；若这餐由多个食物组成，可点“新增一项”继续录入。</div>
+      <div class="step">3. 每项只需填写名称、kcal、P、C、F。系统会自动汇总为本餐与全天数据。</div>
+      <div class="step">4. 系统会自动保存当天草稿；只有点“保存”后，这一天才会正式进入历史记录。</div>
+      <div class="step">5. 设置页可生成未来每日目标；历史页支持导出 CSV 与带预览确认的 CSV 导入。</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="importModal" role="dialog" aria-modal="true" aria-labelledby="importModalTitle">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3 id="importModalTitle">导入确认</h3>
+      <button class="icon-btn" id="closeImportPreviewBtn" type="button" aria-label="关闭导入确认">×</button>
+    </div>
+    <div class="steps" id="importPreviewBody"></div>
+    <div class="item-actions">
+      <button class="mini-btn" id="cancelImportBtn" type="button">取消</button>
+      <button class="btn dark" id="confirmImportBtn" type="button">确认导入</button>
+    </div>
+  </div>
+</div>
+
+<input id="csvImportInput" class="visually-hidden" type="file" accept=".csv,text/csv" />
+</body>
+</html>
