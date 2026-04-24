@@ -1,4 +1,4 @@
-const CACHE_NAME = "macro-tracker-v16-shell-1";
+const CACHE_NAME = "macro-tracker-v16-shell-2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -30,6 +30,12 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
     return;
@@ -45,13 +51,36 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (APP_SHELL.includes(url.pathname.replace(/^\//, "./")) || APP_SHELL.includes(url.pathname)) {
-    event.respondWith(staleWhileRevalidate(event.request));
+  if (isAppShellRequest(url)) {
+    event.respondWith(networkFirst(event.request));
     return;
   }
 
   event.respondWith(cacheFirst(event.request));
 });
+
+function isAppShellRequest(url) {
+  const relativePath = getRelativePathInScope(url);
+  return APP_SHELL.includes(relativePath);
+}
+
+function getRelativePathInScope(url) {
+  const scopeUrl = new URL(self.registration.scope);
+  const scopePath = scopeUrl.pathname.endsWith("/") ? scopeUrl.pathname : `${scopeUrl.pathname}/`;
+  let path = url.pathname;
+
+  if (path === scopePath) {
+    return "./";
+  }
+
+  if (path.startsWith(scopePath)) {
+    path = path.slice(scopePath.length);
+  } else {
+    path = path.replace(/^\//, "");
+  }
+
+  return path ? `./${path}` : "./";
+}
 
 async function handleNavigationRequest(event) {
   const preload = await event.preloadResponse;
@@ -60,7 +89,7 @@ async function handleNavigationRequest(event) {
   }
 
   try {
-    const networkResponse = await fetch(event.request);
+    const networkResponse = await fetch(event.request, { cache: "no-store" });
     const cache = await caches.open(CACHE_NAME);
     cache.put("./index.html", networkResponse.clone());
     return networkResponse;
@@ -73,16 +102,19 @@ async function handleNavigationRequest(event) {
   }
 }
 
-async function staleWhileRevalidate(request) {
+async function networkFirst(request) {
   const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
-  const networkPromise = fetch(request)
-    .then((response) => {
-      cache.put(request, response.clone());
-      return response;
-    })
-    .catch(() => cached);
-  return cached || networkPromise;
+  try {
+    const response = await fetch(request, { cache: "no-store" });
+    cache.put(request, response.clone());
+    return response;
+  } catch (error) {
+    const cached = await cache.match(request);
+    if (cached) {
+      return cached;
+    }
+    throw error;
+  }
 }
 
 async function cacheFirst(request) {

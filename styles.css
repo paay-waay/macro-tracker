@@ -16,6 +16,9 @@
   --warn-line: #ddd0ad;
   --bad-bg: #f4e8e8;
   --bad-line: #dfc1c3;
+  --pending: #8a928c;
+  --pending-bg: #f3f0ea;
+  --pending-line: #d9d2c8;
   --shadow: 0 1px 2px rgba(70, 76, 72, 0.05), 0 12px 30px rgba(70, 76, 72, 0.08);
 }
 
@@ -253,12 +256,15 @@ input.big {
 
 .meal-tab {
   min-width: 84px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--pending-line);
   border-radius: 18px;
-  background: var(--card);
+  background: var(--pending-bg);
+  color: var(--pending);
   padding: 9px 12px;
   text-align: left;
   box-shadow: var(--shadow);
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .meal-tab.active {
