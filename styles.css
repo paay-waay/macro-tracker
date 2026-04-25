@@ -1773,3 +1773,379 @@ body::before,
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* V20 typography normalization: one coherent UI language */
+:root {
+  --font-family-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Helvetica Neue", Arial, sans-serif;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 13px;
+  --text-base: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 24px;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 640;
+  --weight-bold: 720;
+  --line-tight: 1.15;
+  --line-normal: 1.35;
+  --line-relaxed: 1.5;
+}
+
+html,
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-family-ui) !important;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-size: var(--text-base) !important;
+  font-weight: var(--weight-regular) !important;
+  line-height: var(--line-normal) !important;
+}
+
+/* App-level titles */
+.title {
+  font-size: var(--text-2xl) !important;
+  font-weight: var(--weight-bold) !important;
+  line-height: var(--line-tight) !important;
+  letter-spacing: -0.02em !important;
+}
+
+.card h3,
+.modal-head h3 {
+  font-size: var(--text-xl) !important;
+  font-weight: var(--weight-bold) !important;
+  line-height: var(--line-tight) !important;
+  letter-spacing: -0.015em !important;
+  margin-bottom: 8px !important;
+}
+
+.context-card-title,
+.utility-title,
+.item-title,
+.target-title,
+.insight-title {
+  font-size: var(--text-lg) !important;
+  font-weight: var(--weight-bold) !important;
+  line-height: var(--line-tight) !important;
+  letter-spacing: -0.01em !important;
+}
+
+.section-label {
+  font-size: var(--text-sm) !important;
+  font-weight: var(--weight-semibold) !important;
+  letter-spacing: 0.03em !important;
+  line-height: var(--line-normal) !important;
+}
+
+/* Labels and helpers */
+.label,
+.chip .k,
+.stat .k,
+.metric-cell span,
+.target-note,
+.context-card-helper,
+.utility-helper,
+.small,
+.stat .h,
+.item-sub,
+.meal-macro-summary,
+.meal-food-names,
+.preview-list li,
+.step,
+.notice,
+.macro-check,
+.sleep-scale,
+.goal-label,
+.axis-label {
+  font-size: var(--text-sm) !important;
+  line-height: var(--line-normal) !important;
+}
+
+.label,
+.chip .k,
+.stat .k,
+.metric-cell span,
+.target-note {
+  font-weight: var(--weight-medium) !important;
+}
+
+.small,
+.stat .h,
+.item-sub,
+.context-card-helper,
+.utility-helper,
+.meal-macro-summary,
+.meal-food-names,
+.step,
+.notice,
+.macro-check {
+  font-weight: var(--weight-regular) !important;
+}
+
+/* Numeric values and metric hierarchy */
+.chip .v,
+.summary-primary .v,
+.summary-support .v,
+.stat .v,
+.metric-cell strong,
+.sleep-score-readout,
+.meal-total-value,
+#mealTotalCalories,
+#mealTotalProtein,
+#mealTotalCarbs,
+#mealTotalFat,
+#favoriteDraftSummary {
+  font-weight: var(--weight-bold) !important;
+  line-height: var(--line-tight) !important;
+  letter-spacing: -0.012em !important;
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" !important;
+}
+
+.chip .v,
+.summary-primary .v,
+.summary-support .v {
+  font-size: 17px !important;
+}
+
+.stat .v,
+.compact-overview-card .stat .v,
+.metric-grid .stat .v {
+  font-size: 21px !important;
+}
+
+.metric-cell strong {
+  font-size: 16px !important;
+}
+
+.meal-total-grid .metric-cell strong,
+.target-grid .metric-cell strong {
+  font-size: 15px !important;
+}
+
+/* Buttons, segmented controls, badges */
+.btn,
+.mini-btn,
+.segment,
+.nav-btn,
+.save-btn,
+.icon-btn,
+.weekday-chip,
+.badge,
+.meal-state-badge {
+  font-size: var(--text-md) !important;
+  font-weight: var(--weight-semibold) !important;
+  line-height: var(--line-tight) !important;
+  letter-spacing: 0 !important;
+}
+
+.btn,
+.icon-btn {
+  height: 42px !important;
+}
+
+.mini-btn,
+.item-actions .btn {
+  height: 34px !important;
+  font-size: var(--text-sm) !important;
+}
+
+.segment {
+  min-height: 36px !important;
+}
+
+.badge,
+.meal-state-badge {
+  font-size: var(--text-sm) !important;
+  font-weight: var(--weight-semibold) !important;
+}
+
+.bottom .nav-btn,
+.bottom .save-btn {
+  font-size: var(--text-xs) !important;
+  font-weight: var(--weight-semibold) !important;
+}
+
+/* Disclosure controls must be visible but secondary */
+.expand-affordance,
+.small-affordance {
+  min-height: 24px !important;
+  padding: 3px 8px !important;
+  gap: 5px !important;
+  border-radius: 999px !important;
+  font-size: var(--text-sm) !important;
+  font-weight: var(--weight-semibold) !important;
+  line-height: var(--line-tight) !important;
+  background: rgba(255, 253, 248, 0.44) !important;
+  border-color: rgba(216, 211, 202, 0.72) !important;
+  box-shadow: none !important;
+}
+
+.card-summary,
+.context-summary,
+.secondary-summary {
+  font-size: var(--text-base) !important;
+  font-weight: var(--weight-semibold) !important;
+  line-height: var(--line-normal) !important;
+}
+
+.secondary-summary {
+  min-height: 38px !important;
+  padding: 8px 10px !important;
+}
+
+.chevron {
+  font-size: var(--text-sm) !important;
+  font-weight: var(--weight-semibold) !important;
+  line-height: 1 !important;
+}
+
+/* Inputs: actual values are clear, placeholders are quiet */
+input,
+select {
+  font-size: var(--text-base) !important;
+  font-weight: var(--weight-regular) !important;
+  line-height: var(--line-normal) !important;
+}
+
+input.big {
+  height: 52px !important;
+  font-size: 21px !important;
+  font-weight: var(--weight-semibold) !important;
+  line-height: var(--line-tight) !important;
+}
+
+.macro-input {
+  height: 46px !important;
+  font-size: 17px !important;
+  font-weight: var(--weight-semibold) !important;
+}
+
+input::placeholder,
+input.big::placeholder,
+.macro-input::placeholder {
+  color: rgba(125, 129, 123, 0.46) !important;
+  font-weight: var(--weight-medium) !important;
+  opacity: 1 !important;
+}
+
+input.big::placeholder {
+  font-size: 21px !important;
+}
+
+.macro-input::placeholder {
+  font-size: 17px !important;
+}
+
+/* Normalize card rhythm */
+.card,
+.current-meal-card,
+.entry-card,
+.item,
+.stat,
+.hint-box,
+.warn-box,
+.target-strip,
+.context-card,
+.utility-card,
+.context-body-card,
+.modal-card {
+  line-height: var(--line-normal) !important;
+}
+
+.card {
+  padding: 15px !important;
+}
+
+.item-title {
+  font-size: var(--text-lg) !important;
+}
+
+.entry-head .item-title {
+  font-size: var(--text-xl) !important;
+}
+
+.meal-row strong {
+  font-size: var(--text-base) !important;
+  font-weight: var(--weight-bold) !important;
+}
+
+.meal-food-names {
+  font-weight: var(--weight-regular) !important;
+}
+
+.meal-row {
+  min-height: 54px !important;
+}
+
+.sleep-score-readout {
+  font-size: var(--text-md) !important;
+  font-weight: var(--weight-semibold) !important;
+}
+
+.meal-guidance {
+  font-size: var(--text-sm) !important;
+  font-weight: var(--weight-medium) !important;
+  line-height: var(--line-relaxed) !important;
+}
+
+/* Overview and settings metric grids should share one internal language */
+.metric-grid .stat,
+.stat-grid .stat {
+  padding: 10px !important;
+}
+
+.stat .k,
+.stat .h {
+  margin-top: 3px !important;
+}
+
+/* Mobile tuning */
+@media (max-width: 520px) {
+  .title {
+    font-size: 24px !important;
+  }
+
+  .card h3,
+  .modal-head h3 {
+    font-size: 18px !important;
+  }
+
+  .chip .v,
+  .summary-primary .v,
+  .summary-support .v {
+    font-size: 16px !important;
+  }
+
+  .stat .v,
+  .compact-overview-card .stat .v,
+  .metric-grid .stat .v {
+    font-size: 20px !important;
+  }
+
+  .metric-cell strong,
+  .target-grid .metric-cell strong,
+  .meal-total-grid .metric-cell strong {
+    font-size: 14px !important;
+  }
+
+  .entry-head .item-title {
+    font-size: 18px !important;
+  }
+
+  input.big {
+    font-size: 20px !important;
+  }
+
+  input.big::placeholder {
+    font-size: 20px !important;
+  }
+}
