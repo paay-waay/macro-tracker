@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "Macro Tracker",
-  "short_name": "Macro",
+  "name": "宏量追踪",
+  "short_name": "宏量",
   "description": "支持离线使用、自动保存草稿、CSV 导入导出与自动目标生成的每日饮食追踪工具",
   "start_url": "./",
   "scope": "./",

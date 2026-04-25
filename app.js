@@ -35,7 +35,7 @@
   };
   const GOAL_MODE_CONFIG = {
     cut: { label: "减脂优先", description: "体重稳步下降，保留训练表现", deficitRatio: 0.16, minDeficit: 300, maxDeficit: 550, boost: 125, proteinBase: 2.05, fatBase: 0.68 },
-    recomp: { label: "Recomp 平衡", description: "小缺口，优先保训练质量", deficitRatio: 0.08, minDeficit: 100, maxDeficit: 250, boost: 200, proteinBase: 1.9, fatBase: 0.75 },
+    recomp: { label: "重组平衡", description: "小缺口，优先保训练质量", deficitRatio: 0.08, minDeficit: 100, maxDeficit: 250, boost: 200, proteinBase: 1.9, fatBase: 0.75 },
     performance: { label: "表现优先", description: "接近维持，训练日碳水更高", deficitRatio: 0.03, minDeficit: 0, maxDeficit: 120, boost: 250, proteinBase: 1.75, fatBase: 0.8 }
   };
   const ACTIVITY_LEVEL_CONFIG = {
@@ -155,7 +155,7 @@
   });
 
   async function bootstrap() {
-    dom.subtitle.textContent = `Private tracker · V${APP_VERSION}`;
+    dom.subtitle.textContent = "";
     bindEvents();
     renderLoading();
     await migrateLegacyLocalStorage();
@@ -560,9 +560,9 @@
     const overview = stats();
     const summaryItems = [
       ["热量", remainingChipText(overview.remaining.calories), overallTone("calories", overview.overall.cal)],
-      ["蛋白", remainingChipText(overview.remaining.protein, "g"), overallTone("protein", overview.overall.pro)],
-      ["碳水", remainingChipText(overview.remaining.carbs, "g"), overallTone("carbs", overview.overall.carb)],
-      ["脂肪", remainingChipText(overview.remaining.fat, "g"), overallTone("fat", overview.overall.fat)]
+      ["蛋白", remainingChipText(overview.remaining.protein), overallTone("protein", overview.overall.pro)],
+      ["碳水", remainingChipText(overview.remaining.carbs), overallTone("carbs", overview.overall.carb)],
+      ["脂肪", remainingChipText(overview.remaining.fat), overallTone("fat", overview.overall.fat)]
     ];
     dom.summaryChips.innerHTML = `
       <div class="summary-dashboard">
@@ -640,7 +640,7 @@
       <div class="card current-meal-card">
         <div class="item-top" style="margin-bottom:8px">
           <div>
-            <h3>Meal entry</h3>
+            <h3>当前餐</h3>
             <div class="small">${esc(meal.label)} · 草稿自动保存</div>
           </div>
           <button class="btn" id="saveFavBtn" type="button">存为常用</button>
@@ -668,7 +668,7 @@
     return `
       <div class="context-panel ${open ? "open" : ""}">
         <button class="context-summary" type="button" data-toggle-ui="dailyContextOpen" aria-expanded="${open ? "true" : "false"}">
-          <span>${fmtDate(state.date)} · ${state.dayType === "training" ? "训练日" : "休息日"}${state.bodyWeight ? ` · ${state.bodyWeight} kg` : ""}${state.sleepScore ? ` · Sleep ${state.sleepScore}` : ""}${trendText ? ` · ${trendText}` : ""}</span>
+          <span>${fmtDate(state.date)} · ${state.dayType === "training" ? "训练日" : "休息日"}${state.bodyWeight ? ` · ${state.bodyWeight} kg` : ""}${state.sleepScore ? ` · 睡眠 ${state.sleepScore}` : ""}${trendText ? ` · ${trendText}` : ""}</span>
           <span class="chevron" aria-hidden="true">${open ? "⌃" : "⌄"}</span>
         </button>
         ${open ? `
@@ -681,8 +681,8 @@
               <div>
                 <div class="label">日类型</div>
                 ${renderSegmentedControl("day-type", [
-                  ["training", "Training day"],
-                  ["rest", "Rest day"]
+                  ["training", "训练日"],
+                  ["rest", "休息日"]
                 ], state.dayType, "segmentDayType")}
               </div>
             </div>
@@ -695,18 +695,18 @@
                 <div>
                   <div class="label">训练表现</div>
                   ${renderSegmentedControl("training-performance", [
-                    ["poor", "Poor"],
-                    ["normal", "Normal"],
-                    ["great", "Great"]
+                    ["poor", "偏差"],
+                    ["normal", "正常"],
+                    ["great", "很好"]
                   ], state.trainingPerformance, "segmentPerformance")}
                 </div>
               ` : ""}
               <div>
                 <div class="label">饥饿感</div>
                 ${renderSegmentedControl("hunger-level", [
-                  ["low", "Low"],
-                  ["medium", "Medium"],
-                  ["high", "High"]
+                  ["low", "低"],
+                  ["medium", "中"],
+                  ["high", "高"]
                 ], state.hungerLevel, "segmentHunger")}
               </div>
               <div>
@@ -742,7 +742,10 @@
     const totals = mealTotals(mealItem);
     const filled = filledMeal(mealItem);
     const startedCount = mealItem.entries.filter(entryStarted).length;
-    const status = active ? "currently editing" : (filled ? `${round1(totals.calories)} kcal · P ${round1(totals.protein)} · C ${round1(totals.carbs)} · F ${round1(totals.fat)}` : "empty");
+    const foodSummary = mealFoodSummary(mealItem);
+    const macroSummary = filled
+      ? `${round1(totals.calories)} kcal · P ${round1(totals.protein)} · C ${round1(totals.carbs)} · F ${round1(totals.fat)}`
+      : (startedCount ? `${startedCount} 项待补全` : "未录入");
     return `
       <button
         class="meal-row ${active ? "active" : ""} ${filled ? "done" : ""}"
@@ -750,13 +753,30 @@
         data-meal="${mealItem.id}"
         aria-pressed="${active ? "true" : "false"}"
       >
-        <span>
-          <strong>${esc(mealItem.label)}</strong>
-          <span>${status}${startedCount && !filled ? ` · ${startedCount} item` : ""}</span>
+        <span class="meal-row-text">
+          <span class="meal-row-title">
+            <strong>${esc(mealItem.label)}</strong>
+            ${foodSummary ? `<span class="meal-food-names">${esc(foodSummary)}</span>` : ""}
+          </span>
+          <span class="meal-macro-summary">${macroSummary}</span>
         </span>
         <span class="meal-indicator" aria-hidden="true">${filled ? "✓" : (active ? "•" : "")}</span>
       </button>
     `;
+  }
+
+  function mealFoodSummary(mealItem) {
+    const names = mealItem.entries
+      .filter(entryStarted)
+      .map((entry) => String(entry.name || "").trim())
+      .filter(Boolean);
+    if (!names.length) {
+      return "";
+    }
+    const visible = names.slice(0, 3);
+    return names.length > visible.length
+      ? `${visible.join("、")}等 ${names.length} 项`
+      : visible.join("、");
   }
 
   function renderFavoriteQuickApply() {
@@ -764,7 +784,7 @@
     return `
       <div class="favorite-quick">
         <button class="context-summary secondary-summary" type="button" data-toggle-ui="favoriteQuickOpen" aria-expanded="${open ? "true" : "false"}">
-          <span>Favorite meals · ${state.favorites.length} saved</span>
+          <span>常用餐 · 已保存 ${state.favorites.length} 条</span>
           <span class="chevron" aria-hidden="true">${open ? "⌃" : "⌄"}</span>
         </button>
         ${open ? `
@@ -790,7 +810,7 @@
     return `
       <div class="entry-card">
         <div class="entry-head">
-          <div><div class="item-title">Item ${entryIndex + 1}</div></div>
+          <div><div class="item-title">项目 ${entryIndex + 1}</div></div>
           <button
             class="mini-btn danger ${meal.entries.length <= 1 ? "hidden" : ""}"
             type="button"
@@ -809,15 +829,15 @@
         <div class="grid-3" style="margin-top:10px">
           <div>
             <label class="label">P</label>
-          <input class="big macro-input protein-input" data-entry="${meal.id}-${entryIndex}-protein" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="g" value="${esc(entry.protein)}" />
+          <input class="big macro-input protein-input" data-entry="${meal.id}-${entryIndex}-protein" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例如 30" value="${esc(entry.protein)}" />
           </div>
           <div>
             <label class="label">C</label>
-            <input class="big macro-input carb-input" data-entry="${meal.id}-${entryIndex}-carbs" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="g" value="${esc(entry.carbs)}" />
+            <input class="big macro-input carb-input" data-entry="${meal.id}-${entryIndex}-carbs" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例如 40" value="${esc(entry.carbs)}" />
           </div>
           <div>
             <label class="label">F</label>
-            <input class="big macro-input fat-input" data-entry="${meal.id}-${entryIndex}-fat" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="g" value="${esc(entry.fat)}" />
+            <input class="big macro-input fat-input" data-entry="${meal.id}-${entryIndex}-fat" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例如 10" value="${esc(entry.fat)}" />
           </div>
         </div>
         <div data-entry-preview="${meal.id}-${entryIndex}">${entryPreviewMarkup(entry, `${meal.id}-${entryIndex}`)}</div>
@@ -844,9 +864,9 @@
         <div class="small" style="margin-top:6px">当前窗口内已记录 ${summary.rolling7.coveredDays} / 7 天${summary.rolling7.latestDate ? ` · 截止 ${fmtDate(summary.rolling7.latestDate)}` : ""}</div>
         <div class="stat-grid" style="margin-top:12px">
           ${renderRollingAverageStat("热量", summary.rolling7.average.calories, summary.rolling7.target.calories, "kcal")}
-          ${renderRollingAverageStat("蛋白", summary.rolling7.average.protein, summary.rolling7.target.protein, "g")}
-          ${renderRollingAverageStat("碳水", summary.rolling7.average.carbs, summary.rolling7.target.carbs, "g")}
-          ${renderRollingAverageStat("脂肪", summary.rolling7.average.fat, summary.rolling7.target.fat, "g")}
+          ${renderRollingAverageStat("蛋白", summary.rolling7.average.protein, summary.rolling7.target.protein, "")}
+          ${renderRollingAverageStat("碳水", summary.rolling7.average.carbs, summary.rolling7.target.carbs, "")}
+          ${renderRollingAverageStat("脂肪", summary.rolling7.average.fat, summary.rolling7.target.fat, "")}
         </div>
       </div>
       ${renderOverviewDetails(summary)}
@@ -868,26 +888,26 @@
             <h3>体重趋势</h3>
             <div class="insight-title">${esc(trend.status)}</div>
           </div>
-          <span class="badge ${trend.tone}">${summary.weightEntryCount} entries</span>
+          <span class="badge ${trend.tone}">${summary.weightEntryCount} 次记录</span>
         </div>
         <div class="metric-grid">
-          <div class="stat"><div class="k">7-entry avg</div><div class="v">${trend.currentAvgText}</div><div class="h">当前均重</div></div>
-          <div class="stat"><div class="k">Weekly change</div><div class="v">${trend.weeklyChangeText}</div><div class="h">${trend.percentText}</div></div>
-          <div class="stat"><div class="k">Required pace</div><div class="v">${trend.requiredPaceText}</div><div class="h">到目标日期</div></div>
-          <div class="stat"><div class="k">To target</div><div class="v">${trend.distanceText}</div><div class="h">目标 ${summary.goalWeight} kg</div></div>
+          <div class="stat"><div class="k">近 7 次均重</div><div class="v">${trend.currentAvgText}</div><div class="h">当前趋势</div></div>
+          <div class="stat"><div class="k">每周变化</div><div class="v">${trend.weeklyChangeText}</div><div class="h">${trend.percentText}</div></div>
+          <div class="stat"><div class="k">所需速度</div><div class="v">${trend.requiredPaceText}</div><div class="h">到目标日期</div></div>
+          <div class="stat"><div class="k">距目标</div><div class="v">${trend.distanceText}</div><div class="h">目标 ${summary.goalWeight} kg</div></div>
         </div>
         <div class="hint-box insight-box" style="margin-top:12px">${esc(trend.guidance)}</div>
         ${renderWeightTrendChart(summary)}
         <button class="context-summary secondary-summary" type="button" data-toggle-ui="weightDetailsOpen" aria-expanded="${state.ui.weightDetailsOpen ? "true" : "false"}">
-          <span>Weight trend details</span>
+          <span>体重趋势详情</span>
           <span class="chevron" aria-hidden="true">${state.ui.weightDetailsOpen ? "⌃" : "⌄"}</span>
         </button>
         ${state.ui.weightDetailsOpen ? `
           <div class="stat-grid" style="margin-top:10px">
-            <div class="stat"><div class="k">Latest</div><div class="v">${summary.latestWeight || "—"}</div><div class="h">kg</div></div>
-            <div class="stat"><div class="k">Previous 7 avg</div><div class="v">${summary.prev7Avg || "—"}</div><div class="h">kg</div></div>
-            <div class="stat"><div class="k">Target date</div><div class="v">${daysLeft()}</div><div class="h">${currentSettings().targetDate}</div></div>
-            <div class="stat"><div class="k">Data coverage</div><div class="v">${summary.weightEntryCount}</div><div class="h">weight entries</div></div>
+            <div class="stat"><div class="k">最新体重</div><div class="v">${summary.latestWeight || "—"}</div><div class="h">kg</div></div>
+            <div class="stat"><div class="k">前 7 次均重</div><div class="v">${summary.prev7Avg || "—"}</div><div class="h">kg</div></div>
+            <div class="stat"><div class="k">目标倒计时</div><div class="v">${daysLeft()}</div><div class="h">${currentSettings().targetDate}</div></div>
+            <div class="stat"><div class="k">数据覆盖</div><div class="v">${summary.weightEntryCount}</div><div class="h">体重记录</div></div>
           </div>
         ` : ""}
       </div>
@@ -898,7 +918,7 @@
     return `
       <div class="card">
         <button class="context-summary card-summary" type="button" data-toggle-ui="overviewMoreOpen" aria-expanded="${state.ui.overviewMoreOpen ? "true" : "false"}">
-          <span>More details</span>
+          <span>更多细节</span>
           <span class="chevron" aria-hidden="true">${state.ui.overviewMoreOpen ? "⌃" : "⌄"}</span>
         </button>
         ${state.ui.overviewMoreOpen ? `
@@ -923,13 +943,13 @@
         <div class="item-top">
           <h3>历史</h3>
           <div class="segmented compact-segmented" role="tablist" aria-label="历史内容切换">
-            <button class="segment ${showRecords ? "active" : ""}" type="button" data-history-mode="records" aria-pressed="${showRecords ? "true" : "false"}">Records</button>
-            <button class="segment ${!showRecords ? "active" : ""}" type="button" data-history-mode="favorites" aria-pressed="${!showRecords ? "true" : "false"}">Favorites</button>
+            <button class="segment ${showRecords ? "active" : ""}" type="button" data-history-mode="records" aria-pressed="${showRecords ? "true" : "false"}">记录</button>
+            <button class="segment ${!showRecords ? "active" : ""}" type="button" data-history-mode="favorites" aria-pressed="${!showRecords ? "true" : "false"}">常用餐</button>
           </div>
         </div>
         ${showRecords ? `
           <button class="context-summary secondary-summary" type="button" data-toggle-ui="historyToolsOpen" aria-expanded="${state.ui.historyToolsOpen ? "true" : "false"}">
-            <span>Tools & filters</span>
+            <span>工具与筛选</span>
             <span class="chevron" aria-hidden="true">${state.ui.historyToolsOpen ? "⌃" : "⌄"}</span>
           </button>
           ${state.ui.historyToolsOpen ? `<div class="history-toolbar">
@@ -963,7 +983,7 @@
               ? visibleDates.map((date) => renderHistoryItem(date)).join("")
               : `<div class="hint-box">${Object.keys(state.records).length ? "没有符合当前筛选条件的历史记录。" : "还没有历史记录。先保存几天数据，这里会自动生成日期列表。"}</div>`}
           </div>
-          ${historyDates.length > 7 ? `<button class="btn full-width" type="button" data-toggle-ui="historyShowAll">${state.ui.historyShowAll ? "Show less" : `Show more (${historyDates.length - 7})`}</button>` : ""}
+          ${historyDates.length > 7 ? `<button class="btn full-width" type="button" data-toggle-ui="historyShowAll">${state.ui.historyShowAll ? "收起" : `显示更多（${historyDates.length - 7} 条）`}</button>` : ""}
         ` : `
           <div class="history-toolbar">
             <div>
@@ -1075,15 +1095,15 @@
         <div class="grid-3" style="margin-top:10px">
           <div>
             <label class="label">P</label>
-            <input class="big" data-favorite-entry="${entryIndex}-protein" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="g" value="${esc(entry.protein)}" />
+            <input class="big" data-favorite-entry="${entryIndex}-protein" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例如 30" value="${esc(entry.protein)}" />
           </div>
           <div>
             <label class="label">C</label>
-            <input class="big" data-favorite-entry="${entryIndex}-carbs" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="g" value="${esc(entry.carbs)}" />
+            <input class="big" data-favorite-entry="${entryIndex}-carbs" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例如 40" value="${esc(entry.carbs)}" />
           </div>
           <div>
             <label class="label">F</label>
-            <input class="big" data-favorite-entry="${entryIndex}-fat" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="g" value="${esc(entry.fat)}" />
+            <input class="big" data-favorite-entry="${entryIndex}-fat" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例如 10" value="${esc(entry.fat)}" />
           </div>
         </div>
         <div data-favorite-preview="${entryIndex}">${entryPreviewMarkup(entry, `favorite-${entryIndex}`)}</div>
@@ -1095,9 +1115,9 @@
     const draft = state.settingsDraft || currentSettings();
     const settings = normalizeSettings(draft);
     return `
-      ${renderSettingsGroup("body", "Body & Goal", `
+      ${renderSettingsGroup("body", "身体与目标", `
         <div class="settings-grid">
-          ${renderSettingInput("BMR", "bmr", draft.bmr, "decimal")}
+          ${renderSettingInput("基础代谢", "bmr", draft.bmr, "decimal")}
           ${renderSettingInput("当前体重 kg", "currentWeightKg", draft.currentWeightKg, "decimal")}
           ${renderSettingInput("目标体重 kg", "targetWeightKg", draft.targetWeightKg, "decimal")}
           ${renderSettingInput("目标体脂 %", "targetBodyFatPercent", draft.targetBodyFatPercent, "decimal")}
@@ -1105,7 +1125,7 @@
           ${renderSettingInput("每周训练天数", "trainingDaysPerWeek", settings.trainingDaysPerWeek, "number")}
         </div>
       `)}
-      ${renderSettingsGroup("strategy", "Strategy", `
+      ${renderSettingsGroup("strategy", "策略", `
         <div class="settings-grid">
           <div>
             <label class="label" for="setting-goalMode">目标模式</label>
@@ -1126,9 +1146,9 @@
             </select>
           </div>
         </div>
-        <div class="hint-box" style="margin-top:10px">系统会自动估算 activity factor、蛋白、脂肪、训练日加成；每日只需要选择当天是训练日还是休息日。</div>
+        <div class="hint-box" style="margin-top:10px">系统会自动估算活动系数、蛋白、脂肪、训练日加成；每日只需要选择当天是训练日还是休息日。</div>
       `)}
-      ${renderSettingsGroup("preview", "Calculation Preview", `<div id="settingsPreviewBody">${renderSettingsPreview(draft)}</div>`)}
+      ${renderSettingsGroup("preview", "计算预览", `<div id="settingsPreviewBody">${renderSettingsPreview(draft)}</div>`)}
     `;
   }
 
@@ -1160,10 +1180,10 @@
     const preview = computeSettingsPreview(draft, { includeTrend: true });
     return `
       <div class="stat-grid">
-        <div class="stat"><div class="k">TDEE</div><div class="v">${preview.tdee}</div><div class="h">activity factor ${preview.activityFactor}</div></div>
+        <div class="stat"><div class="k">估算消耗</div><div class="v">${preview.tdee}</div><div class="h">活动系数 ${preview.activityFactor}</div></div>
         <div class="stat"><div class="k">总缺口</div><div class="v">${preview.totalDeficit}</div><div class="h">kcal</div></div>
         <div class="stat"><div class="k">剩余天数</div><div class="v">${preview.daysRemaining}</div><div class="h">从明天到目标日</div></div>
-        <div class="stat"><div class="k">计划日缺口</div><div class="v">${preview.plannedDailyDeficit}</div><div class="h">kcal/day</div></div>
+        <div class="stat"><div class="k">计划日缺口</div><div class="v">${preview.plannedDailyDeficit}</div><div class="h">kcal/天</div></div>
       </div>
       <div class="stat-grid" style="margin-top:10px">
         <div class="stat"><div class="k">平均热量</div><div class="v">${preview.finalAverageCalories}</div><div class="h">含误差缓冲</div></div>
@@ -1171,7 +1191,7 @@
         <div class="stat"><div class="k">休息日</div><div class="v">${preview.restCalories}</div><div class="h">P ${preview.proteinTarget} · C ${preview.restCarbs} · F ${preview.fatTarget}</div></div>
         <div class="stat"><div class="k">目标瘦体重</div><div class="v">${preview.targetLeanMass}</div><div class="h">kg</div></div>
       </div>
-      <div class="hint-box" style="margin-top:10px">自动参数：蛋白 ${preview.proteinMultiplier} g/kg · 脂肪 ${preview.fatMultiplier} g/kg · 训练日加成 ${preview.effectiveBoost} kcal</div>
+      <div class="hint-box" style="margin-top:10px">自动参数：蛋白系数 ${preview.proteinMultiplier} · 脂肪系数 ${preview.fatMultiplier} · 训练日加成 ${preview.effectiveBoost} kcal</div>
       ${preview.trend?.current7DayAvg ? `
         <div class="hint-box" style="margin-top:10px">
           <div class="small">14 天趋势</div>
@@ -1288,17 +1308,17 @@
     const bad = numberValue(entry.calories) > 0 && Math.abs(diff) > 80;
     const open = !!(detailKey && state.ui.macroDetails[detailKey]);
     if (!bad && !open) {
-      return '<div class="macro-check small">Macro check OK</div>';
+      return '<div class="macro-check small">热量校验正常</div>';
     }
-    const label = bad ? `Calorie difference ${diff > 0 ? "+" : ""}${diff} kcal` : "Macro check details";
+    const label = bad ? `热量差异 ${diff > 0 ? "+" : ""}${diff} kcal` : "热量校验详情";
     return `
       <div class="${bad ? "warn-box compact-warning" : "hint-box"}" style="margin-top:10px">
         <div class="item-top">
           <span>${esc(label)}</span>
-          ${detailKey ? `<button class="mini-btn ghost" type="button" data-macro-details="${esc(detailKey)}">${open ? "Hide" : "Details"}</button>` : ""}
+          ${detailKey ? `<button class="mini-btn ghost" type="button" data-macro-details="${esc(detailKey)}">${open ? "收起" : "详情"}</button>` : ""}
         </div>
         ${open ? `
-          <div class="item-top" style="margin-top:6px"><span>由 macro 推算</span><strong style="color:var(--text)">${round1(entryMacroCalories(entry))} kcal</strong></div>
+          <div class="item-top" style="margin-top:6px"><span>由营养素推算</span><strong style="color:var(--text)">${round1(entryMacroCalories(entry))} kcal</strong></div>
           <div class="item-top" style="margin-top:6px"><span>差异</span><strong>${diff > 0 ? "+" : ""}${diff} kcal</strong></div>
         ` : ""}
         ${bad && !open ? '<div class="small" style="margin-top:6px">建议复核包装或录入。</div>' : ""}
@@ -2232,10 +2252,10 @@
 
     const tips = [];
     if (state.dayType === "training" && remaining.carbs > 35) {
-      tips.push(`今天是训练日，当前碳水仍差 ${remaining.carbs}g，后续优先补米饭、红薯、面包或水果。`);
+      tips.push(`今天是训练日，当前碳水仍差 ${remaining.carbs}，后续优先补米饭、红薯、面包或水果。`);
     }
     if (remaining.protein > 25) {
-      tips.push(`蛋白质仍差 ${remaining.protein}g，下一餐优先补鸡胸、虾、希腊酸奶、豆腐或乳清。`);
+      tips.push(`蛋白质仍差 ${remaining.protein}，下一餐优先补鸡胸、虾、希腊酸奶、豆腐或乳清。`);
     }
     if (remaining.calories < 0 && remaining.protein > 0) {
       tips.push("热量已经超出但蛋白仍未到位，后续优先高蛋白、低脂食物。");
@@ -2254,7 +2274,7 @@
     const macroCalories = totals.protein * 4 + totals.carbs * 4 + totals.fat * 9;
     const calorieGap = round1(totals.calories - macroCalories);
     if (Math.abs(calorieGap) > 80) {
-      anomalies.push(`当日输入热量与 macro 推算热量相差 ${Math.abs(calorieGap)} kcal，建议复核。`);
+      anomalies.push(`当日输入热量与营养素推算热量相差 ${Math.abs(calorieGap)} kcal，建议复核。`);
     }
     state.meals.forEach((meal) => {
       meal.entries.forEach((entry) => {
@@ -2402,41 +2422,41 @@
     const recoveryWeak = summary.execution7.poorTrainingDays
       || summary.execution7.highHungerDays >= 3
       || (summary.execution7.avgSleep && summary.execution7.avgSleep < 65);
-    let status = "Not enough data";
+    let status = "数据不足";
     let tone = "warn";
-    let guidance = "Keep recording morning weight. The trend gets useful after at least 4 entries.";
+    let guidance = "继续记录晨起体重；至少 4 次记录后，趋势判断才会更有参考价值。";
     if (count >= 4 && count < 7) {
-      status = "Short-term fluctuation";
-      guidance = "Early data can swing with water, sodium, and glycogen. Keep recording before changing targets.";
+      status = "短期波动";
+      guidance = "早期数据容易受水分、钠和糖原影响。先继续记录，不急着调整目标。";
     } else if (count >= 7 && count < 14) {
-      status = "Short-term trend";
+      status = "短期趋势";
       tone = "ok";
-      guidance = "Current average is visible, but wait for 14 entries before making strong adjustments.";
+      guidance = "当前均重已有参考价值，但建议等到 14 次记录后再做强判断。";
     } else if (count >= 14) {
       if (recoveryWeak) {
-        status = "Recovery pressure detected";
+        status = "恢复压力偏高";
         tone = "warn";
-        guidance = "Recovery signal is weak. Avoid lowering calories until sleep, hunger, and training performance stabilize.";
+        guidance = "睡眠、饥饿或训练表现出现压力信号。先别继续降热量，等恢复稳定后再判断。";
       } else if (weeklyChange < 0 && percent <= 1 && (!requiredWeekly || Math.abs(weeklyChange) >= requiredWeekly * 0.65)) {
-        status = "On track";
+        status = "趋势正常";
         tone = "ok";
-        guidance = "Trend is on track. Keep current targets for another 7 days.";
+        guidance = "体重趋势基本符合计划。建议再维持当前目标 7 天。";
       } else if (weeklyChange < 0 && percent > 1) {
-        status = "Losing too quickly";
+        status = "下降偏快";
         tone = "warn";
-        guidance = "Weight is dropping quickly. If recovery worsens, consider adding 100-150 kcal, especially on training days.";
+        guidance = "体重下降较快。如果恢复变差，可考虑训练日增加 100-150 kcal。";
       } else if (requiredWeekly && Math.abs(weeklyChange) < requiredWeekly * 0.65 && calorieDiff > 100) {
-        status = "Fix execution first";
+        status = "先修正执行";
         tone = "bad";
-        guidance = "Trend is slower than planned, but intake is above target. Fix execution first before changing targets.";
+        guidance = "趋势慢于计划，但摄入高于目标。先修正执行，再考虑改目标。";
       } else if (requiredWeekly && Math.abs(weeklyChange) < requiredWeekly * 0.65) {
-        status = "Losing too slowly";
+        status = "下降偏慢";
         tone = "warn";
-        guidance = "Trend is slower than planned. If this continues another 7 days, consider reducing 100-150 kcal or tightening tracking accuracy.";
+        guidance = "趋势慢于计划。如果再持续 7 天，可考虑减少 100-150 kcal 或提高记录准确度。";
       } else {
-        status = "Short-term fluctuation";
+        status = "短期波动";
         tone = "warn";
-        guidance = "Single-day changes can come from water, sodium, or glycogen. Use the 7-entry average for decisions.";
+        guidance = "单日体重上升常来自水分、钠或糖原。请用 7 次均重做判断。";
       }
     }
     return {
@@ -2445,8 +2465,8 @@
       guidance,
       currentAvgText: currentAvg ? `${round1(currentAvg)} kg` : "—",
       weeklyChangeText: count >= 14 ? `${weeklyChange > 0 ? "+" : ""}${weeklyChange} kg` : "—",
-      percentText: count >= 14 ? `${percent}% bodyweight / week` : "needs 14 entries",
-      requiredPaceText: requiredWeekly ? `${round1(requiredWeekly)} kg/wk` : "—",
+      percentText: count >= 14 ? `每周 ${percent}% 体重` : "需要 14 次记录",
+      requiredPaceText: requiredWeekly ? `${round1(requiredWeekly)} kg/周` : "—",
       distanceText: currentAvg ? `${Math.max(0, distance)} kg` : "—",
       settings
     };
@@ -2814,22 +2834,22 @@
       return "";
     }
     if (!state.ready) {
-      return "Loading…";
+      return "正在读取…";
     }
     if (state.syncingDraft) {
-      return "Draft saving…";
+      return "草稿保存中…";
     }
     if (state.dirty && state.lastDraftSavedAt) {
-      return `Draft saved ${fmtTime(state.lastDraftSavedAt)}`;
+      return `草稿已保存 ${fmtTime(state.lastDraftSavedAt)}`;
     }
     if (state.dirty) {
-      return "Unsaved changes";
+      return "有未保存修改";
     }
     if (exportReminderDue()) {
       return "建议导出备份";
     }
     if (state.lastSavedAt) {
-      return `Saved ${fmtTime(state.lastSavedAt)}`;
+      return `已保存 ${fmtTime(state.lastSavedAt)}`;
     }
     return "";
   }
@@ -3102,7 +3122,7 @@
     const trainingCarbs = Math.max(0, Math.round((split.trainingCalories - proteinTarget * 4 - fatTarget * 9) / 4));
     const restCarbs = Math.max(0, Math.round((split.restCalories - proteinTarget * 4 - fatTarget * 9) / 4));
     if (trainingCarbs < 180 || restCarbs < 120) {
-      warnings.push("Carbs are low for the selected training frequency. Consider reducing deficit, increasing calories, or lowering fat target.");
+      warnings.push("当前训练频率下碳水偏低。可考虑降低缺口、提高热量，或下调脂肪目标。");
     }
     if (buffer.calories && (trainingCarbs < 180 || restCarbs < 120)) {
       warnings.push("记录误差缓冲已生效，但当前碳水空间偏紧。");
@@ -3205,7 +3225,7 @@
       return {
         adjustmentKcal: 0,
         evaluated: false,
-        message: "Not enough complete data for automatic target adjustment."
+        message: "完整记录不足，暂不自动调整目标。"
       };
     }
     const previousRecords = completeRecords.filter((record) => record.date < addDays(today, -6));
@@ -3214,7 +3234,7 @@
       return {
         adjustmentKcal: 0,
         evaluated: false,
-        message: "Not enough complete data for automatic target adjustment."
+        message: "完整记录不足，暂不自动调整目标。"
       };
     }
     const current7DayAvg = averageBodyWeight(currentRecords);
@@ -3689,13 +3709,14 @@
   function renderRollingAverageStat(label, actual, expected, unit) {
     const diff = round1(actual - expected);
     const tone = diff > rollingAverageTolerance(unit) ? "bad" : (diff < -rollingAverageTolerance(unit) ? "warn" : "ok");
-    const deltaText = `${diff > 0 ? "+" : ""}${diff} ${unit}`;
+    const unitText = unit ? ` ${unit}` : "";
+    const deltaText = `${diff > 0 ? "+" : ""}${diff}${unitText}`;
     const kind = unit === "kcal" ? "calories" : labelType(label);
     return `
       <div class="stat">
         <div class="k">${label}</div>
         <div class="v">${round1(actual)}</div>
-        <div class="h">目标日均 ${round1(expected)} ${unit}</div>
+        <div class="h">目标日均 ${round1(expected)}${unitText}</div>
         ${progressMarkup(actual, expected, kind)}
         <div class="small" style="margin-top:6px">
           <span class="badge ${tone}">相差 ${deltaText}</span>

@@ -41,11 +41,31 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
 
+html {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255, 253, 248, 0.78), transparent 32%),
+    linear-gradient(180deg, #f4f1ea 0%, var(--bg) 52%, #e8e3d9 100%);
+}
+
 body {
+  min-height: 100vh;
   padding-bottom: 124px;
   background:
     radial-gradient(circle at 20% 0%, rgba(255, 253, 248, 0.78), transparent 32%),
     linear-gradient(180deg, #f4f1ea 0%, var(--bg) 52%, #e8e3d9 100%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(env(safe-area-inset-top, 0px) + 12px);
+  z-index: 19;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(244, 241, 234, 0.98), rgba(238, 236, 230, 0.94));
 }
 
 body.modal-open {
@@ -84,7 +104,7 @@ select:focus-visible {
 .app {
   max-width: 430px;
   margin: 0 auto;
-  padding: 12px;
+  padding: 0 12px 12px;
 }
 
 .sticky {
@@ -93,7 +113,26 @@ select:focus-visible {
   z-index: 20;
   background: rgba(238, 236, 230, 0.92);
   backdrop-filter: blur(12px);
-  padding-bottom: 10px;
+  -webkit-backdrop-filter: blur(12px);
+  margin: 0 -12px;
+  padding: calc(env(safe-area-inset-top, 0px) + 8px) 12px 10px;
+  box-shadow: 0 1px 0 rgba(216, 211, 202, 0.6);
+}
+
+.sticky::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(244, 241, 234, 0.98), rgba(238, 236, 230, 0.92));
+}
+
+#view {
+  padding-top: 2px;
+}
+
+.sticky + #view {
+  margin-top: 0;
 }
 
 .topbar {
@@ -111,6 +150,7 @@ select:focus-visible {
 }
 
 .sub {
+  display: none;
   font-size: 10px;
   color: var(--muted);
   margin-top: 3px;
@@ -535,16 +575,39 @@ input.big {
   box-shadow: none;
 }
 
+.meal-row-text {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.meal-row-title {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 7px;
+}
+
 .meal-row strong {
-  display: block;
+  flex: 0 0 auto;
   color: var(--text);
   font-size: 14px;
 }
 
-.meal-row span span {
+.meal-food-names {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meal-macro-summary {
   display: block;
   margin-top: 2px;
   font-size: 12px;
+  color: var(--muted);
 }
 
 .meal-row.active {
