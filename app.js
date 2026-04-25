@@ -668,11 +668,13 @@
           <button class="btn" id="saveFavBtn" type="button">存为常用</button>
         </div>
         <div class="hint-box meal-total-box">
-          <div class="item-top">
-            <span>本餐合计</span>
-            <strong class="meal-total-value" id="mealTotalCalories">0 kcal</strong>
+          <div class="meal-total-head">本餐合计</div>
+          <div class="meal-total-grid" aria-label="本餐宏量汇总">
+            <div class="metric-cell metric-calories"><span>热量</span><strong id="mealTotalCalories">0 kcal</strong></div>
+            <div class="metric-cell metric-protein"><span>P</span><strong id="mealTotalProtein">0</strong></div>
+            <div class="metric-cell metric-carbs"><span>C</span><strong id="mealTotalCarbs">0</strong></div>
+            <div class="metric-cell metric-fat"><span>F</span><strong id="mealTotalFat">0</strong></div>
           </div>
-          <div style="margin-top:6px" class="small" id="mealTotalMacros">P 0 · C 0 · F 0</div>
         </div>
         <div id="currentMealGuidance">${renderCurrentMealGuidance(meal)}</div>
         ${renderFavoriteQuickApply()}
@@ -756,9 +758,15 @@
     const values = target();
     return `
       <div class="target-strip" aria-label="今日目标">
-        <div>
-          <div class="target-title">${values.label || (state.dayType === "training" ? "训练日" : "休息日")}目标</div>
-          <div class="target-values">${values.calories} kcal · P ${values.protein} · C ${values.carbs} · F ${values.fat}</div>
+        <div class="target-head">
+          <span class="target-title">${values.label || (state.dayType === "training" ? "训练日" : "休息日")}目标</span>
+          <span class="target-note">今日原始目标</span>
+        </div>
+        <div class="target-grid">
+          <div class="metric-cell metric-calories"><span>热量</span><strong>${values.calories} kcal</strong></div>
+          <div class="metric-cell metric-protein"><span>P</span><strong>${values.protein}</strong></div>
+          <div class="metric-cell metric-carbs"><span>C</span><strong>${values.carbs}</strong></div>
+          <div class="metric-cell metric-fat"><span>F</span><strong>${values.fat}</strong></div>
         </div>
       </div>
     `;
@@ -1127,6 +1135,9 @@
               <span>
                 <span class="utility-title">数据工具与筛选</span>
                 <span class="utility-helper">导入 CSV · 导出备份 · 筛选历史记录</span>
+                <span class="utility-chip-row" aria-hidden="true">
+                  <span class="utility-chip">导入</span><span class="utility-chip">导出</span><span class="utility-chip">筛选</span>
+                </span>
               </span>
               <span class="expand-affordance"><span>${state.ui.historyToolsOpen ? "收起" : "展开"}</span><span class="chevron" aria-hidden="true">${state.ui.historyToolsOpen ? "⌃" : "⌄"}</span></span>
             </span>
@@ -1471,12 +1482,20 @@
     const meal = state.meals[state.activeMeal - 1];
     const totals = mealTotals(meal);
     const caloriesNode = document.getElementById("mealTotalCalories");
-    const macroNode = document.getElementById("mealTotalMacros");
+    const proteinNode = document.getElementById("mealTotalProtein");
+    const carbsNode = document.getElementById("mealTotalCarbs");
+    const fatNode = document.getElementById("mealTotalFat");
     if (caloriesNode) {
       caloriesNode.textContent = `${round1(totals.calories)} kcal`;
     }
-    if (macroNode) {
-      macroNode.textContent = `P ${round1(totals.protein)} · C ${round1(totals.carbs)} · F ${round1(totals.fat)}`;
+    if (proteinNode) {
+      proteinNode.textContent = round1(totals.protein);
+    }
+    if (carbsNode) {
+      carbsNode.textContent = round1(totals.carbs);
+    }
+    if (fatNode) {
+      fatNode.textContent = round1(totals.fat);
     }
     const guidanceNode = document.getElementById("currentMealGuidance");
     if (guidanceNode) {

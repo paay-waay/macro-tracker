@@ -62,17 +62,13 @@ body {
 
 html {
   min-height: 100%;
-  background:
-    radial-gradient(circle at 20% 0%, rgba(255, 253, 248, 0.86), transparent 32%),
-    linear-gradient(180deg, #f4f1ea 0%, var(--bg) 52%, #e8e3d9 100%);
+  background: var(--bg);
 }
 
 body {
   min-height: 100vh;
   padding-bottom: 124px;
-  background:
-    radial-gradient(circle at 20% 0%, rgba(255, 253, 248, 0.86), transparent 32%),
-    linear-gradient(180deg, #f4f1ea 0%, var(--bg) 52%, #e8e3d9 100%);
+  background: var(--bg);
 }
 
 body::before {
@@ -84,7 +80,7 @@ body::before {
   left: 0;
   right: 0;
   height: calc(env(safe-area-inset-top, 0px) + 14px);
-  background: linear-gradient(180deg, rgba(244, 241, 234, 0.99), rgba(238, 236, 230, 0.94));
+  background: var(--bg);
 }
 
 body.modal-open {
@@ -143,7 +139,7 @@ select:focus-visible {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(180deg, rgba(244, 241, 234, 0.99), rgba(238, 236, 230, 0.92));
+  background: rgba(238, 236, 230, 0.96);
 }
 
 #view {
@@ -201,7 +197,7 @@ select:focus-visible {
 .summary-primary {
   border-radius: 20px;
   padding: 12px;
-  background: linear-gradient(180deg, var(--card), var(--surface));
+  background: var(--card);
   box-shadow: var(--shadow);
 }
 
@@ -305,7 +301,7 @@ select:focus-visible {
 }
 
 .card {
-  background: linear-gradient(180deg, var(--surface-primary) 0%, #f9f7f0 100%);
+  background: var(--surface-primary);
   border: 1px solid var(--line);
   border-radius: 24px;
   padding: 16px;
@@ -487,7 +483,7 @@ input.big {
 
 .stat-calories {
   border-color: rgba(95, 111, 106, 0.28);
-  background: linear-gradient(180deg, #fffdf8, var(--accent-soft));
+  background: var(--accent-soft);
 }
 
 .stat .k {
@@ -742,7 +738,7 @@ input.big {
 .weight-chart {
   border: 1px solid var(--line);
   border-radius: 18px;
-  background: linear-gradient(180deg, var(--card) 0%, var(--surface) 100%);
+  background: var(--card);
   padding: 8px;
 }
 
@@ -1132,7 +1128,7 @@ input.big {
   padding: 13px 14px;
   text-align: left;
   border: 1px solid var(--context-line);
-  background: linear-gradient(180deg, var(--context-bg), rgba(245, 248, 247, 0.88));
+  background: var(--context-bg);
   color: var(--context-text);
   box-shadow: var(--shadow-soft);
 }
@@ -1230,7 +1226,7 @@ input.big {
   padding: 11px 13px;
   border: 1px solid var(--info-line);
   border-radius: 18px;
-  background: linear-gradient(180deg, rgba(231, 236, 239, 0.76), rgba(251, 250, 246, 0.78));
+  background: var(--info-bg);
   color: var(--info-text);
   box-shadow: var(--shadow-soft);
 }
@@ -1428,7 +1424,7 @@ input.big {
 .utility-card {
   margin-top: 12px;
   border-color: var(--tools-line);
-  background: linear-gradient(180deg, var(--tools-bg), rgba(247, 245, 250, 0.88));
+  background: var(--tools-bg);
   color: var(--tools-text);
 }
 
@@ -1460,5 +1456,320 @@ input.big {
 @media (display-mode: standalone) {
   body::before {
     height: calc(env(safe-area-inset-top, 0px) + 22px);
+  }
+}
+
+
+/* V19 solid Morandi refinement: typography, compact grids, no gradient-style surfaces */
+:root {
+  --font-ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  --font-size-title: 22px;
+  --font-size-section: 17px;
+  --font-size-card: 16px;
+  --font-size-label: 12px;
+  --font-size-helper: 12px;
+  --font-size-body: 14px;
+  --font-size-metric: 20px;
+  --font-size-button: 14px;
+  --tracking-tight: -0.015em;
+}
+
+html,
+body,
+button,
+input,
+select {
+  font-family: var(--font-ui);
+}
+
+html,
+body {
+  background: var(--bg) !important;
+}
+
+body::before,
+.sticky::before {
+  background: var(--bg) !important;
+}
+
+.sticky {
+  background: rgba(238, 236, 230, 0.98) !important;
+}
+
+.card,
+.summary-primary,
+.summary-support,
+.stat,
+.stat-calories,
+.weight-chart,
+.context-card,
+.utility-card,
+.target-strip,
+.entry-card,
+.hint-box,
+.warn-box,
+.modal-card,
+.step,
+.item,
+.sleep-slider-wrap,
+.context-body-card {
+  background-image: none !important;
+}
+
+.card,
+.modal-card {
+  background: var(--surface-primary) !important;
+}
+
+.summary-primary,
+.summary-support,
+.chip,
+.entry-card,
+.item,
+.stat,
+.weight-chart {
+  background: var(--card) !important;
+}
+
+.context-card,
+.context-body-card {
+  background: var(--context-bg) !important;
+}
+
+.utility-card {
+  background: var(--tools-bg) !important;
+}
+
+.target-strip {
+  background: var(--info-bg) !important;
+}
+
+.title {
+  font-size: var(--font-size-title);
+  font-weight: 760;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.12;
+}
+
+.card h3,
+.modal-head h3 {
+  font-size: var(--font-size-section);
+  font-weight: 740;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.2;
+}
+
+.context-card-title,
+.utility-title,
+.item-title {
+  font-size: var(--font-size-card);
+  font-weight: 720;
+  letter-spacing: var(--tracking-tight);
+}
+
+.context-card-helper,
+.utility-helper,
+.small,
+.label,
+.stat .k,
+.stat .h,
+.target-note,
+.meal-macro-summary,
+.meal-food-names {
+  font-size: var(--font-size-helper);
+  line-height: 1.35;
+}
+
+.label {
+  font-weight: 620;
+}
+
+.chip .v,
+.stat .v,
+.metric-cell strong,
+.sleep-score-readout {
+  font-weight: 720;
+  letter-spacing: -0.01em;
+}
+
+.stat .v {
+  font-size: var(--font-size-metric);
+}
+
+.metric-grid,
+.stat-grid,
+.target-grid,
+.meal-total-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.target-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.target-note {
+  color: var(--info-text);
+  font-weight: 620;
+}
+
+.metric-cell {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 8px 6px;
+  background: var(--surface);
+  text-align: center;
+}
+
+.metric-cell span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 660;
+  line-height: 1.1;
+}
+
+.metric-cell strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.metric-calories {
+  background: var(--info-bg);
+  border-color: var(--info-line);
+}
+
+.metric-protein {
+  background: var(--protein-soft);
+  border-color: var(--good-line);
+}
+
+.metric-carbs {
+  background: var(--carb-soft);
+  border-color: var(--caution-line);
+}
+
+.metric-fat {
+  background: var(--fat-soft);
+  border-color: var(--warn-line);
+}
+
+.meal-total-box {
+  padding: 10px;
+}
+
+.meal-total-head {
+  margin: 0 2px 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.context-chip-row,
+.utility-chip-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.context-chip,
+.utility-chip {
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.utility-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--tools-line);
+  background: var(--tools-chip-bg);
+  color: var(--tools-text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.settings-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.history-toolbar .grid-2,
+.context-body-card .grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.summary-dashboard {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.summary-primary,
+.summary-support {
+  box-shadow: none;
+}
+
+.nav-btn,
+.save-btn,
+.btn,
+.mini-btn,
+.segment {
+  font-size: var(--font-size-button);
+  font-weight: 660;
+}
+
+.bottom .nav-btn,
+.bottom .save-btn {
+  font-size: 11px;
+}
+
+/* retain compact two-column fallback where four cards would become cramped */
+@media (max-width: 520px) {
+  .metric-grid,
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .target-grid,
+  .meal-total-grid,
+  .context-chip-row,
+  .utility-chip-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .metric-cell {
+    padding: 7px 5px;
+  }
+
+  .metric-cell strong {
+    font-size: 13px;
+  }
+
+  .context-chip {
+    padding: 5px 6px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 360px) {
+  .target-grid,
+  .meal-total-grid,
+  .context-chip-row,
+  .utility-chip-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
