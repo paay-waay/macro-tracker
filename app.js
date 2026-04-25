@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "16";
+  const APP_VERSION = "1.17.0";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -79,7 +79,10 @@
     favoriteQuickOpen: false,
     historyToolsOpen: false,
     historyMode: "records",
+    historyRecordsOpen: true,
+    historyFavoritesOpen: false,
     historyShowAll: false,
+    historyFavoritesShowAll: false,
     settingsGroup: "planStart",
     settingsGroups: {
       planStart: true,
@@ -450,7 +453,8 @@
     if (target.id === "sleepScoreInput" && target instanceof HTMLInputElement) {
       state.sleepScore = normalizeSleepScore(target.value);
       markDirty();
-      render();
+      renderHeader();
+      refreshDailyContextLiveBits();
       return;
     }
 
@@ -654,6 +658,7 @@
     const meal = state.meals[state.activeMeal - 1];
     const mealTotalsValue = mealTotals(meal);
     const mealGuidance = currentMealGuidance(mealTotalsValue);
+    const showMealTotal = meal.entries.length >= 2;
     return `
       ${renderDailyContext()}
       ${renderDailyTargetStrip()}
@@ -669,16 +674,18 @@
           </div>
           <button class="btn" id="saveFavBtn" type="button">存为常用</button>
         </div>
+        ${showMealTotal ? `
         <div class="meal-total-panel ${mealCalorieState(mealTotalsValue).tone}">
           <div class="mini-section-title">本餐合计</div>
           <div class="macro-grid compact-total-grid">
-            <div class="stat"><div class="k">热量</div><div class="v" id="mealTotalCalories">${round1(mealTotalsValue.calories)} kcal</div></div>
-            <div class="stat"><div class="k">P</div><div class="v" id="mealTotalProtein">${round1(mealTotalsValue.protein)}</div></div>
-            <div class="stat"><div class="k">C</div><div class="v" id="mealTotalCarbs">${round1(mealTotalsValue.carbs)}</div></div>
-            <div class="stat"><div class="k">F</div><div class="v" id="mealTotalFat">${round1(mealTotalsValue.fat)}</div></div>
+            <div class="stat"><div class="k">热量</div><div class="v" id="mealTotalCalories">${round1(mealTotalsValue.calories)}</div><div class="h">kcal</div></div>
+            <div class="stat"><div class="k">P</div><div class="v" id="mealTotalProtein">${round1(mealTotalsValue.protein)}</div><div class="h">蛋白</div></div>
+            <div class="stat"><div class="k">C</div><div class="v" id="mealTotalCarbs">${round1(mealTotalsValue.carbs)}</div><div class="h">碳水</div></div>
+            <div class="stat"><div class="k">F</div><div class="v" id="mealTotalFat">${round1(mealTotalsValue.fat)}</div><div class="h">脂肪</div></div>
           </div>
           <div class="meal-guidance ${mealGuidance ? "" : "hidden"}" id="mealGuidance">${esc(mealGuidance)}</div>
         </div>
+        ` : ""}
         ${renderFavoriteQuickApply()}
         <div>${meal.entries.map((entry, entryIndex) => renderEntry(meal, entry, entryIndex)).join("")}</div>
         <div class="grid-2" style="margin-top:12px">
@@ -696,7 +703,6 @@
         <div class="target-strip-head">
           <div>
             <div class="mini-section-title">${values.label}目标</div>
-            <div class="small">今日目标：${round1(values.calories)} kcal · P ${round1(values.protein)} · C ${round1(values.carbs)} · F ${round1(values.fat)}</div>
           </div>
         </div>
         <div class="macro-grid target-grid">
@@ -724,7 +730,7 @@
         <button class="context-summary" type="button" data-toggle-ui="dailyContextOpen" aria-expanded="${open ? "true" : "false"}">
           <span class="context-copy">
             <span class="context-title">今日设置</span>
-            <span class="context-helper">日期、体重、睡眠、训练状态</span>
+            ${open ? '<span class="context-helper">日期、体重、睡眠、训练状态</span>' : ""}
             <span class="context-chip-row">${summaryChips.map((chip) => `<span class="context-chip">${esc(chip)}</span>`).join("")}</span>
           </span>
           <span class="expand-affordance"><span>${open ? "收起" : "展开"}</span><span class="chevron" aria-hidden="true">${open ? "⌃" : "⌄"}</span></span>
@@ -953,12 +959,12 @@
     return `
       <div class="entry-card">
         <div class="entry-head">
-          <div><div class="item-title">项目 ${entryIndex + 1}</div></div>
+          <div><div class="item-title">食物 ${entryIndex + 1}</div></div>
           <button
             class="mini-btn danger ${meal.entries.length <= 1 ? "hidden" : ""}"
             type="button"
             data-delete-entry="${meal.id}-${entryIndex}"
-            aria-label="删除 ${meal.label} 的项目 ${entryIndex + 1}"
+            aria-label="删除 ${meal.label} 的食物 ${entryIndex + 1}"
           >删除</button>
         </div>
         <div style="margin-top:10px">
@@ -1060,18 +1066,13 @@
   function renderOverviewDetails(summary) {
     return `
       <div class="card">
-        <button class="context-summary card-summary" type="button" data-toggle-ui="overviewMoreOpen" aria-expanded="${state.ui.overviewMoreOpen ? "true" : "false"}">
-          <span>更多细节</span>
-          <span class="chevron" aria-hidden="true">${state.ui.overviewMoreOpen ? "⌃" : "⌄"}</span>
-        </button>
-        ${state.ui.overviewMoreOpen ? `
-          <div class="stat-grid" style="margin-top:12px">
-            <div class="stat"><div class="k">记录完整度</div><div class="v">${summary.execution7.completeDays}/7</div><div class="h">有饮食记录的天数</div></div>
-            <div class="stat"><div class="k">平均睡眠</div><div class="v">${summary.execution7.avgSleep || "—"}</div><div class="h">${summary.execution7.sleepDays ? `来自 ${summary.execution7.sleepDays} 天评分` : "未记录睡眠"}</div></div>
-            <div class="stat"><div class="k">高饥饿</div><div class="v">${summary.execution7.highHungerDays}</div><div class="h">过去 7 天</div></div>
-            <div class="stat"><div class="k">训练表现</div><div class="v">${summary.execution7.goodTrainingDays}/${summary.execution7.trainingDays}</div><div class="h">很好 / 训练日</div></div>
-          </div>
-        ` : ""}
+        <h3>更多细节</h3>
+        <div class="stat-grid" style="margin-top:12px">
+          <div class="stat"><div class="k">记录完整度</div><div class="v">${summary.execution7.completeDays}/7</div><div class="h">有饮食记录的天数</div></div>
+          <div class="stat"><div class="k">平均睡眠</div><div class="v">${summary.execution7.avgSleep || "—"}</div><div class="h">${summary.execution7.sleepDays ? `来自 ${summary.execution7.sleepDays} 天评分` : "未记录睡眠"}</div></div>
+          <div class="stat"><div class="k">高饥饿</div><div class="v">${summary.execution7.highHungerDays}</div><div class="h">过去 7 天</div></div>
+          <div class="stat"><div class="k">训练表现</div><div class="v">${summary.execution7.goodTrainingDays}/${summary.execution7.trainingDays}</div><div class="h">很好 / 训练日</div></div>
+        </div>
       </div>
     `;
   }
@@ -1079,58 +1080,67 @@
   function renderHistory() {
     const historyDates = getFilteredHistoryDates();
     const favoriteList = getFilteredFavorites();
-    const visibleDates = state.ui.historyShowAll ? historyDates : historyDates.slice(0, 7);
-    const showRecords = state.ui.historyMode !== "favorites";
+    const visibleDates = state.ui.historyShowAll ? historyDates : historyDates.slice(0, 3);
+    const visibleFavorites = state.ui.historyFavoritesShowAll ? favoriteList : favoriteList.slice(0, 3);
     return `
-      <div class="card">
-        <div class="item-top">
-          <h3>历史</h3>
-          <div class="segmented compact-segmented" role="tablist" aria-label="历史内容切换">
-            <button class="segment ${showRecords ? "active" : ""}" type="button" data-history-mode="records" aria-pressed="${showRecords ? "true" : "false"}">记录</button>
-            <button class="segment ${!showRecords ? "active" : ""}" type="button" data-history-mode="favorites" aria-pressed="${!showRecords ? "true" : "false"}">常用餐</button>
+      <div class="history-tools-card">
+        <button class="context-summary tools-summary" type="button" data-toggle-ui="historyToolsOpen" aria-expanded="${state.ui.historyToolsOpen ? "true" : "false"}">
+          <span class="context-copy">
+            <span class="context-title">数据工具与筛选</span>
+            <span class="context-helper">导入 CSV · 导出备份 · 筛选历史记录</span>
+          </span>
+          <span class="expand-affordance"><span>${state.ui.historyToolsOpen ? "收起" : "展开"}</span><span class="chevron" aria-hidden="true">${state.ui.historyToolsOpen ? "⌃" : "⌄"}</span></span>
+        </button>
+        ${state.ui.historyToolsOpen ? `<div class="history-toolbar">
+          <div class="grid-2">
+            <button class="btn" id="exportAllBtn" type="button">导出备份</button>
+            <button class="btn" id="importCsvBtn" type="button">导入 CSV</button>
           </div>
-        </div>
-        ${showRecords ? `
-          <button class="context-summary tools-summary" type="button" data-toggle-ui="historyToolsOpen" aria-expanded="${state.ui.historyToolsOpen ? "true" : "false"}">
-            <span class="context-copy">
-              <span class="context-title">数据工具与筛选</span>
-              <span class="context-helper">导入 CSV · 导出备份 · 筛选历史记录</span>
-            </span>
-            <span class="expand-affordance"><span>${state.ui.historyToolsOpen ? "收起" : "展开"}</span><span class="chevron" aria-hidden="true">${state.ui.historyToolsOpen ? "⌃" : "⌄"}</span></span>
-          </button>
-          ${state.ui.historyToolsOpen ? `<div class="history-toolbar">
-            <div class="grid-2">
-              <button class="btn" id="exportAllBtn" type="button">导出备份</button>
-              <button class="btn" id="importCsvBtn" type="button">导入 CSV</button>
-            </div>
-            <div class="hint-box">仅支持导入本应用导出的 CSV；导入前会预览冲突日期。</div>
-            <div class="grid-2">
-              <div>
-                <label class="label" for="historyDateFilter">按日期跳转</label>
-                <input id="historyDateFilter" type="date" value="${esc(state.historyDateFilter)}" />
-              </div>
-              <div>
-                <label class="label" for="historyDayTypeFilter">按类型筛选</label>
-                <select id="historyDayTypeFilter">
-                  <option value="all" ${state.historyDayTypeFilter === "all" ? "selected" : ""}>全部</option>
-                  <option value="training" ${state.historyDayTypeFilter === "training" ? "selected" : ""}>训练日</option>
-                  <option value="rest" ${state.historyDayTypeFilter === "rest" ? "selected" : ""}>休息日</option>
-                </select>
-              </div>
+          <div class="hint-box">导出会包含历史记录和常用餐；导入前会预览冲突日期。</div>
+          <div class="grid-2">
+            <div>
+              <label class="label" for="historyDateFilter">按日期跳转</label>
+              <input id="historyDateFilter" type="date" value="${esc(state.historyDateFilter)}" />
             </div>
             <div>
-              <label class="label" for="historySearchInput">快速搜索</label>
-              <input id="historySearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="搜索日期、体重或训练/休息日" value="${esc(state.historySearchText)}" />
+              <label class="label" for="historyDayTypeFilter">按类型筛选</label>
+              <select id="historyDayTypeFilter">
+                <option value="all" ${state.historyDayTypeFilter === "all" ? "selected" : ""}>全部</option>
+                <option value="training" ${state.historyDayTypeFilter === "training" ? "selected" : ""}>训练日</option>
+                <option value="rest" ${state.historyDayTypeFilter === "rest" ? "selected" : ""}>休息日</option>
+              </select>
             </div>
-            <div class="small">当前筛选 ${historyDates.length} 条记录。</div>
-          </div>` : ""}
+          </div>
+          <div>
+            <label class="label" for="historySearchInput">快速搜索</label>
+            <input id="historySearchInput" type="search" autocomplete="off" spellcheck="false" placeholder="搜索日期、体重或训练/休息日" value="${esc(state.historySearchText)}" />
+          </div>
+          <div class="small">当前筛选 ${historyDates.length} 条记录。</div>
+        </div>` : ""}
+      </div>
+      <div class="card">
+        <button class="context-summary card-summary" type="button" data-toggle-ui="historyRecordsOpen" aria-expanded="${state.ui.historyRecordsOpen ? "true" : "false"}">
+          <span>记录</span>
+          <span class="expand-affordance"><span>${state.ui.historyRecordsOpen ? "收起" : "展开"}</span><span class="chevron" aria-hidden="true">${state.ui.historyRecordsOpen ? "⌃" : "⌄"}</span></span>
+        </button>
+        ${state.ui.historyRecordsOpen ? `
           <div class="list compact-list" style="margin-top:12px">
             ${visibleDates.length
               ? visibleDates.map((date) => renderHistoryItem(date)).join("")
               : `<div class="hint-box">${Object.keys(state.records).length ? "没有符合当前筛选条件的历史记录。" : "还没有历史记录。先保存几天数据，这里会自动生成日期列表。"}</div>`}
           </div>
-          ${historyDates.length > 7 ? `<button class="btn full-width" type="button" data-toggle-ui="historyShowAll">${state.ui.historyShowAll ? "收起" : `显示更多（${historyDates.length - 7} 条）`}</button>` : ""}
-        ` : `
+          ${historyDates.length > 3 ? `<button class="btn full-width" type="button" data-toggle-ui="historyShowAll">${state.ui.historyShowAll ? "收起" : `显示更多（${historyDates.length - 3} 条）`}</button>` : ""}
+        ` : ""}
+      </div>
+      <div class="card">
+        <button class="context-summary card-summary" type="button" data-toggle-ui="historyFavoritesOpen" aria-expanded="${state.ui.historyFavoritesOpen ? "true" : "false"}">
+          <span class="context-copy">
+            <span class="context-title">常用餐</span>
+            <span class="context-helper">最近保存 ${Math.min(3, favoriteList.length)} / ${favoriteList.length} 条</span>
+          </span>
+          <span class="expand-affordance"><span>${state.ui.historyFavoritesOpen ? "收起" : "展开"}</span><span class="chevron" aria-hidden="true">${state.ui.historyFavoritesOpen ? "⌃" : "⌄"}</span></span>
+        </button>
+        ${state.ui.historyFavoritesOpen ? `
           <div class="history-toolbar">
             <div>
               <label class="label" for="favoriteSearchInput">搜索常用餐</label>
@@ -1139,13 +1149,14 @@
             <div class="small">按使用次数和最近使用排序，当前显示 ${favoriteList.length} 条。</div>
           </div>
           <div class="list compact-list">
-            ${favoriteList.length
-              ? favoriteList.map((favorite) => {
+            ${visibleFavorites.length
+              ? visibleFavorites.map((favorite) => {
                 return state.editingFavId === favorite.id ? renderFavoriteEditor(favorite) : renderFavoriteItem(favorite);
               }).join("")
               : `<div class="hint-box">${state.favorites.length ? "没有符合搜索条件的常用餐。" : "暂无常用餐。先在“今天”页面录一餐，再点“存为常用”。"}</div>`}
           </div>
-        `}
+          ${favoriteList.length > 3 ? `<button class="btn full-width" type="button" data-toggle-ui="historyFavoritesShowAll">${state.ui.historyFavoritesShowAll ? "收起" : `显示更多（${favoriteList.length - 3} 条）`}</button>` : ""}
+        ` : ""}
       </div>
     `;
   }
@@ -1201,7 +1212,7 @@
           </div>
           <div class="hint-box">
             <div class="small">当前汇总</div>
-            <div style="font-size:18px;font-weight:800;color:var(--text)" id="favoriteDraftSummary">0 kcal</div>
+            <div style="font-size:18px;font-weight:750;color:var(--text)" id="favoriteDraftSummary">0 kcal</div>
             <div class="small" id="favoriteDraftMacros">P 0 · C 0 · F 0</div>
           </div>
         </div>
@@ -1435,8 +1446,9 @@
     const carbsNode = document.getElementById("mealTotalCarbs");
     const fatNode = document.getElementById("mealTotalFat");
     const guidanceNode = document.getElementById("mealGuidance");
+    const totalPanel = document.querySelector(".meal-total-panel");
     if (caloriesNode) {
-      caloriesNode.textContent = `${round1(totals.calories)} kcal`;
+      caloriesNode.textContent = round1(totals.calories);
     }
     if (proteinNode) {
       proteinNode.textContent = round1(totals.protein);
@@ -1452,12 +1464,38 @@
       guidanceNode.textContent = guidance;
       guidanceNode.classList.toggle("hidden", !guidance);
     }
+    if (totalPanel) {
+      totalPanel.classList.remove("ok", "warn", "bad", "neutral");
+      totalPanel.classList.add(mealCalorieState(totals).tone);
+    }
     meal.entries.forEach((entry, index) => {
       const preview = document.querySelector(`[data-entry-preview="${meal.id}-${index}"]`);
       if (preview) {
         preview.innerHTML = entryPreviewMarkup(entry, `${meal.id}-${index}`);
       }
     });
+  }
+
+  function refreshDailyContextLiveBits() {
+    if (state.view !== "today") {
+      return;
+    }
+    const label = document.querySelector('label[for="sleepScoreInput"]');
+    const control = document.querySelector(".sleep-control");
+    const badge = control?.querySelector(".badge");
+    const score = state.sleepScore === "" ? 85 : numberValue(state.sleepScore);
+    const meta = sleepScoreMeta(score);
+    if (label) {
+      label.textContent = `睡眠评分 ${state.sleepScore === "" ? "未记录" : state.sleepScore}`;
+    }
+    if (badge) {
+      badge.textContent = meta.label;
+      badge.className = `badge ${meta.tone}`;
+    }
+    if (control) {
+      control.classList.remove("ok", "warn", "bad", "info");
+      control.classList.add(meta.tone);
+    }
   }
 
   function refreshFavoriteDraftLiveBits() {
@@ -2893,7 +2931,7 @@
         if (!entryComplete(entry)) {
           return {
             valid: false,
-            message: `${meal.label} · 项目 ${entryIndex + 1} 未填写完整，请补全名称、kcal、P、C、F`,
+            message: `${meal.label} · 食物 ${entryIndex + 1} 未填写完整，请补全名称、kcal、P、C、F`,
             selector: `[data-entry="${meal.id}-${entryIndex}-name"]`
           };
         }
@@ -2936,7 +2974,7 @@
             valid: false,
             message: options.favorite
               ? `常用餐 · 食物项 ${item.entryIndex + 1} 缺少名称`
-              : `${item.meal.label} · 项目 ${item.entryIndex + 1} 缺少名称`,
+              : `${item.meal.label} · 食物 ${item.entryIndex + 1} 缺少名称`,
             selector: options.favorite
               ? `[data-favorite-entry="${item.entryIndex}-name"]`
               : `[data-entry="${item.meal.id}-${item.entryIndex}-name"]`
@@ -2949,7 +2987,7 @@
               valid: false,
               message: options.favorite
                 ? `常用餐 · 食物项 ${item.entryIndex + 1} 的${validation.message}`
-                : `${item.meal.label} · 项目 ${item.entryIndex + 1} 的${validation.message}`,
+                : `${item.meal.label} · 食物 ${item.entryIndex + 1} 的${validation.message}`,
               selector: options.favorite
                 ? `[data-favorite-entry="${item.entryIndex}-${field}"]`
                 : `[data-entry="${item.meal.id}-${item.entryIndex}-${field}"]`
