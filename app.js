@@ -142,7 +142,7 @@
   });
 
   async function bootstrap() {
-    dom.subtitle.textContent = `iPhone 极简离线版 V${APP_VERSION}`;
+    dom.subtitle.textContent = `Private tracker · V${APP_VERSION}`;
     bindEvents();
     renderLoading();
     await migrateLegacyLocalStorage();
@@ -504,14 +504,19 @@
 
   function renderHeader() {
     const overview = stats();
-    dom.summaryChips.innerHTML = [
-      ["热量", remainingChipText(overview.remaining.calories), overallTone("calories", overview.overall.cal)],
-      ["蛋白", remainingChipText(overview.remaining.protein, "g"), overallTone("protein", overview.overall.pro)],
-      ["碳水", remainingChipText(overview.remaining.carbs, "g"), overallTone("carbs", overview.overall.carb)],
-      ["脂肪", remainingChipText(overview.remaining.fat, "g"), overallTone("fat", overview.overall.fat)]
-    ].map(([label, value, tone]) => {
-      return `<div class="chip ${tone}"><div class="k">${label}</div><div class="v">${value}</div></div>`;
-    }).join("");
+    const summaryItems = [
+      ["热量", remainingChipText(overview.remaining.calories), overallTone("calories", overview.overall.cal), "primary"],
+      ["蛋白", remainingChipText(overview.remaining.protein, "g"), overallTone("protein", overview.overall.pro), "support"],
+      ["碳水", remainingChipText(overview.remaining.carbs, "g"), overallTone("carbs", overview.overall.carb), "support"],
+      ["脂肪", remainingChipText(overview.remaining.fat, "g"), overallTone("fat", overview.overall.fat), "support"]
+    ];
+    dom.summaryChips.innerHTML = `
+      <div class="summary-dashboard">
+        ${summaryItems.map(([label, value, tone, weight]) => {
+          return `<div class="chip ${tone} ${weight === "primary" ? "summary-primary" : "summary-support"}"><div class="k">${label}</div><div class="v">${value}</div></div>`;
+        }).join("")}
+      </div>
+    `;
 
     dom.statusLine.textContent = buildStatusText();
     dom.noticeBox.innerHTML = state.notice
@@ -627,11 +632,11 @@
                 <button class="btn" id="applySelectedFavoriteBtn" type="button" ${state.favoriteSelectionId ? "" : "disabled"}>套用</button>
               </div>
               <div class="small" style="margin-top:8px">下拉选择后可直接套用到当前餐次。</div>`
-            : '<div class="hint-box">暂无常用餐。保存当前整餐时会保留每个食物项，而不只是总宏量。</div>'}
+            : '<div class="hint-box empty-state"><div class="empty-icon">☆</div><strong>暂无常用餐</strong><span>保存一餐后可快速套用。</span></div>'}
         </div>
         <div>${meal.entries.map((entry, entryIndex) => renderEntry(meal, entry, entryIndex)).join("")}</div>
         <div class="grid-2" style="margin-top:12px">
-          <button class="btn" id="addEntryBtn" type="button" style="background:#fff;color:var(--text)">新增一项</button>
+          <button class="btn" id="addEntryBtn" type="button">新增一项</button>
           <button class="btn dark" id="nextMealBtn" type="button">下一餐</button>
         </div>
       </div>
@@ -642,7 +647,7 @@
     return `
       <div class="entry-card">
         <div class="entry-head">
-          <div><div class="item-title">项目 ${entryIndex + 1}</div></div>
+          <div><div class="item-title">Item ${entryIndex + 1}</div></div>
           <button
             class="mini-btn danger ${meal.entries.length <= 1 ? "hidden" : ""}"
             type="button"
@@ -661,15 +666,15 @@
         <div class="grid-3" style="margin-top:10px">
           <div>
             <label class="label">P</label>
-            <input class="big" data-entry="${meal.id}-${entryIndex}-protein" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="g" value="${esc(entry.protein)}" />
+          <input class="big macro-input protein-input" data-entry="${meal.id}-${entryIndex}-protein" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="g" value="${esc(entry.protein)}" />
           </div>
           <div>
             <label class="label">C</label>
-            <input class="big" data-entry="${meal.id}-${entryIndex}-carbs" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="g" value="${esc(entry.carbs)}" />
+            <input class="big macro-input carb-input" data-entry="${meal.id}-${entryIndex}-carbs" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="g" value="${esc(entry.carbs)}" />
           </div>
           <div>
             <label class="label">F</label>
-            <input class="big" data-entry="${meal.id}-${entryIndex}-fat" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="g" value="${esc(entry.fat)}" />
+            <input class="big macro-input fat-input" data-entry="${meal.id}-${entryIndex}-fat" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="g" value="${esc(entry.fat)}" />
           </div>
         </div>
         <div data-entry-preview="${meal.id}-${entryIndex}">${entryPreviewMarkup(entry)}</div>
@@ -683,14 +688,14 @@
       <div class="card">
         <h3>今日总览</h3>
         <div class="stat-grid">
-          <div class="stat"><div class="k">总热量</div><div class="v">${round1(summary.totals.calories)}</div><div class="h">目标 ${target().calories} kcal</div></div>
-          <div class="stat"><div class="k">总蛋白</div><div class="v">${round1(summary.totals.protein)}</div><div class="h">目标 ${target().protein} g</div></div>
-          <div class="stat"><div class="k">总碳水</div><div class="v">${round1(summary.totals.carbs)}</div><div class="h">目标 ${target().carbs} g</div></div>
-          <div class="stat"><div class="k">总脂肪</div><div class="v">${round1(summary.totals.fat)}</div><div class="h">目标 ${target().fat} g</div></div>
+          <div class="stat stat-calories"><div class="k">总热量</div><div class="v">${round1(summary.totals.calories)}</div><div class="h">目标 ${target().calories} kcal</div>${progressMarkup(summary.totals.calories, target().calories, "calories")}</div>
+          <div class="stat"><div class="k">总蛋白</div><div class="v">${round1(summary.totals.protein)}</div><div class="h">目标 ${target().protein} g</div>${progressMarkup(summary.totals.protein, target().protein, "protein")}</div>
+          <div class="stat"><div class="k">总碳水</div><div class="v">${round1(summary.totals.carbs)}</div><div class="h">目标 ${target().carbs} g</div>${progressMarkup(summary.totals.carbs, target().carbs, "carbs")}</div>
+          <div class="stat"><div class="k">总脂肪</div><div class="v">${round1(summary.totals.fat)}</div><div class="h">目标 ${target().fat} g</div>${progressMarkup(summary.totals.fat, target().fat, "fat")}</div>
         </div>
-        <div class="hint-box" style="margin-top:12px">
+        <div class="hint-box insight-box" style="margin-top:12px">
           <div class="small">总体结论</div>
-          <div style="font-size:20px;font-weight:800;margin-top:4px;color:var(--text)">${summary.overall.summary}</div>
+          <div class="insight-title">${summary.overall.summary}</div>
           <div class="badges" style="margin-top:10px">
             <span class="badge ${badgeTone(summary.overall.cal, "cal")}">热量 ${summary.overall.cal}</span>
             <span class="badge ${badgeTone(summary.overall.pro, "pro")}">蛋白 ${summary.overall.pro}</span>
@@ -701,8 +706,8 @@
       </div>
       <div class="card">
         <h3>系统判断</h3>
-        <div class="hint-box">
-          <div style="font-size:20px;font-weight:800;color:var(--text)">${summary.systemInsight.title}</div>
+        <div class="hint-box insight-box">
+          <div class="insight-title">${summary.systemInsight.title}</div>
           <div class="small" style="margin-top:8px;line-height:1.5">${summary.systemInsight.body}</div>
         </div>
         <div class="badges" style="margin-top:10px">
@@ -767,8 +772,8 @@
         </div>
       </div>
       ${summary.anomalies.length ? `
-        <div class="card" style="border-color:#fecdd3;background:#fff1f2">
-          <h3 style="color:var(--bad)">数据异常提醒</h3>
+        <div class="card danger-card">
+          <h3>数据异常提醒</h3>
           <div class="list">${summary.anomalies.map((item) => `<div class="warn-box">${esc(item)}</div>`).join("")}</div>
         </div>
       ` : ""}
@@ -1261,7 +1266,7 @@
     state.editingFavId = null;
     state.favoriteDraft = null;
     render();
-    setNotice("已更新常用餐", { tone: "ok" });
+    setNotice("已更新", { tone: "ok" });
   }
 
   async function deleteFavorite(id) {
@@ -1275,7 +1280,7 @@
       state.favoriteDraft = null;
     }
     render();
-    setNotice("已删除常用餐", { tone: "ok" });
+    setNotice("已删除", { tone: "ok" });
   }
 
   async function saveFavoriteFromActive() {
@@ -1307,7 +1312,7 @@
       .slice(0, MAX_FAVORITES)
       .sort(sortFavorites);
     render();
-    setNotice(`已保存常用餐：${favorite.name}`, { tone: "ok" });
+    setNotice("已保存常用餐", { tone: "ok" });
   }
 
   async function applyFavorite(id) {
@@ -1325,7 +1330,7 @@
     state.meals[state.activeMeal - 1].entries = favorite.entries.map((entry) => normalizeEntry(entry));
     markDirty();
     render();
-    setNotice(`已套用常用餐：${favorite.name}`, { tone: "ok" });
+    setNotice("已套用", { tone: "ok" });
   }
 
   function addEntryToActiveMeal() {
@@ -1372,7 +1377,7 @@
     state.lastDraftSavedAt = "";
     state.dirty = false;
     renderHeader();
-    setNotice(`已保存 ${fmtDate(state.date)} 的记录`, { tone: "ok" });
+    setNotice("已保存", { tone: "ok" });
   }
 
   async function deleteRecord(date) {
@@ -1398,7 +1403,7 @@
     } else {
       render();
     }
-    setNotice(`已删除 ${fmtDate(date)} 的记录`, { tone: "ok" });
+    setNotice("已删除", { tone: "ok" });
   }
 
   function exportAll() {
@@ -1452,7 +1457,7 @@
           });
       });
     exportCsv(rows, `macro-tracker-all-records-v${APP_VERSION}-${exportTimestamp()}.csv`);
-    setNotice("已导出全部历史 CSV，包含记录与常用餐", { tone: "ok" });
+    setNotice("已导出", { tone: "ok" });
   }
 
   function prepareImportPreview(text) {
@@ -1736,7 +1741,7 @@
 
     if (!changedRecords.length && !changedFavorites.length) {
       closeImportPreview();
-      setNotice("导入内容与现有记录和常用餐一致，无需覆盖", { tone: "ok" });
+      setNotice("无需导入", { tone: "ok" });
       return;
     }
 
@@ -1772,7 +1777,7 @@
     if (changedFavorites.length) {
       messageParts.push(`${changedFavorites.length} 个常用餐`);
     }
-    setNotice(`已导入 ${messageParts.join("，")}`, { tone: "ok" });
+    setNotice("已导入", { tone: "ok" });
   }
 
   function openSettingsModal(trigger) {
@@ -1852,7 +1857,7 @@
 
     closeSettingsModal();
     render();
-    setNotice(`已保存设置，并生成 ${generation.targets.length} 个未来每日目标`, { tone: "ok", duration: 3600 });
+    setNotice("设置已保存", { tone: "ok", duration: 3000 });
   }
 
   function openHelpModal(trigger) {
@@ -3422,16 +3427,37 @@
     const diff = round1(actual - expected);
     const tone = diff > rollingAverageTolerance(unit) ? "bad" : (diff < -rollingAverageTolerance(unit) ? "warn" : "ok");
     const deltaText = `${diff > 0 ? "+" : ""}${diff} ${unit}`;
+    const kind = unit === "kcal" ? "calories" : labelType(label);
     return `
       <div class="stat">
         <div class="k">${label}</div>
         <div class="v">${round1(actual)}</div>
         <div class="h">目标日均 ${round1(expected)} ${unit}</div>
+        ${progressMarkup(actual, expected, kind)}
         <div class="small" style="margin-top:6px">
           <span class="badge ${tone}">相差 ${deltaText}</span>
         </div>
       </div>
     `;
+  }
+
+  function progressMarkup(actual, expected, kind) {
+    const safeExpected = Math.max(0, numberValue(expected));
+    const safeActual = Math.max(0, numberValue(actual));
+    const percent = safeExpected ? Math.round((safeActual / safeExpected) * 100) : 0;
+    const width = Math.min(100, Math.max(0, percent));
+    return `
+      <div class="progress ${kind}" aria-hidden="true">
+        <div style="width:${width}%"></div>
+      </div>
+    `;
+  }
+
+  function labelType(label) {
+    if (label === "蛋白") return "protein";
+    if (label === "碳水") return "carbs";
+    if (label === "脂肪") return "fat";
+    return "calories";
   }
 
   function rollingAverageTolerance(unit) {
