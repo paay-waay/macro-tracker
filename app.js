@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.18.3";
+  const APP_VERSION = "1.18.4";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -70,7 +70,7 @@
   const NUMERIC_RULES = {
     bodyWeight: { label: "晨起体重", min: 0, max: 500, decimals: 1 },
     calories: { label: "kcal", min: 0, max: 5000, decimals: 1 },
-    protein: { label: "蛋白", min: 0, max: 500, decimals: 1 },
+    protein: { label: "蛋白质", min: 0, max: 500, decimals: 1 },
     carbs: { label: "碳水", min: 0, max: 800, decimals: 1 },
     fat: { label: "脂肪", min: 0, max: 300, decimals: 1 }
   };
@@ -580,20 +580,23 @@
     const overview = stats();
     const targetValues = target();
     const summaryItems = [
-      ["热量", overview.totals.calories, targetValues.calories, overview.remaining.calories, overallTone("calories", overview.overall.cal), "kcal"],
-      ["蛋白质", overview.totals.protein, targetValues.protein, overview.remaining.protein, overallTone("protein", overview.overall.pro), "g"],
-      ["碳水化合物", overview.totals.carbs, targetValues.carbs, overview.remaining.carbs, overallTone("carbs", overview.overall.carb), "g"],
-      ["脂肪", overview.totals.fat, targetValues.fat, overview.remaining.fat, overallTone("fat", overview.overall.fat), "g"]
+      ["calories", "热量", overview.totals.calories, targetValues.calories, overview.remaining.calories, "kcal"],
+      ["protein", "蛋白质", overview.totals.protein, targetValues.protein, overview.remaining.protein, "g"],
+      ["carbs", "碳水", overview.totals.carbs, targetValues.carbs, overview.remaining.carbs, "g"],
+      ["fat", "脂肪", overview.totals.fat, targetValues.fat, overview.remaining.fat, "g"]
     ];
     dom.summaryChips.innerHTML = `
       <div class="summary-dashboard">
-        ${summaryItems.map(([label, consumed, targetAmount, remaining, tone, unit]) => {
+        ${summaryItems.map(([key, label, consumed, targetAmount, remaining, unit]) => {
           const pct = targetAmount ? Math.min(100, Math.max(0, Math.round((numberValue(consumed) / targetAmount) * 100))) : 0;
-          return `<div class="chip ${tone} summary-support">
+          return `<div class="chip summary-support macro-card-${key} ${remaining < 0 ? "is-exceeded" : ""}">
             <div class="k">${label}</div>
-            <div class="v">${round1(consumed)}<span>/${round1(targetAmount)} ${unit}</span></div>
+            <div class="v">
+              <span class="value-main">${round1(consumed)} / ${round1(targetAmount)}</span>
+              <span class="value-unit">${unit}</span>
+            </div>
             <div class="mini-progress" aria-hidden="true"><i style="width:${pct}%"></i></div>
-            <div class="h">${remainingChipText(remaining)} ${unit}</div>
+            <div class="h ${remaining < 0 ? "is-exceeded" : ""}">${headerDeltaText(remaining)}</div>
           </div>`;
         }).join("")}
       </div>
@@ -948,6 +951,7 @@
   }
 
   function renderEntry(meal, entry, entryIndex) {
+    const suggestion = entryPlaceholderSuggestions();
     return `
       <div class="entry-card">
         <div class="entry-head">
@@ -961,24 +965,24 @@
         </div>
         <div style="margin-top:10px">
           <label class="label">名称</label>
-          <input data-entry="${meal.id}-${entryIndex}-name" autocomplete="off" spellcheck="false" placeholder="例如：蛋白饮料" value="${esc(entry.name)}" />
+          <input data-entry="${meal.id}-${entryIndex}-name" autocomplete="off" spellcheck="false" placeholder="${esc(entry.name ? "" : suggestion.name)}" value="${esc(entry.name)}" />
         </div>
         <div style="margin-top:10px">
           <label class="label">kcal</label>
-          <input class="big" data-entry="${meal.id}-${entryIndex}-calories" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例如 180" value="${esc(entry.calories)}" />
+          <input class="big" data-entry="${meal.id}-${entryIndex}-calories" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="${esc(entry.calories ? "" : suggestion.calories)}" value="${esc(entry.calories)}" />
         </div>
         <div class="grid-3" style="margin-top:10px">
           <div>
-            <label class="label">P</label>
-          <input class="big macro-input protein-input" data-entry="${meal.id}-${entryIndex}-protein" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例如 30" value="${esc(entry.protein)}" />
+            <label class="label">蛋白质</label>
+          <input class="big macro-input protein-input" data-entry="${meal.id}-${entryIndex}-protein" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="${esc(entry.protein ? "" : suggestion.protein)}" value="${esc(entry.protein)}" />
           </div>
           <div>
-            <label class="label">C</label>
-            <input class="big macro-input carb-input" data-entry="${meal.id}-${entryIndex}-carbs" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例如 40" value="${esc(entry.carbs)}" />
+            <label class="label">碳水</label>
+            <input class="big macro-input carb-input" data-entry="${meal.id}-${entryIndex}-carbs" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="${esc(entry.carbs ? "" : suggestion.carbs)}" value="${esc(entry.carbs)}" />
           </div>
           <div>
-            <label class="label">F</label>
-            <input class="big macro-input fat-input" data-entry="${meal.id}-${entryIndex}-fat" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例如 10" value="${esc(entry.fat)}" />
+            <label class="label">脂肪</label>
+            <input class="big macro-input fat-input" data-entry="${meal.id}-${entryIndex}-fat" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="${esc(entry.fat ? "" : suggestion.fat)}" value="${esc(entry.fat)}" />
           </div>
         </div>
         <div data-entry-preview="${meal.id}-${entryIndex}">${entryPreviewMarkup(entry, `${meal.id}-${entryIndex}`)}</div>
@@ -1465,6 +1469,7 @@
       totalPanel.classList.add(mealCalorieState(totals).tone);
     }
     meal.entries.forEach((entry, index) => {
+      updateEntryPlaceholders(meal.id, index, entry);
       const preview = document.querySelector(`[data-entry-preview="${meal.id}-${index}"]`);
       if (preview) {
         preview.innerHTML = entryPreviewMarkup(entry, `${meal.id}-${index}`);
@@ -2808,6 +2813,154 @@
     return ENTRY_FIELDS.some((field) => String(entry[field] ?? "").trim() !== "");
   }
 
+  function entryPlaceholderSuggestions() {
+    const fallback = {
+      name: "建议：正常输入",
+      calories: "建议：正常输入",
+      protein: "建议：正常输入",
+      carbs: "建议：正常输入",
+      fat: "建议：正常输入"
+    };
+    try {
+      const overview = stats();
+      const targetValues = target();
+      const activeMeal = state.meals[state.activeMeal - 1];
+      const activeStarted = activeMeal ? activeMeal.entries.some(entryStarted) : false;
+      const mealSlots = Math.max(1, (overview.remainingSlots || 0) + (activeStarted ? 1 : 0));
+      const remaining = overview.remaining || {};
+      if (!Number.isFinite(numberValue(targetValues.calories))) {
+        return fallback;
+      }
+      return {
+        name: suggestedFoodName(remaining, targetValues),
+        calories: suggestedCalories(remaining.calories, mealSlots),
+        protein: suggestedProtein(remaining.protein),
+        carbs: suggestedCarbs(remaining.carbs),
+        fat: suggestedFat(remaining.fat)
+      };
+    } catch (error) {
+      return fallback;
+    }
+  }
+
+  function updateEntryPlaceholders(mealId, entryIndex, entry) {
+    const suggestion = entryPlaceholderSuggestions();
+    const fields = {
+      name: suggestion.name,
+      calories: suggestion.calories,
+      protein: suggestion.protein,
+      carbs: suggestion.carbs,
+      fat: suggestion.fat
+    };
+    Object.entries(fields).forEach(([field, text]) => {
+      const input = document.querySelector(`[data-entry="${mealId}-${entryIndex}-${field}"]`);
+      if (input) {
+        input.placeholder = String(entry[field] || "").trim() ? "" : text;
+      }
+    });
+  }
+
+  function suggestedFoodName(remaining, targetValues) {
+    if (!Number.isFinite(numberValue(targetValues.calories))) {
+      return "建议：正常输入";
+    }
+    if (numberValue(remaining.calories) <= 0) {
+      return numberValue(remaining.protein) > 15 ? "建议：高蛋白低脂食物" : "建议：轻量加餐 / 小份食物";
+    }
+    if (numberValue(remaining.fat) <= 6) {
+      return "建议：选择低脂食物";
+    }
+    if (numberValue(remaining.protein) >= Math.max(25, targetValues.protein * 0.18)) {
+      return "建议：高蛋白食物（鸡胸肉 / 虾 / 蛋白饮料）";
+    }
+    if (numberValue(remaining.carbs) >= Math.max(35, targetValues.carbs * 0.2)) {
+      return "建议：补充碳水（米饭 / 面 / 水果）";
+    }
+    if (numberValue(remaining.calories) <= Math.max(220, targetValues.calories * 0.12)) {
+      return "建议：轻量加餐 / 小份食物";
+    }
+    return "建议：正常一餐";
+  }
+
+  function suggestedCalories(remainingCalories, mealSlots) {
+    const remaining = numberValue(remainingCalories);
+    if (!Number.isFinite(remaining)) {
+      return "建议：正常输入";
+    }
+    if (remaining <= 0) {
+      return "建议：尽量不再增加热量";
+    }
+    const perMeal = remaining / Math.max(1, mealSlots);
+    if (perMeal <= 220) {
+      return "建议：本餐控制在 200 kcal 内";
+    }
+    const lower = clamp(roundToStep(perMeal * 0.75, 50), 150, 900);
+    const upper = clamp(roundToStep(perMeal * 1.2, 50), lower + 50, 1000);
+    return `建议：本餐约 ${lower}-${upper} kcal`;
+  }
+
+  function suggestedProtein(remainingProtein) {
+    const remaining = numberValue(remainingProtein);
+    if (!Number.isFinite(remaining)) {
+      return "建议：正常输入";
+    }
+    if (remaining <= 0) {
+      return "建议：控制蛋白质摄入";
+    }
+    if (remaining >= 35) {
+      return "建议：30-50 g";
+    }
+    if (remaining >= 20) {
+      return "建议：20-30 g";
+    }
+    if (remaining >= 10) {
+      return "建议：10-20 g";
+    }
+    return "建议：少量蛋白质";
+  }
+
+  function suggestedCarbs(remainingCarbs) {
+    const remaining = numberValue(remainingCarbs);
+    if (!Number.isFinite(remaining)) {
+      return "建议：正常输入";
+    }
+    if (remaining <= 0) {
+      return "建议：避免高碳水";
+    }
+    if (remaining >= 60) {
+      return "建议：40-80 g";
+    }
+    if (remaining >= 25) {
+      return "建议：20-40 g";
+    }
+    return "建议：少量碳水";
+  }
+
+  function suggestedFat(remainingFat) {
+    const remaining = numberValue(remainingFat);
+    if (!Number.isFinite(remaining)) {
+      return "建议：正常输入";
+    }
+    if (remaining <= 0) {
+      return "建议：避免脂肪摄入";
+    }
+    if (remaining <= 10) {
+      return "建议：尽量低脂";
+    }
+    if (remaining >= 20) {
+      return "建议：10-20 g";
+    }
+    return "建议：5-10 g";
+  }
+
+  function roundToStep(value, step) {
+    return Math.round(numberValue(value) / step) * step;
+  }
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
   function entryComplete(entry) {
     return ENTRY_FIELDS.every((field) => String(entry[field] ?? "").trim() !== "");
   }
@@ -3096,8 +3249,8 @@
     return Date.now() - last.getTime() > 7 * 24 * 60 * 60 * 1000;
   }
 
-  function remainingChipText(value, suffix = "") {
-    return `${value >= 0 ? "剩" : "超"} ${Math.abs(value)}${suffix}`;
+  function headerDeltaText(value) {
+    return `${value >= 0 ? "△" : "▲"} ${round1(Math.abs(value))}`;
   }
 
   function badgeTone(value, kind) {

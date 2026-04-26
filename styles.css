@@ -214,8 +214,14 @@ select:focus-visible {
 }
 
 .summary-support {
+  min-height: 86px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   border-radius: 14px;
-  background: rgba(255, 253, 248, 0.62);
+  background: var(--macro-card-bg, rgba(255, 253, 248, 0.62));
+  border-color: var(--macro-card-line, var(--line));
+  color: var(--macro-card-text, var(--text));
   box-shadow: none;
   text-align: center;
 }
@@ -223,42 +229,57 @@ select:focus-visible {
 .chip .k {
   font-size: 11px;
   line-height: 1.15;
-  color: var(--muted);
+  color: var(--macro-card-text, var(--muted));
 }
 
 .chip .v {
-  font-size: 13px;
-  font-weight: var(--weight-bold);
-  margin-top: 2px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 4px;
   white-space: nowrap;
 }
 
-.chip .v span {
-  color: var(--muted);
-  font-size: 11px;
+.chip .value-main {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+}
+
+.chip .value-unit {
+  color: var(--macro-card-text, var(--muted));
+  font-size: 10px;
+  font-style: normal;
   font-weight: var(--weight-medium);
 }
 
 .chip .h {
-  margin-top: 3px;
-  color: var(--muted);
+  margin-top: 5px;
+  color: var(--macro-card-text, var(--muted));
   font-size: 10px;
   white-space: nowrap;
+  opacity: 0.88;
+}
+
+.chip .h.is-exceeded {
+  color: var(--bad);
+  opacity: 1;
 }
 
 .mini-progress {
   height: 4px;
-  margin-top: 4px;
+  margin-top: 6px;
   border-radius: 999px;
   overflow: hidden;
-  background: rgba(216, 209, 198, 0.58);
+  background: rgba(255, 253, 248, 0.54);
 }
 
 .mini-progress i {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: currentColor;
+  background: var(--macro-card-text, currentColor);
 }
 
 .summary-primary .v {
@@ -268,34 +289,39 @@ select:focus-visible {
 }
 
 .summary-support .v {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-bold);
   letter-spacing: 0;
 }
 
-.summary-dashboard .chip.ok,
-.summary-dashboard .chip.warn,
-.summary-dashboard .chip.bad {
-  background: rgba(251, 250, 246, 0.72);
-  border-color: var(--line);
+.macro-card-calories {
+  --macro-card-bg: var(--info-bg);
+  --macro-card-line: var(--info-line);
+  --macro-card-text: var(--info-text);
 }
 
-.chip.ok {
-  background: var(--ok-bg);
-  border-color: var(--ok-line);
-  color: var(--ok);
+.macro-card-protein {
+  --macro-card-bg: var(--protein-soft);
+  --macro-card-line: var(--ok-line);
+  --macro-card-text: var(--ok);
 }
 
-.chip.bad {
-  background: var(--bad-bg);
-  border-color: var(--bad-line);
-  color: var(--bad);
+.macro-card-carbs {
+  --macro-card-bg: var(--carb-soft);
+  --macro-card-line: var(--warn-line);
+  --macro-card-text: var(--warn);
 }
 
-.chip.warn {
-  background: var(--warn-bg);
-  border-color: var(--warn-line);
-  color: var(--warn);
+.macro-card-fat {
+  --macro-card-bg: var(--fat-soft);
+  --macro-card-line: var(--bad-line);
+  --macro-card-text: var(--bad);
+}
+
+.summary-support.is-exceeded {
+  box-shadow: inset 0 0 0 1px rgba(147, 99, 107, 0.15);
+}
+
+.summary-support.is-exceeded .mini-progress i {
+  background: var(--bad);
 }
 
 .chip-static {
