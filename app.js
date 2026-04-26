@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.17.0";
+  const APP_VERSION = "1.18.0";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -75,11 +75,12 @@
     fat: { label: "脂肪", min: 0, max: 300, decimals: 1 }
   };
   const DEFAULT_UI_STATE = {
+    uiVersion: APP_VERSION,
     dailyContextOpen: false,
     favoriteQuickOpen: false,
-    historyToolsOpen: false,
+    historyToolsOpen: true,
     historyMode: "records",
-    historyRecordsOpen: true,
+    historyRecordsOpen: false,
     historyFavoritesOpen: false,
     historyShowAll: false,
     historyFavoritesShowAll: false,
@@ -577,16 +578,24 @@
 
   function renderHeader() {
     const overview = stats();
+    const targetValues = target();
     const summaryItems = [
-      ["热量", remainingChipText(overview.remaining.calories), overallTone("calories", overview.overall.cal)],
-      ["蛋白", remainingChipText(overview.remaining.protein), overallTone("protein", overview.overall.pro)],
-      ["碳水", remainingChipText(overview.remaining.carbs), overallTone("carbs", overview.overall.carb)],
-      ["脂肪", remainingChipText(overview.remaining.fat), overallTone("fat", overview.overall.fat)]
+      ["热量", overview.totals.calories, targetValues.calories, overview.remaining.calories, overallTone("calories", overview.overall.cal), "kcal"],
+      ["P", overview.totals.protein, targetValues.protein, overview.remaining.protein, overallTone("protein", overview.overall.pro), "蛋白"],
+      ["C", overview.totals.carbs, targetValues.carbs, overview.remaining.carbs, overallTone("carbs", overview.overall.carb), "碳水"],
+      ["F", overview.totals.fat, targetValues.fat, overview.remaining.fat, overallTone("fat", overview.overall.fat), "脂肪"]
     ];
     dom.summaryChips.innerHTML = `
+      <div class="header-target-line">${esc(targetValues.label)}目标：${round1(targetValues.calories)} kcal · P ${round1(targetValues.protein)} · C ${round1(targetValues.carbs)} · F ${round1(targetValues.fat)}</div>
       <div class="summary-dashboard">
-        ${summaryItems.map(([label, value, tone]) => {
-          return `<div class="chip ${tone} summary-support"><div class="k">${label}</div><div class="v">${value}</div></div>`;
+        ${summaryItems.map(([label, consumed, targetAmount, remaining, tone, unit]) => {
+          const pct = targetAmount ? Math.min(100, Math.max(0, Math.round((numberValue(consumed) / targetAmount) * 100))) : 0;
+          return `<div class="chip ${tone} summary-support">
+            <div class="k">${label}</div>
+            <div class="v">${round1(consumed)}<span>/${round1(targetAmount)}</span></div>
+            <div class="mini-progress" aria-hidden="true"><i style="width:${pct}%"></i></div>
+            <div class="h">${remainingChipText(remaining)}${unit === "kcal" ? " kcal" : ""}</div>
+          </div>`;
         }).join("")}
       </div>
     `;
@@ -619,9 +628,14 @@
   function loadUiState() {
     try {
       const parsed = JSON.parse(window.localStorage.getItem(UI_STATE_KEY) || "{}");
+      const versionFresh = parsed.uiVersion === APP_VERSION;
       return {
         ...DEFAULT_UI_STATE,
         ...parsed,
+        uiVersion: APP_VERSION,
+        historyToolsOpen: versionFresh ? (parsed.historyToolsOpen ?? DEFAULT_UI_STATE.historyToolsOpen) : DEFAULT_UI_STATE.historyToolsOpen,
+        historyRecordsOpen: versionFresh ? (parsed.historyRecordsOpen ?? DEFAULT_UI_STATE.historyRecordsOpen) : DEFAULT_UI_STATE.historyRecordsOpen,
+        historyFavoritesOpen: versionFresh ? (parsed.historyFavoritesOpen ?? DEFAULT_UI_STATE.historyFavoritesOpen) : DEFAULT_UI_STATE.historyFavoritesOpen,
         settingsGroups: {
           ...DEFAULT_UI_STATE.settingsGroups,
           ...(parsed && typeof parsed.settingsGroups === "object" && parsed.settingsGroups ? parsed.settingsGroups : {}),
@@ -636,6 +650,7 @@
 
   function saveUiState() {
     try {
+      state.ui.uiVersion = APP_VERSION;
       window.localStorage.setItem(UI_STATE_KEY, JSON.stringify(state.ui));
     } catch (error) {
       // UI state is optional and should never block food logging.
@@ -661,7 +676,6 @@
     const showMealTotal = meal.entries.length >= 2;
     return `
       ${renderDailyContext()}
-      ${renderDailyTargetStrip()}
       <div class="section-label">餐食记录</div>
       <div class="meal-accordion" aria-label="餐次切换">
         ${state.meals.map((mealItem) => renderMealRow(mealItem)).join("")}
@@ -696,25 +710,6 @@
     `;
   }
 
-  function renderDailyTargetStrip() {
-    const values = target();
-    return `
-      <div class="daily-target-strip" aria-label="今日目标">
-        <div class="target-strip-head">
-          <div>
-            <div class="mini-section-title">${values.label}目标</div>
-          </div>
-        </div>
-        <div class="macro-grid target-grid">
-          <div class="stat"><div class="k">热量</div><div class="v">${round1(values.calories)}</div><div class="h">kcal</div></div>
-          <div class="stat"><div class="k">P</div><div class="v">${round1(values.protein)}</div><div class="h">蛋白</div></div>
-          <div class="stat"><div class="k">C</div><div class="v">${round1(values.carbs)}</div><div class="h">碳水</div></div>
-          <div class="stat"><div class="k">F</div><div class="v">${round1(values.fat)}</div><div class="h">脂肪</div></div>
-        </div>
-      </div>
-    `;
-  }
-
   function renderDailyContext() {
     const open = !!state.ui.dailyContextOpen;
     const trendText = compactWeightContext();
@@ -737,27 +732,25 @@
         </button>
         ${open ? `
           <div class="context-body">
-            <div class="grid-2">
-              <div>
-                <label class="label" for="dateInput">日期</label>
-                <input id="dateInput" type="date" value="${esc(state.date)}" />
+            <div class="compact-field-grid">
+              <div class="field-shell">
+                <label class="visually-hidden" for="dateInput">日期</label>
+                <input id="dateInput" type="date" aria-label="日期" value="${esc(state.date)}" />
               </div>
-              <div>
-                <div class="label">日类型</div>
+              <div class="field-shell">
                 ${renderSegmentedControl("日类型", [
                   ["training", "训练日"],
                   ["rest", "休息日"]
                 ], state.dayType, "segmentDayType")}
               </div>
             </div>
-            <div style="margin-top:10px">
-              <label class="label" for="bodyWeightInput">晨起体重（kg）</label>
-              <input id="bodyWeightInput" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="例如 78.5" value="${esc(state.bodyWeight)}" />
+            <div class="field-shell">
+              <label class="visually-hidden" for="bodyWeightInput">晨起体重 kg</label>
+              <input id="bodyWeightInput" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="晨起体重 kg" placeholder="晨起体重 kg" value="${esc(state.bodyWeight)}" />
             </div>
-            <div class="grid-2" style="margin-top:10px">
+            <div class="compact-field-grid">
               ${state.dayType === "training" ? `
-                <div>
-                  <div class="label">训练表现</div>
+                <div class="field-shell">
                   ${renderSegmentedControl("训练表现", [
                     ["poor", "偏差"],
                     ["normal", "正常"],
@@ -765,8 +758,7 @@
                   ], state.trainingPerformance, "segmentPerformance")}
                 </div>
               ` : ""}
-                <div>
-                  <div class="label">饥饿感</div>
+                <div class="field-shell">
                 ${renderSegmentedControl("饥饿感", [
                     ["low", "低"],
                     ["medium", "中"],
@@ -1082,12 +1074,13 @@
     const favoriteList = getFilteredFavorites();
     const visibleDates = state.ui.historyShowAll ? historyDates : historyDates.slice(0, 3);
     const visibleFavorites = state.ui.historyFavoritesShowAll ? favoriteList : favoriteList.slice(0, 3);
+    const latestDate = historyDates[0] ? fmtDate(historyDates[0]) : "暂无记录";
     return `
       <div class="history-tools-card">
         <button class="context-summary tools-summary" type="button" data-toggle-ui="historyToolsOpen" aria-expanded="${state.ui.historyToolsOpen ? "true" : "false"}">
           <span class="context-copy">
-            <span class="context-title">数据工具与筛选</span>
-            <span class="context-helper">导入 CSV · 导出备份 · 筛选历史记录</span>
+            <span class="context-title">备份与筛选</span>
+            <span class="context-helper">CSV 备份 · 导入 · 历史筛选</span>
           </span>
           <span class="expand-affordance"><span>${state.ui.historyToolsOpen ? "收起" : "展开"}</span><span class="chevron" aria-hidden="true">${state.ui.historyToolsOpen ? "⌃" : "⌄"}</span></span>
         </button>
@@ -1120,7 +1113,10 @@
       </div>
       <div class="card">
         <button class="context-summary card-summary" type="button" data-toggle-ui="historyRecordsOpen" aria-expanded="${state.ui.historyRecordsOpen ? "true" : "false"}">
-          <span>记录</span>
+          <span class="context-copy">
+            <span class="context-title">记录</span>
+            <span class="context-helper">已保存 ${historyDates.length} 天 · 最新 ${latestDate}</span>
+          </span>
           <span class="expand-affordance"><span>${state.ui.historyRecordsOpen ? "收起" : "展开"}</span><span class="chevron" aria-hidden="true">${state.ui.historyRecordsOpen ? "⌃" : "⌄"}</span></span>
         </button>
         ${state.ui.historyRecordsOpen ? `
@@ -1136,7 +1132,7 @@
         <button class="context-summary card-summary" type="button" data-toggle-ui="historyFavoritesOpen" aria-expanded="${state.ui.historyFavoritesOpen ? "true" : "false"}">
           <span class="context-copy">
             <span class="context-title">常用餐</span>
-            <span class="context-helper">最近保存 ${Math.min(3, favoriteList.length)} / ${favoriteList.length} 条</span>
+            <span class="context-helper">已保存 ${favoriteList.length} 条</span>
           </span>
           <span class="expand-affordance"><span>${state.ui.historyFavoritesOpen ? "收起" : "展开"}</span><span class="chevron" aria-hidden="true">${state.ui.historyFavoritesOpen ? "⌃" : "⌄"}</span></span>
         </button>
