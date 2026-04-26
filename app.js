@@ -135,6 +135,9 @@
       trendReference: "当前趋势参考",
       planPreview: "计划预览",
       bodyAndGoals: "身体与目标",
+      date: "日期",
+      dayType: "日类型",
+      bodyWeight: "晨起体重",
       targetWeight: "目标体重",
       loading: "正在加载",
       loadingBody: "正在读取本地数据与草稿，请稍候…",
@@ -166,6 +169,7 @@
       deleteFavoriteFoodAria: "删除常用餐食物项 {index}",
       itemFoodUsage: "{count} 项食物 · 已使用 {uses} 次{last}",
       lastUsedAt: " · 最近使用 {time}",
+      foodSummaryMore: "{items}等 {count} 项",
       favoriteName: "常用餐名称",
       currentSummary: "当前汇总",
       addFoodItem: "新增食物项",
@@ -304,6 +308,7 @@
       helpClose: "关闭使用说明",
       settingsOpen: "打开设置",
       settingsClose: "关闭设置",
+      closeImport: "关闭导入确认",
       noSelectedFavorite: "请先从下拉菜单中选择一个常用餐",
       noSavedCurrentMeal: "当前这餐还没有可保存的数据",
       updated: "已更新",
@@ -342,6 +347,28 @@
       confirmImportOverwriting: "导入会覆盖当前日期，并清除当前日期的未正式保存修改。确定继续导入吗？",
       importSuccessDetails: "{records} 个日期的记录{favorites}",
       importSuccessFavorites: "，{count} 个常用餐",
+      goalModeCut: "减脂优先",
+      goalModeCutDesc: "体重稳步下降，保留训练表现",
+      goalModeRecomp: "重组平衡",
+      goalModeRecompDesc: "小缺口，优先保训练质量",
+      goalModePerformance: "表现优先",
+      goalModePerformanceDesc: "接近维持，训练日碳水更高",
+      activityLow: "低",
+      activityLowDesc: "久坐办公，日常步数少",
+      activityMedium: "中",
+      activityMediumDesc: "正常通勤和走动",
+      activityHigh: "高",
+      activityHighDesc: "日常走动多或工作较活跃",
+      trackingLow: "低",
+      trackingLowDesc: "称重严格、外食少",
+      trackingMedium: "中",
+      trackingMediumDesc: "普通记录，默认保守一点",
+      trackingHigh: "高",
+      trackingHighDesc: "外食多、油量难估",
+      mealSwitcherAria: "餐次切换",
+      targetDateValue: "{date}",
+      averageTargetLabel: "目标均值",
+      detail: "详情",
       recordSummaryTitle: "记录",
       favoritesSummaryTitle: "常用餐",
       todayMealTitle: "当前餐",
@@ -448,6 +475,9 @@
       trendReference: "Referencia actual",
       planPreview: "Vista del plan",
       bodyAndGoals: "Datos y objetivos",
+      date: "Fecha",
+      dayType: "Tipo de día",
+      bodyWeight: "Peso en ayunas",
       targetWeight: "Peso objetivo",
       loading: "Cargando",
       loadingBody: "Leyendo datos y borradores locales…",
@@ -479,6 +509,7 @@
       deleteFavoriteFoodAria: "Eliminar alimento frecuente {index}",
       itemFoodUsage: "{count} alimentos · Usada {uses} veces{last}",
       lastUsedAt: " · Último uso {time}",
+      foodSummaryMore: "{items} y {count} más",
       favoriteName: "Nombre frecuente",
       currentSummary: "Resumen actual",
       addFoodItem: "Añadir alimento",
@@ -617,6 +648,7 @@
       helpClose: "Cerrar ayuda",
       settingsOpen: "Abrir ajustes",
       settingsClose: "Cerrar ajustes",
+      closeImport: "Cerrar confirmación de importación",
       noSelectedFavorite: "Primero selecciona una comida frecuente en el menú",
       noSavedCurrentMeal: "Esta comida aún no tiene datos para guardar",
       updated: "Actualizado",
@@ -654,7 +686,29 @@
       confirmDeleteRecord: "¿Eliminar el registro de {date}? Esta acción no se puede deshacer.",
       confirmImportOverwriting: "La importación reemplazará la fecha actual y borrará los cambios sin guardar. ¿Continuar?",
       importSuccessDetails: "{records} fechas de registros{favorites}",
-      importSuccessFavorites: "，{count} comidas frecuentes",
+      importSuccessFavorites: ", {count} comidas frecuentes",
+      goalModeCut: "Prioridad a pérdida",
+      goalModeCutDesc: "Bajada estable de peso conservando rendimiento",
+      goalModeRecomp: "Equilibrio recomposición",
+      goalModeRecompDesc: "Déficit pequeño con prioridad al rendimiento",
+      goalModePerformance: "Prioridad al rendimiento",
+      goalModePerformanceDesc: "Cerca de mantenimiento, más carbohidratos en entreno",
+      activityLow: "Baja",
+      activityLowDesc: "Trabajo sedentario y pocos pasos diarios",
+      activityMedium: "Media",
+      activityMediumDesc: "Desplazamiento y movimiento normales",
+      activityHigh: "Alta",
+      activityHighDesc: "Mucho movimiento diario o trabajo activo",
+      trackingLow: "Bajo",
+      trackingLowDesc: "Pesaje estricto y pocas comidas fuera",
+      trackingMedium: "Medio",
+      trackingMediumDesc: "Registro normal, con margen prudente",
+      trackingHigh: "Alto",
+      trackingHighDesc: "Muchas comidas fuera y aceite difícil de estimar",
+      mealSwitcherAria: "Cambio de comida",
+      targetDateValue: "{date}",
+      averageTargetLabel: "Objetivo medio",
+      detail: "Detalle",
       recordSummaryTitle: "Registros",
       favoritesSummaryTitle: "Comidas frecuentes",
       todayMealTitle: "Comida actual",
@@ -878,6 +932,12 @@
 
   function bindZoomGuard() {
     let lastTouchEnd = 0;
+    const preventGestureZoom = (event) => {
+      event.preventDefault();
+    };
+    ["gesturestart", "gesturechange", "gestureend"].forEach((eventName) => {
+      document.addEventListener(eventName, preventGestureZoom, { passive: false });
+    });
     document.addEventListener("touchend", (event) => {
       const target = event.target;
       if (target && target.closest?.("input, textarea, select, button, [contenteditable='true']")) {
@@ -1336,9 +1396,12 @@
   function t(key, params = {}) {
     const lang = getCurrentLanguage();
     const template = I18N[lang]?.[key] || I18N.zh[key] || key;
-    return Object.entries(params).reduce((text, [name, value]) => {
-      return text.replaceAll(`{${name}}`, String(value));
-    }, template);
+    return String(template).replace(/\{(\w+)\}/g, (_, name) => (params[name] ?? ""));
+  }
+
+  function capitalize(value) {
+    const text = String(value || "");
+    return text ? text[0].toUpperCase() + text.slice(1) : "";
   }
 
   function applyLanguageShell() {
@@ -1385,7 +1448,7 @@
     const importTitle = document.getElementById("importModalTitle");
     if (importTitle) importTitle.textContent = t("importTitle");
     const closeImport = document.getElementById("closeImportPreviewBtn");
-    if (closeImport) closeImport.setAttribute("aria-label", t("importTitle"));
+    if (closeImport) closeImport.setAttribute("aria-label", t("closeImport"));
     const cancelImport = document.getElementById("cancelImportBtn");
     if (cancelImport) cancelImport.textContent = t("importCancel");
     const confirmImport = document.getElementById("confirmImportBtn");
@@ -1425,7 +1488,7 @@
     return `
       ${renderDailyContext()}
       <div class="section-label">${t("mealRecords")}</div>
-      <div class="meal-accordion" aria-label="餐次切换">
+      <div class="meal-accordion" aria-label="${t("mealSwitcherAria")}">
         ${state.meals.map((mealItem) => renderMealRow(mealItem)).join("")}
       </div>
       <div class="card current-meal-card">
@@ -1481,19 +1544,19 @@
           <div class="context-body">
             <div class="compact-field-grid">
               <div class="field-shell">
-                <label class="visually-hidden" for="dateInput">日期</label>
-                <input id="dateInput" type="date" aria-label="日期" value="${esc(state.date)}" />
+                <label class="visually-hidden" for="dateInput">${t("date")}</label>
+                <input id="dateInput" type="date" aria-label="${t("date")}" value="${esc(state.date)}" />
               </div>
               <div class="field-shell">
-                ${renderSegmentedControl("日类型", [
+                ${renderSegmentedControl(t("dayType"), [
                     ["training", t("trainingDay")],
                     ["rest", t("restDay")]
                 ], state.dayType, "segmentDayType")}
               </div>
             </div>
             <div class="field-shell">
-              <label class="visually-hidden" for="bodyWeightInput">晨起体重 kg</label>
-              <input id="bodyWeightInput" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="晨起体重 kg" placeholder="晨起体重 kg" value="${esc(state.bodyWeight)}" />
+              <label class="visually-hidden" for="bodyWeightInput">${t("bodyWeight")} kg</label>
+              <input id="bodyWeightInput" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="${t("bodyWeight")} kg" placeholder="${t("bodyWeight")} kg" value="${esc(state.bodyWeight)}" />
             </div>
             <div class="compact-field-grid">
               ${state.dayType === "training" ? `
@@ -1529,7 +1592,7 @@
       <div class="sleep-control ${meta.tone}">
         <div class="item-top">
           <label class="label" for="sleepScoreInput">${t("sleepScore")} ${state.sleepScore === "" ? t("notRecorded") : esc(state.sleepScore)}</label>
-          <span class="badge ${meta.tone}">${meta.label}</span>
+          <span class="badge ${meta.tone}">${meta.labelKey ? t(meta.labelKey) : ""}</span>
         </div>
         <input id="sleepScoreInput" class="sleep-slider" type="range" min="60" max="100" step="5" value="${esc(score)}" aria-valuemin="60" aria-valuemax="100" aria-valuenow="${esc(score)}" />
         <div class="range-scale" aria-hidden="true"><span>60</span><span>80</span><span>100</span></div>
@@ -1600,7 +1663,7 @@
     }
     const visible = names.slice(0, 3);
     return names.length > visible.length
-      ? `${visible.join("、")}等 ${names.length} 项`
+      ? t("foodSummaryMore", { items: visible.join("、"), count: names.length - visible.length })
       : visible.join("、");
   }
 
@@ -1800,7 +1863,7 @@
           <div class="stat-grid" style="margin-top:10px">
             <div class="stat"><div class="k">${t("latestWeight")}</div><div class="v">${summary.latestWeight || "—"}</div><div class="h">kg</div></div>
             <div class="stat"><div class="k">${t("previous7Avg")}</div><div class="v">${summary.prev7Avg || "—"}</div><div class="h">kg</div></div>
-            <div class="stat"><div class="k">${t("targetCountdown")}</div><div class="v">${daysLeft()}</div><div class="h">${t("targetKg", { weight: currentSettings().targetDate })}</div></div>
+            <div class="stat"><div class="k">${t("targetCountdown")}</div><div class="v">${daysLeft()}</div><div class="h">${t("targetDateValue", { date: currentSettings().targetDate })}</div></div>
             <div class="stat"><div class="k">${t("dataCoverage")}</div><div class="v">${summary.weightEntryCount}</div><div class="h">${t("weightRecords")}</div></div>
           </div>
         ` : ""}
@@ -1945,7 +2008,7 @@
         <div class="item-actions">
           <button class="mini-btn" type="button" data-apply-favorite="${favorite.id}">${t("apply")}</button>
           <button class="mini-btn" type="button" data-edit-favorite="${favorite.id}">${t("edit")}</button>
-          <button class="mini-btn danger" type="button" data-delete-favorite="${favorite.id}">删除</button>
+          <button class="mini-btn danger" type="button" data-delete-favorite="${favorite.id}">${t("delete")}</button>
         </div>
       </div>
     `;
@@ -2021,13 +2084,6 @@
     const draft = state.settingsDraft || currentSettings();
     const settings = normalizeSettings(draft);
     return `
-      <div class="settings-section language-section">
-        <span class="label">${t("language")}</span>
-        <div class="segmented language-toggle" role="radiogroup" aria-label="${t("language")}">
-          <button type="button" class="segment ${getCurrentLanguage() === "zh" ? "active" : ""}" data-language="zh" role="radio" aria-checked="${getCurrentLanguage() === "zh" ? "true" : "false"}">${t("chinese")}</button>
-          <button type="button" class="segment ${getCurrentLanguage() === "es" ? "active" : ""}" data-language="es" role="radio" aria-checked="${getCurrentLanguage() === "es" ? "true" : "false"}">${t("spanish")}</button>
-        </div>
-      </div>
       ${renderSettingsGroup("planStart", t("planStart"), `
         <div class="hint-box">${t("planStartHint")}</div>
         <div class="settings-grid">
@@ -2050,19 +2106,19 @@
           <div>
             <label class="label" for="setting-goalMode">${t("goalMode")}</label>
             <select id="setting-goalMode" data-setting="goalMode">
-              ${Object.entries(GOAL_MODE_CONFIG).map(([key, value]) => `<option value="${key}" ${settings.goalMode === key ? "selected" : ""}>${value.label} · ${value.description}</option>`).join("")}
+              ${Object.keys(GOAL_MODE_CONFIG).map((key) => `<option value="${key}" ${settings.goalMode === key ? "selected" : ""}>${t(`goalMode${capitalize(key)}`)} · ${t(`goalMode${capitalize(key)}Desc`)}</option>`).join("")}
             </select>
           </div>
           <div>
             <label class="label" for="setting-activityLevel">${t("dailyActivity")}</label>
             <select id="setting-activityLevel" data-setting="activityLevel">
-              ${Object.entries(ACTIVITY_LEVEL_CONFIG).map(([key, value]) => `<option value="${key}" ${settings.activityLevel === key ? "selected" : ""}>${value.label} · ${value.description}</option>`).join("")}
+              ${Object.keys(ACTIVITY_LEVEL_CONFIG).map((key) => `<option value="${key}" ${settings.activityLevel === key ? "selected" : ""}>${t(`activity${capitalize(key)}`)} · ${t(`activity${capitalize(key)}Desc`)}</option>`).join("")}
             </select>
           </div>
           <div>
             <label class="label" for="setting-trackingAccuracyBuffer">${t("trackingBuffer")}</label>
             <select id="setting-trackingAccuracyBuffer" data-setting="trackingAccuracyBuffer">
-              ${Object.entries(TRACKING_BUFFER_CONFIG).map(([key, value]) => `<option value="${key}" ${settings.trackingAccuracyBuffer === key ? "selected" : ""}>${value.label}</option>`).join("")}
+              ${Object.keys(TRACKING_BUFFER_CONFIG).map((key) => `<option value="${key}" ${settings.trackingAccuracyBuffer === key ? "selected" : ""}>${t(`tracking${capitalize(key)}`)}</option>`).join("")}
             </select>
           </div>
         </div>
@@ -2070,6 +2126,13 @@
       `)}
       ${renderSettingsGroup("trend", t("trendReference"), `<div id="settingsTrendBody">${renderSettingsTrendReference()}</div>`)}
       ${renderSettingsGroup("preview", t("planPreview"), `<div id="settingsPreviewBody">${renderSettingsPreview(draft)}</div>`)}
+      <div class="settings-section language-section compact-language-section">
+        <span class="label">${t("language")}</span>
+        <div class="segmented language-toggle" role="radiogroup" aria-label="${t("language")}">
+          <button type="button" class="segment ${getCurrentLanguage() === "zh" ? "active" : ""}" data-language="zh" role="radio" aria-checked="${getCurrentLanguage() === "zh" ? "true" : "false"}">${t("chinese")}</button>
+          <button type="button" class="segment ${getCurrentLanguage() === "es" ? "active" : ""}" data-language="es" role="radio" aria-checked="${getCurrentLanguage() === "es" ? "true" : "false"}">${t("spanish")}</button>
+        </div>
+      </div>
     `;
   }
 
@@ -2283,12 +2346,12 @@
     if (!bad && !open) {
       return `<div class="macro-check small">${t("macroCheckOk")}</div>`;
     }
-    const label = bad ? `热量差异 ${diff > 0 ? "+" : ""}${diff} kcal` : t("macroCheckDetail");
+    const label = bad ? t("calorieBadge", { value: `${diff > 0 ? "+" : ""}${diff}` }) : t("macroCheckDetail");
     return `
       <div class="${bad ? "warn-box compact-warning" : "hint-box"}" style="margin-top:10px">
         <div class="item-top">
           <span>${esc(label)}</span>
-          ${detailKey ? `<button class="mini-btn ghost" type="button" data-macro-details="${esc(detailKey)}">${open ? t("collapse") : t("moreDetails")}</button>` : ""}
+          ${detailKey ? `<button class="mini-btn ghost" type="button" data-macro-details="${esc(detailKey)}">${open ? t("collapse") : t("detail")}</button>` : ""}
         </div>
         ${open ? `
           <div class="item-top" style="margin-top:6px"><span>${t("macroCheckDerived")}</span><strong style="color:var(--text)">${round1(entryMacroCalories(entry))} kcal</strong></div>
@@ -2677,7 +2740,7 @@
       const mealIndex = Number(mealText);
       const itemIndex = Number(itemText);
       if (bodyWeight) {
-        const weightValidation = validateNumericText(bodyWeight, NUMERIC_RULES.bodyWeight, "晨起体重");
+        const weightValidation = validateNumericText(bodyWeight, NUMERIC_RULES.bodyWeight, t("bodyWeight"));
         if (!weightValidation.valid) {
           invalidRows.push({ rowNumber, reason: weightValidation.message });
           return;
@@ -3231,51 +3294,39 @@
 
     const tips = [];
     if (state.dayType === "training" && remaining.carbs > 35) {
-      tips.push(getCurrentLanguage() === "es"
-        ? `Hoy es un día de entreno; aún faltan ${remaining.carbs} g de carbohidratos. Prioriza arroz, batata, pan o fruta.`
-        : `今天是训练日，当前碳水仍差 ${remaining.carbs}，后续优先补米饭、红薯、面包或水果。`);
+      tips.push(t("todayTrainingTip", { value: remaining.carbs }));
     }
     if (remaining.protein > 25) {
-      tips.push(getCurrentLanguage() === "es"
-        ? `Aún faltan ${remaining.protein} g de proteína; en la próxima comida prioriza pollo, camarones, yogur griego, tofu o whey.`
-        : `蛋白质仍差 ${remaining.protein}，下一餐优先补鸡胸、虾、希腊酸奶、豆腐或乳清。`);
+      tips.push(t("proteinTip", { value: remaining.protein }));
     }
     if (remaining.calories < 0 && remaining.protein > 0) {
-      tips.push(getCurrentLanguage() === "es"
-        ? "Las calorías ya se pasaron, pero aún falta proteína. Prioriza opciones altas en proteína y bajas en grasa."
-        : "热量已经超出但蛋白仍未到位，后续优先高蛋白、低脂食物。");
+      tips.push(t("calorieOverTip"));
     }
     if (remaining.fat < -10) {
-      tips.push(getCurrentLanguage() === "es"
-        ? "La grasa ya se pasó claramente; reduce aceite, frutos secos y yemas en lo siguiente."
-        : "脂肪已明显超出，后续收紧烹调油、坚果和蛋黄类来源。");
+      tips.push(t("fatOverTip"));
     }
     if (state.dayType === "rest" && totals.carbs > target().carbs + 35) {
-      tips.push(getCurrentLanguage() === "es"
-        ? "Hoy es descanso y los carbohidratos están altos; después puedes reducir un poco la ración de almidones."
-        : "今天是休息日，碳水偏高，后续可适度降低主食份量。");
+      tips.push(t("todayRestTip"));
     }
     if (!tips.length) {
-      tips.push(getCurrentLanguage() === "es"
-        ? "La estructura actual está bastante equilibrada; completa la última comida según el objetivo restante."
-        : "当前结构较平衡，后续按剩余目标把最后餐次补齐即可。");
+      tips.push(t("balancedTip"));
     }
 
     const anomalies = [];
     const macroCalories = totals.protein * 4 + totals.carbs * 4 + totals.fat * 9;
     const calorieGap = round1(totals.calories - macroCalories);
     if (Math.abs(calorieGap) > 80) {
-      anomalies.push(getCurrentLanguage() === "es"
-        ? `La diferencia entre las calorías registradas y las calculadas por macros es de ${Math.abs(calorieGap)} kcal. Conviene revisarlo.`
-        : `当日输入热量与营养素推算热量相差 ${Math.abs(calorieGap)} kcal，建议复核。`);
+      anomalies.push(t("calorieGapWarning", { value: Math.abs(calorieGap) }));
     }
     state.meals.forEach((meal) => {
       meal.entries.forEach((entry) => {
         const diff = round1(numberValue(entry.calories) - entryMacroCalories(entry));
         if (numberValue(entry.calories) > 0 && Math.abs(diff) > 80) {
-          anomalies.push(getCurrentLanguage() === "es"
-            ? `${mealLabel(meal.id)}${entry.name ? ` (${entry.name})` : ""} tiene una diferencia de ${Math.abs(diff)} kcal; conviene revisarlo.`
-            : `${meal.label}${entry.name ? `（${entry.name}）` : ""} 的热量差异为 ${Math.abs(diff)} kcal，建议复核。`);
+          anomalies.push(t("entryCalorieGapWarning", {
+            meal: mealLabel(meal.id),
+            name: entry.name ? (getCurrentLanguage() === "es" ? ` (${entry.name})` : `（${entry.name}）`) : "",
+            value: Math.abs(diff)
+          }));
         }
       });
     });
@@ -3461,7 +3512,7 @@
       currentAvgText: currentAvg ? `${round1(currentAvg)} kg` : "—",
       weeklyChangeText: count >= 14 ? `${weeklyChange > 0 ? "+" : ""}${weeklyChange} kg` : "—",
       percentText: count >= 14 ? t("weeklyPercent", { percent }) : t("need14Records"),
-      requiredPaceText: requiredWeekly ? `${round1(requiredWeekly)} kg/周` : "—",
+      requiredPaceText: requiredWeekly ? `${round1(requiredWeekly)} ${t("kgPerWeek")}` : "—",
       distanceText: currentAvg ? `${Math.max(0, distance)} kg` : "—",
       settings
     };
@@ -3842,7 +3893,7 @@
 
   function validateDay() {
     if (state.bodyWeight) {
-      const weightValidation = validateNumericText(state.bodyWeight, NUMERIC_RULES.bodyWeight, "晨起体重");
+      const weightValidation = validateNumericText(state.bodyWeight, NUMERIC_RULES.bodyWeight, t("bodyWeight"));
       if (!weightValidation.valid) {
         return {
           valid: false,
@@ -3912,7 +3963,7 @@
           };
         }
         for (const field of ["calories", "protein", "carbs", "fat"]) {
-          const validation = validateNumericText(entry[field], NUMERIC_RULES[field], NUMERIC_RULES[field].label);
+          const validation = validateNumericText(entry[field], NUMERIC_RULES[field], fieldLabel(field));
           if (!validation.valid) {
             return {
               valid: false,
@@ -3937,7 +3988,7 @@
         return { valid: false, message: `${options.prefix || ""}${t("requiredFieldEmpty", { label: t("name") })}` };
       }
       for (const field of ["calories", "protein", "carbs", "fat"]) {
-        const validation = validateNumericText(entry[field], NUMERIC_RULES[field], NUMERIC_RULES[field].label);
+        const validation = validateNumericText(entry[field], NUMERIC_RULES[field], fieldLabel(field));
         if (!validation.valid) {
           return { valid: false, message: `${options.prefix || ""}${validation.message}` };
         }
@@ -3959,6 +4010,15 @@
       return { valid: false, message: t("rangeBetween", { label: labelOverride || rule.label, min: rule.min, max: rule.max }) };
     }
     return { valid: true, value: number };
+  }
+
+  function fieldLabel(field) {
+    if (field === "bodyWeight") return t("bodyWeight");
+    if (field === "calories") return "kcal";
+    if (field === "protein") return t("protein");
+    if (field === "carbs") return t("carbs");
+    if (field === "fat") return t("fat");
+    return String(field || "");
   }
 
   function focusField(selector) {
@@ -4391,7 +4451,9 @@
       const maxBoost = Math.max(0, ((finalAverageCalories - minCalories) * restDays) / trainingDays);
       boost = Math.min(boost, maxBoost);
       restCalories = finalAverageCalories - (trainingDays * boost) / restDays;
-      warnings.push("休息日热量触及最低保护线，已自动降低训练日热量加成。");
+      warnings.push(getCurrentLanguage() === "es"
+        ? "Las calorías del día de descanso tocaron el mínimo de protección; se redujo automáticamente el extra calórico del día de entreno."
+        : "休息日热量触及最低保护线，已自动降低训练日热量加成。");
     }
     return {
       trainingCalories: finalAverageCalories + boost,
@@ -4517,7 +4579,9 @@
         actualChange,
         expectedChange,
         quality,
-        message: "14 天趋势下降偏慢，未来目标已小幅降低热量。"
+        message: getCurrentLanguage() === "es"
+          ? "La tendencia de 14 días baja más lento de lo previsto; el objetivo futuro reduce ligeramente las calorías."
+          : "14 天趋势下降偏慢，未来目标已小幅降低热量。"
       };
     }
     return {
@@ -4946,7 +5010,7 @@
       <div class="stat">
         <div class="k">${label}</div>
         <div class="v">${round1(actual)}</div>
-        <div class="h">${t("plannedAverageCalories")} ${round1(expected)}${unitText}</div>
+        <div class="h">${t("averageTargetLabel")} ${round1(expected)}${unitText}</div>
         ${progressMarkup(actual, expected, kind)}
         <div class="small" style="margin-top:6px">
           <span class="badge ${tone}">${t("distanceToGoal")} ${deltaText}</span>
@@ -4968,9 +5032,9 @@
   }
 
   function labelType(label) {
-    if (label === "蛋白") return "protein";
-    if (label === "碳水") return "carbs";
-    if (label === "脂肪") return "fat";
+    if (label === t("protein")) return "protein";
+    if (label === t("carbs")) return "carbs";
+    if (label === t("fat")) return "fat";
     return "calories";
   }
 

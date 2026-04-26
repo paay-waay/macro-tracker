@@ -65,6 +65,7 @@ body {
   font-family: var(--font-family-ui);
   font-size: var(--text-base);
   line-height: var(--line-normal);
+  overscroll-behavior-y: contain;
 }
 
 html {
@@ -104,6 +105,14 @@ select {
   font-feature-settings: "tnum";
   max-width: 100%;
   min-width: 0;
+}
+
+button,
+.segment,
+.nav-btn,
+.meal-row,
+.icon-btn {
+  touch-action: manipulation;
 }
 
 body,
@@ -1619,6 +1628,44 @@ input.big {
 
 .settings-group:first-child {
   margin-top: 12px;
+}
+
+.compact-language-section {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: 16px;
+  background: rgba(255, 253, 248, 0.52);
+}
+
+.compact-language-section .label {
+  margin: 0;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.language-toggle {
+  width: auto;
+  max-width: 156px;
+  padding: 3px;
+  border-radius: 14px;
+}
+
+.language-toggle .segment {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 11px;
+}
+
+body.lang-es .language-toggle {
+  max-width: 176px;
+}
+
+body.lang-es .language-toggle .segment {
+  font-size: 10px;
 }
 
 .full-width {
