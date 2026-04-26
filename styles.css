@@ -473,6 +473,21 @@ select {
   transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+input.date-compact {
+  width: min(100%, 190px);
+  max-width: 190px;
+  height: 44px;
+  padding: 0 10px;
+  font-size: 14px;
+  font-weight: var(--weight-semibold);
+  border-radius: 16px;
+  text-align: center;
+}
+
+body.lang-es input.date-compact {
+  max-width: 210px;
+}
+
 input::placeholder {
   color: rgba(123, 128, 122, 0.48);
   font-weight: var(--weight-regular);
@@ -840,6 +855,48 @@ input.big {
 
 body.lang-es .dual-context-grid {
   grid-template-columns: 1fr;
+}
+
+.daily-date-row {
+  display: flex;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.daily-weight-type-row {
+  display: grid;
+  grid-template-columns: minmax(96px, 0.75fr) minmax(160px, 1.25fr);
+  gap: 10px;
+  align-items: end;
+  min-width: 0;
+}
+
+.daily-weight-type-row > * {
+  min-width: 0;
+}
+
+.daily-weight-field input,
+.daily-type-field .segmented {
+  min-height: 46px;
+}
+
+.daily-type-field .segmented {
+  height: 46px;
+}
+
+.backup-filter-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.backup-filter-grid > * {
+  min-width: 0;
+}
+
+.backup-date-compact {
+  width: min(100%, 200px);
+  max-width: 200px;
 }
 
 @keyframes soft-reveal {
@@ -1986,8 +2043,15 @@ body.lang-es .language-toggle .segment {
     grid-template-columns: 1fr;
   }
 
+  .daily-weight-type-row,
   .dual-context-grid,
   .favorite-select-row {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 430px) {
+  .backup-filter-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }

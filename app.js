@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.19.3";
+  const APP_VERSION = "1.19.4";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -1531,20 +1531,22 @@
         </button>
         ${open ? `
           <div class="context-body">
-            <div class="field-shell context-full-field">
+            <div class="daily-date-row">
               <label class="visually-hidden" for="dateInput">${t("date")}</label>
-              <input id="dateInput" type="date" aria-label="${t("date")}" value="${esc(state.date)}" />
+              <input id="dateInput" class="date-compact" type="date" aria-label="${t("date")}" value="${esc(state.date)}" />
             </div>
-            <div class="field-shell context-full-field">
-              <span class="visually-hidden">${t("dayType")}</span>
-              ${renderSegmentedControl(t("dayType"), [
-                  ["training", t("trainingDay")],
-                  ["rest", t("restDay")]
-              ], state.dayType, "segmentDayType")}
-            </div>
-            <div class="field-shell context-full-field">
-              <label class="label" for="bodyWeightInput">${t("bodyWeight")} kg</label>
-              <input id="bodyWeightInput" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="${t("bodyWeight")} kg" placeholder="${t("bodyWeight")} kg" value="${esc(state.bodyWeight)}" />
+            <div class="daily-weight-type-row">
+              <div class="field-shell daily-weight-field">
+                <label class="label" for="bodyWeightInput">${t("bodyWeight")} kg</label>
+                <input id="bodyWeightInput" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="${t("bodyWeight")} kg" placeholder="${t("bodyWeight")} kg" value="${esc(state.bodyWeight)}" />
+              </div>
+              <div class="field-shell daily-type-field">
+                <span class="visually-hidden">${t("dayType")}</span>
+                ${renderSegmentedControl(t("dayType"), [
+                    ["training", t("trainingDay")],
+                    ["rest", t("restDay")]
+                ], state.dayType, "segmentDayType")}
+              </div>
             </div>
             <div class="compact-field-grid dual-context-grid">
               ${state.dayType === "training" ? `
@@ -1909,10 +1911,10 @@
             <button class="btn" id="importCsvBtn" type="button">${t("importCsv")}</button>
           </div>
           <div class="hint-box">${t("historyToolsHint")}</div>
-          <div class="grid-2">
+          <div class="backup-filter-grid">
             <div>
               <label class="label" for="historyDateFilter">${t("jumpByDate")}</label>
-              <input id="historyDateFilter" type="date" value="${esc(state.historyDateFilter)}" />
+              <input id="historyDateFilter" class="date-compact backup-date-compact" type="date" value="${esc(state.historyDateFilter)}" />
             </div>
             <div>
               <label class="label" for="historyDayTypeFilter">${t("filterByType")}</label>
