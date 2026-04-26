@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.18.2";
+  const APP_VERSION = "1.18.3";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -578,11 +578,12 @@
 
   function renderHeader() {
     const overview = stats();
+    const targetValues = target();
     const summaryItems = [
-      ["热量", overview.totals.calories, overview.target.calories, overview.remaining.calories, overallTone("calories", overview.overall.cal), "kcal"],
-      ["蛋白质", overview.totals.protein, overview.target.protein, overview.remaining.protein, overallTone("protein", overview.overall.pro), "g"],
-      ["碳水化合物", overview.totals.carbs, overview.target.carbs, overview.remaining.carbs, overallTone("carbs", overview.overall.carb), "g"],
-      ["脂肪", overview.totals.fat, overview.target.fat, overview.remaining.fat, overallTone("fat", overview.overall.fat), "g"]
+      ["热量", overview.totals.calories, targetValues.calories, overview.remaining.calories, overallTone("calories", overview.overall.cal), "kcal"],
+      ["蛋白质", overview.totals.protein, targetValues.protein, overview.remaining.protein, overallTone("protein", overview.overall.pro), "g"],
+      ["碳水化合物", overview.totals.carbs, targetValues.carbs, overview.remaining.carbs, overallTone("carbs", overview.overall.carb), "g"],
+      ["脂肪", overview.totals.fat, targetValues.fat, overview.remaining.fat, overallTone("fat", overview.overall.fat), "g"]
     ];
     dom.summaryChips.innerHTML = `
       <div class="summary-dashboard">
