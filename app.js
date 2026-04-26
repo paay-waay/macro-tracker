@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.19.2";
+  const APP_VERSION = "1.19.3";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -1986,7 +1986,7 @@
             <div class="item-title">${fmtDate(date)}</div>
             <div class="item-sub">${record.dayType === "training" ? t("trainingDay") : t("restDay")} · ${round1(totals.calories || 0)} kcal · ${record.bodyWeight ? `${record.bodyWeight} kg` : t("noWeight")}</div>
             <div class="small" style="margin-top:6px">${record.savedAt ? t("savedAtLine", { time: fmtDateTime(record.savedAt) }) : t("noSavedTime")} · ${t("recordItemCount", { count: record.meals.reduce((sum, meal) => sum + meal.entries.filter(entryStarted).length, 0) })}</div>
-            <div class="small" style="margin-top:6px">${t("hungerLine", { level: HUNGER_LEVELS[record.hungerLevel]?.label || t("medium") })}${record.dayType === "training" ? ` · ${t("trainingLine", { level: PERFORMANCE_LEVELS[record.trainingPerformance]?.label || t("normal") })}` : ""}${record.sleepScore ? ` · ${t("sleepLine", { score: record.sleepScore })}` : ""}</div>
+            <div class="small" style="margin-top:6px">${t("hungerLine", { level: hungerLabel(record.hungerLevel) })}${record.dayType === "training" ? ` · ${t("trainingLine", { level: performanceLabel(record.trainingPerformance) })}` : ""}${record.sleepScore ? ` · ${t("sleepLine", { score: record.sleepScore })}` : ""}</div>
           </div>
         </div>
         <div class="item-actions">
@@ -2038,7 +2038,7 @@
           <button class="btn" id="addFavEntryBtn" type="button">${t("addFoodItem")}</button>
           <button class="btn dark" id="saveEditedFavBtn" type="button">${t("save")}</button>
           <button class="mini-btn" id="cancelEditFavBtn" type="button">${t("cancel")}</button>
-          <button class="mini-btn danger" type="button" data-delete-favorite="${favorite.id}">删除</button>
+          <button class="mini-btn danger" type="button" data-delete-favorite="${favorite.id}">${t("delete")}</button>
         </div>
       </div>
     `;
@@ -3537,7 +3537,7 @@
     const generated = state.dailyTargets?.[date];
     if (generated && generated.dayType === dayType) {
       return {
-        label: generated.dayType === "rest" ? "休息日" : "训练日",
+        label: generated.dayType === "rest" ? t("restDay") : t("trainingDay"),
         calories: generated.caloriesTarget,
         protein: generated.proteinTarget,
         carbs: generated.carbsTarget,
@@ -3553,14 +3553,14 @@
     const preview = computeSettingsPreview(currentSettings(), { includeTrend: false });
     return dayType === "rest"
       ? {
-        label: "休息日",
+        label: t("restDay"),
         calories: preview.restCalories,
         protein: preview.proteinTarget,
         carbs: preview.restCarbs,
         fat: preview.fatTarget
       }
       : {
-        label: "训练日",
+        label: t("trainingDay"),
         calories: preview.trainingCalories,
         protein: preview.proteinTarget,
         carbs: preview.trainingCarbs,
@@ -5080,8 +5080,16 @@
     return PERFORMANCE_LEVELS[value] ? value : "normal";
   }
 
+  function performanceLabel(value) {
+    return t(normalizeTrainingPerformance(value));
+  }
+
   function normalizeHungerLevel(value) {
     return HUNGER_LEVELS[value] ? value : "medium";
+  }
+
+  function hungerLabel(value) {
+    return t(normalizeHungerLevel(value));
   }
 
   function normalizeSleepScore(value) {

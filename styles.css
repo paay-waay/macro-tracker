@@ -838,6 +838,10 @@ input.big {
   margin-top: 0;
 }
 
+body.lang-es .dual-context-grid {
+  grid-template-columns: 1fr;
+}
+
 @keyframes soft-reveal {
   from {
     opacity: 0;
@@ -1972,9 +1976,6 @@ body.lang-es .language-toggle .segment {
     grid-template-columns: repeat(auto-fit, minmax(156px, 1fr));
   }
 
-  body.lang-es .dual-context-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 360px) {
