@@ -112,7 +112,9 @@
       noFavorites: "暂无常用餐",
       noFavoritesHelp: "保存一餐后可快速套用。",
       selectFavorite: "选择常用餐",
+      chooseFavorite: "选择常用餐",
       apply: "套用",
+      clear: "清空",
       systemInsight: "系统判断",
       weightTrend: "体重趋势",
       rollingMacroAverage: "近 7 天宏量平均",
@@ -166,9 +168,11 @@
       foodItem: "食物 {index}",
       foodItemCompact: "食物项 {index}",
       deleteFoodAria: "删除 {meal} 的食物 {index}",
+      clearFoodAria: "清空食物 {index}",
       deleteFavoriteFoodAria: "删除常用餐食物项 {index}",
       itemFoodUsage: "{count} 项食物 · 已使用 {uses} 次{last}",
       lastUsedAt: " · 最近使用 {time}",
+      favoriteQuickListAria: "常用餐快捷套用列表",
       foodSummaryMore: "{items}等 {count} 项",
       favoriteName: "常用餐名称",
       currentSummary: "当前汇总",
@@ -452,7 +456,9 @@
       noFavorites: "Sin comidas frecuentes",
       noFavoritesHelp: "Guarda una comida para usarla rápido.",
       selectFavorite: "Elegir frecuente",
+      chooseFavorite: "Elegir comida frecuente",
       apply: "Usar",
+      clear: "Vaciar",
       systemInsight: "Evaluación",
       weightTrend: "Tendencia de peso",
       rollingMacroAverage: "Promedio 7 días",
@@ -506,9 +512,11 @@
       foodItem: "Alimento {index}",
       foodItemCompact: "Alimento {index}",
       deleteFoodAria: "Eliminar alimento {index} de {meal}",
+      clearFoodAria: "Vaciar alimento {index}",
       deleteFavoriteFoodAria: "Eliminar alimento frecuente {index}",
       itemFoodUsage: "{count} alimentos · Usada {uses} veces{last}",
       lastUsedAt: " · Último uso {time}",
+      favoriteQuickListAria: "Lista rápida de comidas frecuentes",
       foodSummaryMore: "{items} y {count} más",
       favoriteName: "Nombre frecuente",
       currentSummary: "Resumen actual",
@@ -1056,16 +1064,6 @@
       await saveFavoriteFromActive();
       return;
     }
-    if (button.id === "applySelectedFavoriteBtn") {
-      if (!state.favoriteSelectionId) {
-        setNotice(t("noSelectedFavorite"), { tone: "warn" });
-        return;
-      }
-      const selectedId = state.favoriteSelectionId;
-      state.favoriteSelectionId = "";
-      await applyFavorite(selectedId);
-      return;
-    }
     if (button.dataset.applyFavorite) {
       await applyFavorite(button.dataset.applyFavorite);
       return;
@@ -1168,15 +1166,6 @@
       markDirty();
       renderHeader();
       refreshDailyContextLiveBits();
-      return;
-    }
-
-    if (target.id === "favoriteSelect" && target instanceof HTMLSelectElement) {
-      state.favoriteSelectionId = target.value;
-      const applyButton = document.getElementById("applySelectedFavoriteBtn");
-      if (applyButton) {
-        applyButton.disabled = !state.favoriteSelectionId;
-      }
       return;
     }
 
@@ -1536,29 +1525,28 @@
         <button class="context-summary" type="button" data-toggle-ui="dailyContextOpen" aria-expanded="${open ? "true" : "false"}">
           <span class="context-copy">
             <span class="context-title">${t("todaySettings")}</span>
-            <span class="context-chip-row">${summaryChips.map((chip) => `<span class="context-chip">${esc(chip)}</span>`).join("")}</span>
+            ${open ? "" : `<span class="context-chip-row">${summaryChips.map((chip) => `<span class="context-chip">${esc(chip)}</span>`).join("")}</span>`}
           </span>
           <span class="expand-affordance"><span>${open ? t("collapse") : t("expand")}</span><span class="chevron" aria-hidden="true">${open ? "⌃" : "⌄"}</span></span>
         </button>
         ${open ? `
           <div class="context-body">
-            <div class="compact-field-grid">
-              <div class="field-shell">
-                <label class="visually-hidden" for="dateInput">${t("date")}</label>
-                <input id="dateInput" type="date" aria-label="${t("date")}" value="${esc(state.date)}" />
-              </div>
-              <div class="field-shell">
-                ${renderSegmentedControl(t("dayType"), [
-                    ["training", t("trainingDay")],
-                    ["rest", t("restDay")]
-                ], state.dayType, "segmentDayType")}
-              </div>
+            <div class="field-shell context-full-field">
+              <label class="visually-hidden" for="dateInput">${t("date")}</label>
+              <input id="dateInput" type="date" aria-label="${t("date")}" value="${esc(state.date)}" />
             </div>
-            <div class="field-shell">
-              <label class="visually-hidden" for="bodyWeightInput">${t("bodyWeight")} kg</label>
+            <div class="field-shell context-full-field">
+              <span class="visually-hidden">${t("dayType")}</span>
+              ${renderSegmentedControl(t("dayType"), [
+                  ["training", t("trainingDay")],
+                  ["rest", t("restDay")]
+              ], state.dayType, "segmentDayType")}
+            </div>
+            <div class="field-shell context-full-field">
+              <label class="label" for="bodyWeightInput">${t("bodyWeight")} kg</label>
               <input id="bodyWeightInput" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="${t("bodyWeight")} kg" placeholder="${t("bodyWeight")} kg" value="${esc(state.bodyWeight)}" />
             </div>
-            <div class="compact-field-grid">
+            <div class="compact-field-grid dual-context-grid">
               ${state.dayType === "training" ? `
                 <div class="field-shell">
                   <span class="label">${t("trainingPerformance")}</span>
@@ -1746,14 +1734,16 @@
         ${open ? `
           <div class="favorite-quick-body">
             ${state.favorites.length
-              ? `<div class="favorite-select-row">
-                  <select id="favoriteSelect" aria-label="${t("favorites")}">
-                    <option value="">${t("selectFavorite")}</option>
-                    ${state.favorites.map((favorite) => {
-                      return `<option value="${favorite.id}" ${state.favoriteSelectionId === favorite.id ? "selected" : ""}>${esc(favorite.name)}</option>`;
-                    }).join("")}
-                  </select>
-                  <button class="btn" id="applySelectedFavoriteBtn" type="button" ${state.favoriteSelectionId ? "" : "disabled"}>${t("apply")}</button>
+              ? `<div class="favorite-quick-list" role="list" aria-label="${t("favoriteQuickListAria")}">
+                  ${state.favorites.map((favorite) => {
+                    const totals = favoriteTotals(favorite);
+                    return `
+                      <button class="favorite-quick-item" type="button" data-apply-favorite="${favorite.id}" role="listitem" aria-label="${t("apply")} ${esc(favorite.name)}">
+                        <span class="favorite-quick-name">${esc(favorite.name)}</span>
+                        <span class="favorite-quick-macros">${round1(totals.calories)} kcal · P ${round1(totals.protein)} · C ${round1(totals.carbs)} · F ${round1(totals.fat)}</span>
+                      </button>
+                    `;
+                  }).join("")}
                 </div>`
               : `<div class="hint-box empty-state"><div class="empty-icon">☆</div><strong>${t("noFavorites")}</strong><span>${t("noFavoritesHelp")}</span></div>`}
           </div>
@@ -1764,16 +1754,29 @@
 
   function renderEntry(meal, entry, entryIndex) {
     const suggestion = entryPlaceholderSuggestions();
+    const canDelete = meal.entries.length > 1;
+    const actionLabel = canDelete
+      ? t("deleteFoodAria", { meal: mealLabel(meal.id), index: entryIndex + 1 })
+      : t("clearFoodAria", { index: entryIndex + 1 });
     return `
       <div class="entry-card">
         <div class="entry-head">
           <div><div class="item-title">${t("foodItem", { index: entryIndex + 1 })}</div></div>
           <button
-            class="mini-btn danger ${meal.entries.length <= 1 ? "hidden" : ""}"
+            class="entry-icon-btn ${canDelete ? "danger" : ""}"
             type="button"
             data-delete-entry="${meal.id}-${entryIndex}"
-            aria-label="${t("deleteFoodAria", { meal: mealLabel(meal.id), index: entryIndex + 1 })}"
-          >${t("delete")}</button>
+            aria-label="${actionLabel}"
+            title="${actionLabel}"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 3h6"/>
+              <path d="M4 6h16"/>
+              <path d="M7 6l1 13a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-13"/>
+              <path d="M10 10v7"/>
+              <path d="M14 10v7"/>
+            </svg>
+          </button>
         </div>
         <div style="margin-top:10px">
           <label class="label">${t("name")}</label>
@@ -2549,6 +2552,9 @@
     await storage.putFavorite(favorite);
     state.favorites = [favorite, ...state.favorites.filter((item) => item.id !== favorite.id)].sort(sortFavorites);
     state.meals[state.activeMeal - 1].entries = favorite.entries.map((entry) => normalizeEntry(entry));
+    state.ui.favoriteQuickOpen = false;
+    state.favoriteSelectionId = "";
+    saveUiState();
     markDirty();
     render();
     setNotice(t("applied"), { tone: "ok" });
@@ -2566,7 +2572,7 @@
       return;
     }
     if (meal.entries.length <= 1) {
-      meal.entries = [makeEntry()];
+      meal.entries[0] = makeEntry();
     } else {
       meal.entries.splice(entryIndex, 1);
     }

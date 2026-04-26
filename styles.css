@@ -512,31 +512,32 @@ input.big {
 }
 
 .sleep-control {
-  margin-top: 10px;
-  border: 1px solid var(--info-line);
-  border-radius: 18px;
-  padding: 12px;
-  background: var(--info-bg);
+  margin-top: 0;
+  border: 1px solid rgba(207, 217, 222, 0.9);
+  border-radius: 16px;
+  padding: 9px 10px 8px;
+  background: rgba(251, 250, 246, 0.76);
+  box-shadow: none;
 }
 
 .sleep-control.ok {
-  background: var(--ok-bg);
-  border-color: var(--ok-line);
+  background: rgba(229, 235, 227, 0.52);
+  border-color: rgba(201, 214, 198, 0.95);
 }
 
 .sleep-control.warn {
-  background: var(--warn-bg);
-  border-color: var(--warn-line);
+  background: rgba(239, 231, 216, 0.52);
+  border-color: rgba(216, 202, 176, 0.95);
 }
 
 .sleep-control.bad {
-  background: var(--bad-bg);
-  border-color: var(--bad-line);
+  background: rgba(239, 225, 227, 0.52);
+  border-color: rgba(217, 190, 194, 0.95);
 }
 
 .sleep-slider {
-  height: 38px;
-  margin-top: 8px;
+  height: 30px;
+  margin-top: 4px;
   padding: 0;
   border: 0;
   border-radius: 999px;
@@ -549,6 +550,7 @@ input.big {
   justify-content: space-between;
   color: var(--muted);
   font-size: var(--text-xs);
+  margin-top: 2px;
 }
 
 .grid-2 {
@@ -654,6 +656,11 @@ input.big {
 .context-panel:not(.open) .context-summary {
   min-height: 52px;
   padding: 6px 4px;
+}
+
+.context-panel.open .context-summary {
+  align-items: flex-start;
+  padding: 4px 4px 2px;
 }
 
 .context-summary {
@@ -785,6 +792,12 @@ input.big {
   animation: soft-reveal 0.16s ease;
 }
 
+.context-body {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
 .compact-field-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -801,6 +814,10 @@ input.big {
   margin-top: 10px;
 }
 
+.context-full-field {
+  margin-top: 0;
+}
+
 .compact-field-grid .field-shell {
   margin-top: 0;
 }
@@ -808,6 +825,17 @@ input.big {
 .field-shell input,
 .field-shell select {
   min-height: 48px;
+}
+
+.context-body .segmented,
+.context-body input,
+.context-body select {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dual-context-grid {
+  margin-top: 0;
 }
 
 @keyframes soft-reveal {
@@ -1376,6 +1404,41 @@ input.big {
   gap: 8px;
 }
 
+.entry-icon-btn {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  appearance: none;
+  border: 1px solid rgba(216, 209, 198, 0.8);
+  border-radius: 12px;
+  background: rgba(255, 253, 248, 0.72);
+  color: var(--muted);
+  box-shadow: none;
+}
+
+.entry-icon-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.entry-icon-btn.danger {
+  color: var(--bad);
+  border-color: rgba(217, 190, 194, 0.9);
+  background: rgba(239, 225, 227, 0.44);
+}
+
+.entry-icon-btn:active {
+  background: rgba(245, 241, 234, 0.9);
+}
+
 .history-toolbar {
   display: grid;
   gap: 10px;
@@ -1399,6 +1462,53 @@ input.big {
 
 .favorite-select-row .btn {
   min-width: 84px;
+}
+
+.favorite-quick-list {
+  display: grid;
+  gap: 8px;
+  max-height: 228px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.favorite-quick-item {
+  width: 100%;
+  min-width: 0;
+  appearance: none;
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid rgba(216, 209, 198, 0.74);
+  border-radius: 16px;
+  background: rgba(255, 253, 248, 0.68);
+  color: var(--text);
+  text-align: left;
+  box-shadow: none;
+}
+
+.favorite-quick-item:active {
+  background: var(--surface);
+  border-color: rgba(105, 127, 114, 0.36);
+}
+
+.favorite-quick-name {
+  min-width: 0;
+  font-size: 14px;
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.favorite-quick-macros {
+  min-width: 0;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .inline-meta {
@@ -1861,6 +1971,10 @@ body.lang-es .language-toggle .segment {
   .settings-grid {
     grid-template-columns: repeat(auto-fit, minmax(156px, 1fr));
   }
+
+  body.lang-es .dual-context-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 360px) {
@@ -1871,6 +1985,7 @@ body.lang-es .language-toggle .segment {
     grid-template-columns: 1fr;
   }
 
+  .dual-context-grid,
   .favorite-select-row {
     grid-template-columns: 1fr;
   }
