@@ -1,10 +1,11 @@
 (() => {
-  const APP_VERSION = "1.18.5";
+  const APP_VERSION = "1.19.0";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
   const LEGACY_FAVORITE_KEY = "macro_tracker_favorites_v8";
   const UI_STATE_KEY = "macro_tracker_ui_v17";
+  const LANGUAGE_KEY = "macroTrackerLanguage";
   const DEFAULT_DAY_TYPE = "training";
   const MAX_FAVORITES = 30;
   const MEAL_LABELS = ["第一餐", "第二餐", "第三餐", "第四餐"];
@@ -59,6 +60,174 @@
     low: { label: "低", score: 1 },
     medium: { label: "中", score: 2 },
     high: { label: "高", score: 3 }
+  };
+  const I18N = {
+    zh: {
+      appTitle: "宏量追踪",
+      today: "今天",
+      history: "历史",
+      overview: "总览",
+      save: "保存",
+      settings: "设置",
+      help: "使用说明",
+      closeSettings: "关闭设置",
+      closeHelp: "关闭使用说明",
+      saveSettings: "保存设置并生成未来目标",
+      language: "语言",
+      chinese: "中文",
+      spanish: "Español",
+      calories: "热量",
+      protein: "蛋白质",
+      carbs: "碳水",
+      fat: "脂肪",
+      currentMeal: "当前餐",
+      draftAutoSave: "草稿自动保存",
+      saveFavorite: "存为常用",
+      addItem: "新增一项",
+      nextMeal: "下一餐",
+      mealTotal: "本餐合计",
+      meal1: "第一餐",
+      meal2: "第二餐",
+      meal3: "第三餐",
+      meal4: "第四餐",
+      todaySettings: "今日设置",
+      mealRecords: "餐食记录",
+      name: "名称",
+      delete: "删除",
+      trainingDay: "训练日",
+      restDay: "休息日",
+      noWeight: "未填体重",
+      noSleep: "未记睡眠",
+      sleepScore: "睡眠评分",
+      notRecorded: "未记录",
+      trainingPerformance: "训练表现",
+      hunger: "饥饿感",
+      poor: "偏差",
+      normal: "正常",
+      great: "很好",
+      low: "低",
+      medium: "中",
+      high: "高",
+      favoriteQuick: "常用餐 · 已保存 {count} 条",
+      noFavorites: "暂无常用餐",
+      noFavoritesHelp: "保存一餐后可快速套用。",
+      selectFavorite: "选择常用餐",
+      apply: "套用",
+      systemInsight: "系统判断",
+      weightTrend: "体重趋势",
+      rollingMacroAverage: "近 7 天宏量平均",
+      rollingMacroAverageCompact: "近 7 天宏量平均",
+      moreDetails: "更多细节",
+      backupFilters: "备份与筛选",
+      backupFiltersHelp: "CSV 备份 · 导入 · 历史筛选",
+      exportBackup: "导出备份",
+      importCsv: "导入 CSV",
+      records: "记录",
+      favorites: "常用餐",
+      collapse: "收起",
+      expand: "展开",
+      showMore: "显示更多",
+      savedDaysLatest: "已保存 {count} 天 · 最新 {date}",
+      savedCount: "已保存 {count} 条",
+      planStart: "计划起点",
+      planGoal: "目标终点",
+      executionParams: "执行参数",
+      trendReference: "当前趋势参考",
+      planPreview: "计划预览",
+      bodyAndGoals: "身体与目标",
+      targetWeight: "目标体重",
+      loading: "正在加载",
+      loadingBody: "正在读取本地数据与草稿，请稍候…",
+      reading: "正在读取…",
+      draftSaving: "草稿保存中…",
+      draftSaved: "草稿已保存 {time}",
+      unsavedChanges: "有未保存修改",
+      exportReminder: "建议导出备份",
+      savedAt: "已保存 {time}"
+    },
+    es: {
+      appTitle: "Seguimiento de macros",
+      today: "Hoy",
+      history: "Historial",
+      overview: "Resumen",
+      save: "Guardar",
+      settings: "Ajustes",
+      help: "Ayuda",
+      closeSettings: "Cerrar ajustes",
+      closeHelp: "Cerrar ayuda",
+      saveSettings: "Guardar y generar objetivos",
+      language: "Idioma",
+      chinese: "中文",
+      spanish: "Español",
+      calories: "Calorías",
+      protein: "Proteína",
+      carbs: "Carbohidratos",
+      fat: "Grasas",
+      currentMeal: "Comida actual",
+      draftAutoSave: "Borrador automático",
+      saveFavorite: "Guardar como frecuente",
+      addItem: "Añadir",
+      nextMeal: "Siguiente comida",
+      mealTotal: "Total de comida",
+      meal1: "Comida 1",
+      meal2: "Comida 2",
+      meal3: "Comida 3",
+      meal4: "Comida 4",
+      todaySettings: "Ajustes de hoy",
+      mealRecords: "Registro de comidas",
+      name: "Nombre",
+      delete: "Eliminar",
+      trainingDay: "Día de entreno",
+      restDay: "Día de descanso",
+      noWeight: "Sin peso",
+      noSleep: "Sin sueño",
+      sleepScore: "Sueño",
+      notRecorded: "Sin registrar",
+      trainingPerformance: "Rendimiento",
+      hunger: "Hambre",
+      poor: "Bajo",
+      normal: "Normal",
+      great: "Muy bien",
+      low: "Baja",
+      medium: "Media",
+      high: "Alta",
+      favoriteQuick: "Frecuentes · {count} guardadas",
+      noFavorites: "Sin comidas frecuentes",
+      noFavoritesHelp: "Guarda una comida para usarla rápido.",
+      selectFavorite: "Elegir frecuente",
+      apply: "Usar",
+      systemInsight: "Evaluación",
+      weightTrend: "Tendencia de peso",
+      rollingMacroAverage: "Promedio 7 días",
+      rollingMacroAverageCompact: "Promedio 7 días",
+      moreDetails: "Más detalles",
+      backupFilters: "Copia y filtros",
+      backupFiltersHelp: "CSV · Importar · Filtros",
+      exportBackup: "Exportar copia",
+      importCsv: "Importar CSV",
+      records: "Registros",
+      favorites: "Comidas frecuentes",
+      collapse: "Cerrar",
+      expand: "Abrir",
+      showMore: "Mostrar más",
+      savedDaysLatest: "{count} días · Último {date}",
+      savedCount: "{count} guardadas",
+      planStart: "Punto de partida",
+      planGoal: "Objetivo final",
+      executionParams: "Parámetros",
+      trendReference: "Referencia actual",
+      planPreview: "Vista del plan",
+      bodyAndGoals: "Datos y objetivos",
+      targetWeight: "Peso objetivo",
+      loading: "Cargando",
+      loadingBody: "Leyendo datos y borradores locales…",
+      reading: "Leyendo…",
+      draftSaving: "Guardando borrador…",
+      draftSaved: "Borrador guardado {time}",
+      unsavedChanges: "Cambios sin guardar",
+      exportReminder: "Conviene exportar copia",
+      savedAt: "Guardado {time}"
+    }
   };
   const MIN_DAILY_DEFICIT = 250;
   const MAX_DAILY_DEFICIT = 650;
@@ -281,6 +450,11 @@
     }
     if (button.dataset.view) {
       state.view = button.dataset.view;
+      render();
+      return;
+    }
+    if (button.dataset.language) {
+      setCurrentLanguage(button.dataset.language);
       render();
       return;
     }
@@ -550,7 +724,8 @@
   }
 
   function renderLoading() {
-    dom.view.innerHTML = '<div class="card"><h3>正在加载</h3><div class="hint-box">正在读取本地数据与草稿，请稍候…</div></div>';
+    applyLanguageShell();
+    dom.view.innerHTML = `<div class="card"><h3>${t("loading")}</h3><div class="hint-box">${t("loadingBody")}</div></div>`;
   }
 
   function render() {
@@ -577,13 +752,14 @@
   }
 
   function renderHeader() {
+    applyLanguageShell();
     const overview = stats();
     const targetValues = target();
     const summaryItems = [
-      ["calories", "热量", overview.totals.calories, targetValues.calories, overview.remaining.calories, "kcal"],
-      ["protein", "蛋白质", overview.totals.protein, targetValues.protein, overview.remaining.protein, "g"],
-      ["carbs", "碳水", overview.totals.carbs, targetValues.carbs, overview.remaining.carbs, "g"],
-      ["fat", "脂肪", overview.totals.fat, targetValues.fat, overview.remaining.fat, "g"]
+      ["calories", t("calories"), overview.totals.calories, targetValues.calories, overview.remaining.calories, "kcal"],
+      ["protein", t("protein"), overview.totals.protein, targetValues.protein, overview.remaining.protein, "g"],
+      ["carbs", t("carbs"), overview.totals.carbs, targetValues.carbs, overview.remaining.carbs, "g"],
+      ["fat", t("fat"), overview.totals.fat, targetValues.fat, overview.remaining.fat, "g"]
     ];
     dom.summaryChips.innerHTML = `
       <div class="summary-dashboard">
@@ -670,6 +846,72 @@
     return String(value).replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
   }
 
+  function getCurrentLanguage() {
+    const value = window.localStorage.getItem(LANGUAGE_KEY);
+    return value === "es" ? "es" : "zh";
+  }
+
+  function setCurrentLanguage(language) {
+    window.localStorage.setItem(LANGUAGE_KEY, language === "es" ? "es" : "zh");
+  }
+
+  function t(key, params = {}) {
+    const lang = getCurrentLanguage();
+    const template = I18N[lang]?.[key] || I18N.zh[key] || key;
+    return Object.entries(params).reduce((text, [name, value]) => {
+      return text.replaceAll(`{${name}}`, String(value));
+    }, template);
+  }
+
+  function applyLanguageShell() {
+    const lang = getCurrentLanguage();
+    document.documentElement.lang = lang === "es" ? "es" : "zh-CN";
+    document.body.classList.toggle("lang-es", lang === "es");
+    document.title = t("appTitle");
+    const title = document.querySelector(".title");
+    if (title) title.textContent = t("appTitle");
+    const settingsButton = document.getElementById("settingsBtn");
+    if (settingsButton) {
+      settingsButton.setAttribute("aria-label", t("settings"));
+      settingsButton.setAttribute("title", t("settings"));
+    }
+    const helpButton = document.getElementById("helpBtn");
+    if (helpButton) {
+      helpButton.setAttribute("aria-label", t("help"));
+      helpButton.setAttribute("title", t("help"));
+    }
+    setNavLabel("today", t("today"));
+    setNavLabel("history", t("history"));
+    setNavLabel("overview", t("overview"));
+    setNavAria("today", t("today"));
+    setNavAria("history", t("history"));
+    setNavAria("overview", t("overview"));
+    const saveLabel = document.querySelector("#saveDayBtn .nav-label > span:last-child");
+    if (saveLabel) saveLabel.textContent = t("save");
+    const saveButton = document.getElementById("saveDayBtn");
+    if (saveButton) saveButton.setAttribute("aria-label", t("save"));
+    const settingsTitle = document.getElementById("settingsModalTitle");
+    if (settingsTitle) settingsTitle.textContent = t("settings");
+    const closeSettings = document.getElementById("closeSettingsBtn");
+    if (closeSettings) closeSettings.setAttribute("aria-label", t("closeSettings"));
+    const saveSettings = document.getElementById("saveSettingsBtn");
+    if (saveSettings) saveSettings.textContent = t("saveSettings");
+  }
+
+  function setNavLabel(view, label) {
+    const node = document.querySelector(`.nav-btn[data-view="${view}"] .nav-label > span:last-child`);
+    if (node) node.textContent = label;
+  }
+
+  function setNavAria(view, label) {
+    const node = document.querySelector(`.nav-btn[data-view="${view}"]`);
+    if (node) node.setAttribute("aria-label", label);
+  }
+
+  function mealLabel(mealId) {
+    return t(`meal${mealId}`);
+  }
+
   function renderToday() {
     const meal = state.meals[state.activeMeal - 1];
     const mealTotalsValue = mealTotals(meal);
@@ -677,26 +919,26 @@
     const showMealTotal = meal.entries.length >= 2;
     return `
       ${renderDailyContext()}
-      <div class="section-label">餐食记录</div>
+      <div class="section-label">${t("mealRecords")}</div>
       <div class="meal-accordion" aria-label="餐次切换">
         ${state.meals.map((mealItem) => renderMealRow(mealItem)).join("")}
       </div>
       <div class="card current-meal-card">
         <div class="item-top" style="margin-bottom:8px">
           <div>
-            <h3>当前餐</h3>
-            <div class="small">${esc(meal.label)} · 草稿自动保存</div>
+            <h3>${t("currentMeal")}</h3>
+            <div class="small">${esc(mealLabel(meal.id))} · ${t("draftAutoSave")}</div>
           </div>
-          <button class="btn" id="saveFavBtn" type="button">存为常用</button>
+          <button class="btn" id="saveFavBtn" type="button">${t("saveFavorite")}</button>
         </div>
         ${showMealTotal ? `
         <div class="meal-total-panel ${mealCalorieState(mealTotalsValue).tone}">
-          <div class="mini-section-title">本餐合计</div>
+          <div class="mini-section-title">${t("mealTotal")}</div>
           <div class="macro-grid compact-total-grid">
-            <div class="stat"><div class="k">热量</div><div class="v" id="mealTotalCalories">${round1(mealTotalsValue.calories)}</div><div class="h">kcal</div></div>
-            <div class="stat"><div class="k">P</div><div class="v" id="mealTotalProtein">${round1(mealTotalsValue.protein)}</div><div class="h">蛋白</div></div>
-            <div class="stat"><div class="k">C</div><div class="v" id="mealTotalCarbs">${round1(mealTotalsValue.carbs)}</div><div class="h">碳水</div></div>
-            <div class="stat"><div class="k">F</div><div class="v" id="mealTotalFat">${round1(mealTotalsValue.fat)}</div><div class="h">脂肪</div></div>
+            <div class="stat"><div class="k">${t("calories")}</div><div class="v" id="mealTotalCalories">${round1(mealTotalsValue.calories)}</div><div class="h">kcal</div></div>
+            <div class="stat"><div class="k">P</div><div class="v" id="mealTotalProtein">${round1(mealTotalsValue.protein)}</div><div class="h">${t("protein")}</div></div>
+            <div class="stat"><div class="k">C</div><div class="v" id="mealTotalCarbs">${round1(mealTotalsValue.carbs)}</div><div class="h">${t("carbs")}</div></div>
+            <div class="stat"><div class="k">F</div><div class="v" id="mealTotalFat">${round1(mealTotalsValue.fat)}</div><div class="h">${t("fat")}</div></div>
           </div>
           <div class="meal-guidance ${mealGuidance ? "" : "hidden"}" id="mealGuidance">${esc(mealGuidance)}</div>
         </div>
@@ -704,8 +946,8 @@
         ${renderFavoriteQuickApply()}
         <div>${meal.entries.map((entry, entryIndex) => renderEntry(meal, entry, entryIndex)).join("")}</div>
         <div class="grid-2" style="margin-top:12px">
-          <button class="btn" id="addEntryBtn" type="button">新增一项</button>
-          <button class="btn dark" id="nextMealBtn" type="button">下一餐</button>
+          <button class="btn" id="addEntryBtn" type="button">${t("addItem")}</button>
+          <button class="btn dark" id="nextMealBtn" type="button">${t("nextMeal")}</button>
         </div>
       </div>
     `;
@@ -716,19 +958,19 @@
     const trendText = compactWeightContext();
     const summaryChips = [
       fmtDate(state.date),
-      state.dayType === "training" ? "训练日" : "休息日",
-      state.bodyWeight ? `${state.bodyWeight} kg` : "未填体重",
-      state.sleepScore ? `睡眠 ${state.sleepScore}` : "未记睡眠",
+      state.dayType === "training" ? t("trainingDay") : t("restDay"),
+      state.bodyWeight ? `${state.bodyWeight} kg` : t("noWeight"),
+      state.sleepScore ? `${t("sleepScore")} ${state.sleepScore}` : t("noSleep"),
       trendText || ""
     ].filter(Boolean);
     return `
       <div class="context-panel ${open ? "open" : ""}">
         <button class="context-summary" type="button" data-toggle-ui="dailyContextOpen" aria-expanded="${open ? "true" : "false"}">
           <span class="context-copy">
-            <span class="context-title">今日设置</span>
+            <span class="context-title">${t("todaySettings")}</span>
             <span class="context-chip-row">${summaryChips.map((chip) => `<span class="context-chip">${esc(chip)}</span>`).join("")}</span>
           </span>
-          <span class="expand-affordance"><span>${open ? "收起" : "展开"}</span><span class="chevron" aria-hidden="true">${open ? "⌃" : "⌄"}</span></span>
+          <span class="expand-affordance"><span>${open ? t("collapse") : t("expand")}</span><span class="chevron" aria-hidden="true">${open ? "⌃" : "⌄"}</span></span>
         </button>
         ${open ? `
           <div class="context-body">
@@ -739,8 +981,8 @@
               </div>
               <div class="field-shell">
                 ${renderSegmentedControl("日类型", [
-                  ["training", "训练日"],
-                  ["rest", "休息日"]
+                    ["training", t("trainingDay")],
+                    ["rest", t("restDay")]
                 ], state.dayType, "segmentDayType")}
               </div>
             </div>
@@ -751,20 +993,20 @@
             <div class="compact-field-grid">
               ${state.dayType === "training" ? `
                 <div class="field-shell">
-                  <span class="label">训练表现</span>
-                  ${renderSegmentedControl("训练表现", [
-                    ["poor", "偏差"],
-                    ["normal", "正常"],
-                    ["great", "很好"]
+                  <span class="label">${t("trainingPerformance")}</span>
+                  ${renderSegmentedControl(t("trainingPerformance"), [
+                    ["poor", t("poor")],
+                    ["normal", t("normal")],
+                    ["great", t("great")]
                   ], state.trainingPerformance, "segmentPerformance")}
                 </div>
               ` : ""}
                 <div class="field-shell">
-                <span class="label">饥饿感</span>
-                ${renderSegmentedControl("饥饿感", [
-                    ["low", "低"],
-                    ["medium", "中"],
-                    ["high", "高"]
+                <span class="label">${t("hunger")}</span>
+                ${renderSegmentedControl(t("hunger"), [
+                    ["low", t("low")],
+                    ["medium", t("medium")],
+                    ["high", t("high")]
                   ], state.hungerLevel, "segmentHunger")}
                 </div>
             </div>
@@ -781,7 +1023,7 @@
     return `
       <div class="sleep-control ${meta.tone}">
         <div class="item-top">
-          <label class="label" for="sleepScoreInput">睡眠评分 ${state.sleepScore === "" ? "未记录" : esc(state.sleepScore)}</label>
+          <label class="label" for="sleepScoreInput">${t("sleepScore")} ${state.sleepScore === "" ? t("notRecorded") : esc(state.sleepScore)}</label>
           <span class="badge ${meta.tone}">${meta.label}</span>
         </div>
         <input id="sleepScoreInput" class="sleep-slider" type="range" min="60" max="100" step="5" value="${esc(score)}" aria-valuemin="60" aria-valuemax="100" aria-valuenow="${esc(score)}" />
@@ -830,7 +1072,7 @@
       >
         <span class="meal-row-text">
           <span class="meal-row-title">
-            <strong>${esc(mealItem.label)}</strong>
+            <strong>${esc(mealLabel(mealItem.id))}</strong>
             ${foodSummary ? `<span class="meal-food-names">${esc(foodSummary)}</span>` : ""}
           </span>
           <span class="meal-macro-summary">${macroSummary}${stateBadges ? `<span class="meal-state-row">${stateBadges}</span>` : ""}</span>
@@ -954,16 +1196,16 @@
     return `
       <div class="entry-card">
         <div class="entry-head">
-          <div><div class="item-title">食物 ${entryIndex + 1}</div></div>
+          <div><div class="item-title">${getCurrentLanguage() === "es" ? `Alimento ${entryIndex + 1}` : `食物 ${entryIndex + 1}`}</div></div>
           <button
             class="mini-btn danger ${meal.entries.length <= 1 ? "hidden" : ""}"
             type="button"
             data-delete-entry="${meal.id}-${entryIndex}"
             aria-label="删除 ${meal.label} 的食物 ${entryIndex + 1}"
-          >删除</button>
+          >${t("delete")}</button>
         </div>
         <div style="margin-top:10px">
-          <label class="label">名称</label>
+          <label class="label">${t("name")}</label>
           <input data-entry="${meal.id}-${entryIndex}-name" autocomplete="off" spellcheck="false" placeholder="${esc(entry.name ? "" : suggestion.name)}" value="${esc(entry.name)}" />
         </div>
         <div style="margin-top:10px">
@@ -972,15 +1214,15 @@
         </div>
         <div class="grid-3" style="margin-top:10px">
           <div>
-            <label class="label">蛋白质</label>
+            <label class="label">${t("protein")}</label>
           <input class="big macro-input protein-input" data-entry="${meal.id}-${entryIndex}-protein" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="${esc(entry.protein ? "" : suggestion.protein)}" value="${esc(entry.protein)}" />
           </div>
           <div>
-            <label class="label">碳水</label>
+            <label class="label">${t("carbs")}</label>
             <input class="big macro-input carb-input" data-entry="${meal.id}-${entryIndex}-carbs" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="${esc(entry.carbs ? "" : suggestion.carbs)}" value="${esc(entry.carbs)}" />
           </div>
           <div>
-            <label class="label">脂肪</label>
+            <label class="label">${t("fat")}</label>
             <input class="big macro-input fat-input" data-entry="${meal.id}-${entryIndex}-fat" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="${esc(entry.fat ? "" : suggestion.fat)}" value="${esc(entry.fat)}" />
           </div>
         </div>
@@ -993,7 +1235,7 @@
     const summary = stats();
     return `
       <div class="card">
-        <h3>系统判断</h3>
+        <h3>${t("systemInsight")}</h3>
         <div class="hint-box insight-box">
           <div class="insight-title">${summary.systemInsight.title}</div>
           <div class="small" style="margin-top:8px;line-height:1.5">${summary.systemInsight.body}</div>
@@ -1004,13 +1246,13 @@
       </div>
       ${renderWeightTrendModule(summary)}
       <div class="card compact-overview-card">
-        <h3>近 7 天宏量平均</h3>
+        <h3>${t("rollingMacroAverage")}</h3>
         <div class="small" style="margin-top:6px">当前窗口内已记录 ${summary.rolling7.coveredDays} / 7 天${summary.rolling7.latestDate ? ` · 截止 ${fmtDate(summary.rolling7.latestDate)}` : ""}</div>
         <div class="stat-grid" style="margin-top:12px">
-          ${renderRollingAverageStat("热量", summary.rolling7.average.calories, summary.rolling7.target.calories, "kcal")}
-          ${renderRollingAverageStat("蛋白", summary.rolling7.average.protein, summary.rolling7.target.protein, "")}
-          ${renderRollingAverageStat("碳水", summary.rolling7.average.carbs, summary.rolling7.target.carbs, "")}
-          ${renderRollingAverageStat("脂肪", summary.rolling7.average.fat, summary.rolling7.target.fat, "")}
+          ${renderRollingAverageStat(t("calories"), summary.rolling7.average.calories, summary.rolling7.target.calories, "kcal")}
+          ${renderRollingAverageStat(t("protein"), summary.rolling7.average.protein, summary.rolling7.target.protein, "")}
+          ${renderRollingAverageStat(t("carbs"), summary.rolling7.average.carbs, summary.rolling7.target.carbs, "")}
+          ${renderRollingAverageStat(t("fat"), summary.rolling7.average.fat, summary.rolling7.target.fat, "")}
         </div>
       </div>
       ${renderOverviewDetails(summary)}
@@ -1029,7 +1271,7 @@
       <div class="card weight-trend-card">
         <div class="item-top">
           <div>
-            <h3>体重趋势</h3>
+            <h3>${t("weightTrend")}</h3>
             <div class="insight-title">${esc(trend.status)}</div>
           </div>
           <span class="badge ${trend.tone}">${summary.weightEntryCount} 次记录</span>
@@ -1061,7 +1303,7 @@
   function renderOverviewDetails(summary) {
     return `
       <div class="card">
-        <h3>更多细节</h3>
+        <h3>${t("moreDetails")}</h3>
         <div class="stat-grid" style="margin-top:12px">
           <div class="stat"><div class="k">记录完整度</div><div class="v">${summary.execution7.completeDays}/7</div><div class="h">有饮食记录的天数</div></div>
           <div class="stat"><div class="k">平均睡眠</div><div class="v">${summary.execution7.avgSleep || "—"}</div><div class="h">${summary.execution7.sleepDays ? `来自 ${summary.execution7.sleepDays} 天评分` : "未记录睡眠"}</div></div>
@@ -1082,15 +1324,15 @@
       <div class="history-tools-card">
         <button class="context-summary tools-summary" type="button" data-toggle-ui="historyToolsOpen" aria-expanded="${state.ui.historyToolsOpen ? "true" : "false"}">
           <span class="context-copy">
-            <span class="context-title">备份与筛选</span>
-            <span class="context-helper">CSV 备份 · 导入 · 历史筛选</span>
+            <span class="context-title">${t("backupFilters")}</span>
+            <span class="context-helper">${t("backupFiltersHelp")}</span>
           </span>
-          <span class="expand-affordance"><span>${state.ui.historyToolsOpen ? "收起" : "展开"}</span><span class="chevron" aria-hidden="true">${state.ui.historyToolsOpen ? "⌃" : "⌄"}</span></span>
+          <span class="expand-affordance"><span>${state.ui.historyToolsOpen ? t("collapse") : t("expand")}</span><span class="chevron" aria-hidden="true">${state.ui.historyToolsOpen ? "⌃" : "⌄"}</span></span>
         </button>
         ${state.ui.historyToolsOpen ? `<div class="history-toolbar">
           <div class="grid-2">
-            <button class="btn" id="exportAllBtn" type="button">导出备份</button>
-            <button class="btn" id="importCsvBtn" type="button">导入 CSV</button>
+            <button class="btn" id="exportAllBtn" type="button">${t("exportBackup")}</button>
+            <button class="btn" id="importCsvBtn" type="button">${t("importCsv")}</button>
           </div>
           <div class="hint-box">导出会包含历史记录和常用餐；导入前会预览冲突日期。</div>
           <div class="grid-2">
@@ -1117,10 +1359,10 @@
       <div class="card">
         <button class="context-summary card-summary" type="button" data-toggle-ui="historyRecordsOpen" aria-expanded="${state.ui.historyRecordsOpen ? "true" : "false"}">
           <span class="context-copy">
-            <span class="context-title">记录</span>
-            <span class="context-helper">已保存 ${historyDates.length} 天 · 最新 ${latestDate}</span>
+            <span class="context-title">${t("records")}</span>
+            <span class="context-helper">${t("savedDaysLatest", { count: historyDates.length, date: latestDate })}</span>
           </span>
-          <span class="expand-affordance"><span>${state.ui.historyRecordsOpen ? "收起" : "展开"}</span><span class="chevron" aria-hidden="true">${state.ui.historyRecordsOpen ? "⌃" : "⌄"}</span></span>
+          <span class="expand-affordance"><span>${state.ui.historyRecordsOpen ? t("collapse") : t("expand")}</span><span class="chevron" aria-hidden="true">${state.ui.historyRecordsOpen ? "⌃" : "⌄"}</span></span>
         </button>
         ${state.ui.historyRecordsOpen ? `
           <div class="list compact-list" style="margin-top:12px">
@@ -1128,16 +1370,16 @@
               ? visibleDates.map((date) => renderHistoryItem(date)).join("")
               : `<div class="hint-box">${Object.keys(state.records).length ? "没有符合当前筛选条件的历史记录。" : "还没有历史记录。先保存几天数据，这里会自动生成日期列表。"}</div>`}
           </div>
-          ${historyDates.length > 3 ? `<button class="btn full-width" type="button" data-toggle-ui="historyShowAll">${state.ui.historyShowAll ? "收起" : `显示更多（${historyDates.length - 3} 条）`}</button>` : ""}
+          ${historyDates.length > 3 ? `<button class="btn full-width" type="button" data-toggle-ui="historyShowAll">${state.ui.historyShowAll ? t("collapse") : `${t("showMore")}（${historyDates.length - 3}）`}</button>` : ""}
         ` : ""}
       </div>
       <div class="card">
         <button class="context-summary card-summary" type="button" data-toggle-ui="historyFavoritesOpen" aria-expanded="${state.ui.historyFavoritesOpen ? "true" : "false"}">
           <span class="context-copy">
-            <span class="context-title">常用餐</span>
-            <span class="context-helper">已保存 ${favoriteList.length} 条</span>
+            <span class="context-title">${t("favorites")}</span>
+            <span class="context-helper">${t("savedCount", { count: favoriteList.length })}</span>
           </span>
-          <span class="expand-affordance"><span>${state.ui.historyFavoritesOpen ? "收起" : "展开"}</span><span class="chevron" aria-hidden="true">${state.ui.historyFavoritesOpen ? "⌃" : "⌄"}</span></span>
+          <span class="expand-affordance"><span>${state.ui.historyFavoritesOpen ? t("collapse") : t("expand")}</span><span class="chevron" aria-hidden="true">${state.ui.historyFavoritesOpen ? "⌃" : "⌄"}</span></span>
         </button>
         ${state.ui.historyFavoritesOpen ? `
           <div class="history-toolbar">
@@ -1154,7 +1396,7 @@
               }).join("")
               : `<div class="hint-box">${state.favorites.length ? "没有符合搜索条件的常用餐。" : "暂无常用餐。先在“今天”页面录一餐，再点“存为常用”。"}</div>`}
           </div>
-          ${favoriteList.length > 3 ? `<button class="btn full-width" type="button" data-toggle-ui="historyFavoritesShowAll">${state.ui.historyFavoritesShowAll ? "收起" : `显示更多（${favoriteList.length - 3} 条）`}</button>` : ""}
+          ${favoriteList.length > 3 ? `<button class="btn full-width" type="button" data-toggle-ui="historyFavoritesShowAll">${state.ui.historyFavoritesShowAll ? t("collapse") : `${t("showMore")}（${favoriteList.length - 3}）`}</button>` : ""}
         ` : ""}
       </div>
     `;
@@ -1271,7 +1513,14 @@
     const draft = state.settingsDraft || currentSettings();
     const settings = normalizeSettings(draft);
     return `
-      ${renderSettingsGroup("planStart", "计划起点", `
+      <div class="settings-section language-section">
+        <span class="label">${t("language")}</span>
+        <div class="segmented language-toggle" role="radiogroup" aria-label="${t("language")}">
+          <button type="button" class="segment ${getCurrentLanguage() === "zh" ? "active" : ""}" data-language="zh" role="radio" aria-checked="${getCurrentLanguage() === "zh" ? "true" : "false"}">${t("chinese")}</button>
+          <button type="button" class="segment ${getCurrentLanguage() === "es" ? "active" : ""}" data-language="es" role="radio" aria-checked="${getCurrentLanguage() === "es" ? "true" : "false"}">${t("spanish")}</button>
+        </div>
+      </div>
+      ${renderSettingsGroup("planStart", t("planStart"), `
         <div class="hint-box">这些是生成未来目标的计划基准；实际判断会参考后续体重趋势和记录质量。</div>
         <div class="settings-grid">
           ${renderSettingInput("计划开始日期", "planStartDate", draft.planStartDate || localDateString(), "date")}
@@ -1280,14 +1529,14 @@
           ${renderSettingInput("计划起点体脂 %（可选）", "planStartBodyFatPercent", draft.planStartBodyFatPercent || "", "decimal")}
         </div>
       `)}
-      ${renderSettingsGroup("planGoal", "目标终点", `
+      ${renderSettingsGroup("planGoal", t("planGoal"), `
         <div class="settings-grid">
-          ${renderSettingInput("目标体重 kg", "targetWeightKg", draft.targetWeightKg, "decimal")}
+          ${renderSettingInput(`${t("targetWeight")} kg`, "targetWeightKg", draft.targetWeightKg, "decimal")}
           ${renderSettingInput("目标体脂 %", "targetBodyFatPercent", draft.targetBodyFatPercent, "decimal")}
           ${renderSettingInput("目标完成日期", "targetDate", draft.targetDate, "date")}
         </div>
       `)}
-      ${renderSettingsGroup("execution", "执行参数", `
+      ${renderSettingsGroup("execution", t("executionParams"), `
         <div class="settings-grid">
           ${renderSettingInput("每周训练天数", "trainingDaysPerWeek", settings.trainingDaysPerWeek, "number")}
           <div>
@@ -1311,8 +1560,8 @@
         </div>
         <div class="hint-box" style="margin-top:10px">系统会自动估算活动系数、蛋白、脂肪、训练日加成；每日只需要选择当天是训练日还是休息日。</div>
       `)}
-      ${renderSettingsGroup("trend", "当前趋势参考", `<div id="settingsTrendBody">${renderSettingsTrendReference()}</div>`)}
-      ${renderSettingsGroup("preview", "计划预览", `<div id="settingsPreviewBody">${renderSettingsPreview(draft)}</div>`)}
+      ${renderSettingsGroup("trend", t("trendReference"), `<div id="settingsTrendBody">${renderSettingsTrendReference()}</div>`)}
+      ${renderSettingsGroup("preview", t("planPreview"), `<div id="settingsPreviewBody">${renderSettingsPreview(draft)}</div>`)}
     `;
   }
 
@@ -1322,7 +1571,7 @@
       <div class="settings-section settings-group">
         <button class="context-summary card-summary" type="button" data-settings-group="${esc(key)}" aria-expanded="${open ? "true" : "false"}">
           <span>${esc(title)}</span>
-          <span class="expand-affordance"><span>${open ? "收起" : "展开"}</span><span class="chevron" aria-hidden="true">${open ? "⌃" : "⌄"}</span></span>
+          <span class="expand-affordance"><span>${open ? t("collapse") : t("expand")}</span><span class="chevron" aria-hidden="true">${open ? "⌃" : "⌄"}</span></span>
         </button>
         ${open ? `<div class="settings-group-body">${body}</div>` : ""}
       </div>
@@ -2813,12 +3062,13 @@
   }
 
   function entryPlaceholderSuggestions() {
+    const es = getCurrentLanguage() === "es";
     const fallback = {
-      name: "建议：正常输入",
-      calories: "建议：正常输入",
-      protein: "建议：正常输入",
-      carbs: "建议：正常输入",
-      fat: "建议：正常输入"
+      name: es ? "Sugerencia: entrada normal" : "建议：正常输入",
+      calories: es ? "Sugerencia: entrada normal" : "建议：正常输入",
+      protein: es ? "Sugerencia: entrada normal" : "建议：正常输入",
+      carbs: es ? "Sugerencia: entrada normal" : "建议：正常输入",
+      fat: es ? "Sugerencia: entrada normal" : "建议：正常输入"
     };
     try {
       const overview = stats();
@@ -2860,96 +3110,103 @@
   }
 
   function suggestedFoodName(remaining, targetValues) {
+    const es = getCurrentLanguage() === "es";
     if (!Number.isFinite(numberValue(targetValues.calories))) {
-      return "建议：正常输入";
+      return es ? "Sugerencia: entrada normal" : "建议：正常输入";
     }
     if (numberValue(remaining.calories) <= 0) {
-      return numberValue(remaining.protein) > 15 ? "建议：高蛋白低脂食物" : "建议：轻量加餐 / 小份食物";
+      return numberValue(remaining.protein) > 15
+        ? (es ? "Sugerencia: alta proteína y baja grasa" : "建议：高蛋白低脂食物")
+        : (es ? "Sugerencia: comida ligera / porción pequeña" : "建议：轻量加餐 / 小份食物");
     }
     if (numberValue(remaining.fat) <= 6) {
-      return "建议：选择低脂食物";
+      return es ? "Sugerencia: elegir baja grasa" : "建议：选择低脂食物";
     }
     if (numberValue(remaining.protein) >= Math.max(25, targetValues.protein * 0.18)) {
-      return "建议：高蛋白食物（鸡胸肉 / 虾 / 蛋白饮料）";
+      return es ? "Sugerencia: proteína alta (pollo / camarón / batido)" : "建议：高蛋白食物（鸡胸肉 / 虾 / 蛋白饮料）";
     }
     if (numberValue(remaining.carbs) >= Math.max(35, targetValues.carbs * 0.2)) {
-      return "建议：补充碳水（米饭 / 面 / 水果）";
+      return es ? "Sugerencia: añadir carbohidratos (arroz / pasta / fruta)" : "建议：补充碳水（米饭 / 面 / 水果）";
     }
     if (numberValue(remaining.calories) <= Math.max(220, targetValues.calories * 0.12)) {
-      return "建议：轻量加餐 / 小份食物";
+      return es ? "Sugerencia: comida ligera / porción pequeña" : "建议：轻量加餐 / 小份食物";
     }
-    return "建议：正常一餐";
+    return es ? "Sugerencia: comida normal" : "建议：正常一餐";
   }
 
   function suggestedCalories(remainingCalories, mealSlots) {
+    const es = getCurrentLanguage() === "es";
     const remaining = numberValue(remainingCalories);
     if (!Number.isFinite(remaining)) {
-      return "建议：正常输入";
+      return es ? "Sugerencia: entrada normal" : "建议：正常输入";
     }
     if (remaining <= 0) {
-      return "建议：尽量不再增加热量";
+      return es ? "Sugerencia: evitar más calorías" : "建议：尽量不再增加热量";
     }
     const perMeal = remaining / Math.max(1, mealSlots);
     if (perMeal <= 220) {
-      return "建议：本餐控制在 200 kcal 内";
+      return es ? "Sugerencia: mantener bajo 200 kcal" : "建议：本餐控制在 200 kcal 内";
     }
     const lower = clamp(roundToStep(perMeal * 0.75, 50), 150, 900);
     const upper = clamp(roundToStep(perMeal * 1.2, 50), lower + 50, 1000);
-    return `建议：本餐约 ${lower}-${upper} kcal`;
+    return es ? `Sugerencia: ${lower}-${upper} kcal` : `建议：本餐约 ${lower}-${upper} kcal`;
   }
 
   function suggestedProtein(remainingProtein) {
+    const es = getCurrentLanguage() === "es";
     const remaining = numberValue(remainingProtein);
     if (!Number.isFinite(remaining)) {
-      return "建议：正常输入";
+      return es ? "Sugerencia: entrada normal" : "建议：正常输入";
     }
     if (remaining <= 0) {
-      return "建议：控制蛋白质摄入";
+      return es ? "Sugerencia: moderar proteína" : "建议：控制蛋白质摄入";
     }
     if (remaining >= 35) {
-      return "建议：30-50 g";
+      return es ? "Sugerencia: 30-50 g" : "建议：30-50 g";
     }
     if (remaining >= 20) {
-      return "建议：20-30 g";
+      return es ? "Sugerencia: 20-30 g" : "建议：20-30 g";
     }
     if (remaining >= 10) {
-      return "建议：10-20 g";
+      return es ? "Sugerencia: 10-20 g" : "建议：10-20 g";
     }
-    return "建议：少量蛋白质";
+    return es ? "Sugerencia: poca proteína" : "建议：少量蛋白质";
   }
 
   function suggestedCarbs(remainingCarbs) {
+    const es = getCurrentLanguage() === "es";
     const remaining = numberValue(remainingCarbs);
     if (!Number.isFinite(remaining)) {
-      return "建议：正常输入";
+      return es ? "Sugerencia: entrada normal" : "建议：正常输入";
     }
     if (remaining <= 0) {
-      return "建议：避免高碳水";
+      return es ? "Sugerencia: evitar alto carbohidrato" : "建议：避免高碳水";
     }
     if (remaining >= 60) {
-      return "建议：40-80 g";
+      return es ? "Sugerencia: 40-80 g" : "建议：40-80 g";
     }
     if (remaining >= 25) {
-      return "建议：20-40 g";
+      return es ? "Sugerencia: 20-40 g" : "建议：20-40 g";
     }
-    return "建议：少量碳水";
+    return es ? "Sugerencia: pocos carbohidratos" : "建议：少量碳水";
   }
 
   function suggestedFat(remainingFat) {
+    const es = getCurrentLanguage() === "es";
     const remaining = numberValue(remainingFat);
     if (!Number.isFinite(remaining)) {
-      return "建议：正常输入";
+      return es ? "Sugerencia: entrada normal" : "建议：正常输入";
     }
     if (remaining <= 0) {
-      return "建议：避免脂肪摄入";
+      return es ? "Sugerencia: evitar grasa" : "建议：避免脂肪摄入";
     }
     if (remaining <= 10) {
-      return "建议：尽量低脂";
+      return es ? "Sugerencia: muy bajo en grasa" : "建议：尽量低脂";
     }
     if (remaining >= 20) {
-      return "建议：10-20 g";
+      return es ? "Sugerencia: 10-20 g" : "建议：10-20 g";
     }
-    return "建议：5-10 g";
+    return es ? "Sugerencia: 5-10 g" : "建议：5-10 g";
   }
 
   function roundToStep(value, step) {
@@ -3211,22 +3468,22 @@
       return "";
     }
     if (!state.ready) {
-      return "正在读取…";
+      return t("reading");
     }
     if (state.syncingDraft) {
-      return "草稿保存中…";
+      return t("draftSaving");
     }
     if (state.dirty && state.lastDraftSavedAt) {
-      return `草稿已保存 ${fmtTime(state.lastDraftSavedAt)}`;
+      return t("draftSaved", { time: fmtTime(state.lastDraftSavedAt) });
     }
     if (state.dirty) {
-      return "有未保存修改";
+      return t("unsavedChanges");
     }
     if (exportReminderDue()) {
-      return "建议导出备份";
+      return t("exportReminder");
     }
     if (state.lastSavedAt) {
-      return `已保存 ${fmtTime(state.lastSavedAt)}`;
+      return t("savedAt", { time: fmtTime(state.lastSavedAt) });
     }
     return "";
   }

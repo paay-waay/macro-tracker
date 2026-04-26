@@ -335,6 +335,25 @@ select:focus-visible {
   background: var(--bad);
 }
 
+body.lang-es .chip .k {
+  gap: 2px;
+  font-size: 10px;
+}
+
+body.lang-es .chip .label-unit {
+  font-size: 9px;
+}
+
+body.lang-es .nav-btn {
+  font-size: 10px;
+}
+
+body.lang-es .btn,
+body.lang-es .mini-btn,
+body.lang-es .segment {
+  font-size: 12px;
+}
+
 .chip-static {
   min-width: auto;
   padding: 10px 12px;
