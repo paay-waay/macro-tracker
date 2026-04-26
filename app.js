@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.18.0";
+  const APP_VERSION = "1.18.2";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -578,23 +578,21 @@
 
   function renderHeader() {
     const overview = stats();
-    const targetValues = target();
     const summaryItems = [
-      ["热量", overview.totals.calories, targetValues.calories, overview.remaining.calories, overallTone("calories", overview.overall.cal), "kcal"],
-      ["P", overview.totals.protein, targetValues.protein, overview.remaining.protein, overallTone("protein", overview.overall.pro), "蛋白"],
-      ["C", overview.totals.carbs, targetValues.carbs, overview.remaining.carbs, overallTone("carbs", overview.overall.carb), "碳水"],
-      ["F", overview.totals.fat, targetValues.fat, overview.remaining.fat, overallTone("fat", overview.overall.fat), "脂肪"]
+      ["热量", overview.totals.calories, overview.target.calories, overview.remaining.calories, overallTone("calories", overview.overall.cal), "kcal"],
+      ["蛋白质", overview.totals.protein, overview.target.protein, overview.remaining.protein, overallTone("protein", overview.overall.pro), "g"],
+      ["碳水化合物", overview.totals.carbs, overview.target.carbs, overview.remaining.carbs, overallTone("carbs", overview.overall.carb), "g"],
+      ["脂肪", overview.totals.fat, overview.target.fat, overview.remaining.fat, overallTone("fat", overview.overall.fat), "g"]
     ];
     dom.summaryChips.innerHTML = `
-      <div class="header-target-line">${esc(targetValues.label)}目标：${round1(targetValues.calories)} kcal · P ${round1(targetValues.protein)} · C ${round1(targetValues.carbs)} · F ${round1(targetValues.fat)}</div>
       <div class="summary-dashboard">
         ${summaryItems.map(([label, consumed, targetAmount, remaining, tone, unit]) => {
           const pct = targetAmount ? Math.min(100, Math.max(0, Math.round((numberValue(consumed) / targetAmount) * 100))) : 0;
           return `<div class="chip ${tone} summary-support">
             <div class="k">${label}</div>
-            <div class="v">${round1(consumed)}<span>/${round1(targetAmount)}</span></div>
+            <div class="v">${round1(consumed)}<span>/${round1(targetAmount)} ${unit}</span></div>
             <div class="mini-progress" aria-hidden="true"><i style="width:${pct}%"></i></div>
-            <div class="h">${remainingChipText(remaining)}${unit === "kcal" ? " kcal" : ""}</div>
+            <div class="h">${remainingChipText(remaining)} ${unit}</div>
           </div>`;
         }).join("")}
       </div>
@@ -725,7 +723,6 @@
         <button class="context-summary" type="button" data-toggle-ui="dailyContextOpen" aria-expanded="${open ? "true" : "false"}">
           <span class="context-copy">
             <span class="context-title">今日设置</span>
-            ${open ? '<span class="context-helper">日期、体重、睡眠、训练状态</span>' : ""}
             <span class="context-chip-row">${summaryChips.map((chip) => `<span class="context-chip">${esc(chip)}</span>`).join("")}</span>
           </span>
           <span class="expand-affordance"><span>${open ? "收起" : "展开"}</span><span class="chevron" aria-hidden="true">${open ? "⌃" : "⌄"}</span></span>
@@ -751,6 +748,7 @@
             <div class="compact-field-grid">
               ${state.dayType === "training" ? `
                 <div class="field-shell">
+                  <span class="label">训练表现</span>
                   ${renderSegmentedControl("训练表现", [
                     ["poor", "偏差"],
                     ["normal", "正常"],
@@ -759,6 +757,7 @@
                 </div>
               ` : ""}
                 <div class="field-shell">
+                <span class="label">饥饿感</span>
                 ${renderSegmentedControl("饥饿感", [
                     ["low", "低"],
                     ["medium", "中"],

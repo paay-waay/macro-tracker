@@ -191,16 +191,6 @@ select:focus-visible {
   padding: 6px 0 1px;
 }
 
-.header-target-line {
-  margin: 0 2px 5px;
-  color: var(--muted);
-  font-size: var(--text-xs);
-  line-height: var(--line-tight);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .summary-dashboard {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -231,7 +221,8 @@ select:focus-visible {
 }
 
 .chip .k {
-  font-size: var(--text-xs);
+  font-size: 11px;
+  line-height: 1.15;
   color: var(--muted);
 }
 
@@ -244,7 +235,7 @@ select:focus-visible {
 
 .chip .v span {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: var(--weight-medium);
 }
 
