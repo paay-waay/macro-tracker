@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.18.4";
+  const APP_VERSION = "1.18.5";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -590,10 +590,9 @@
         ${summaryItems.map(([key, label, consumed, targetAmount, remaining, unit]) => {
           const pct = targetAmount ? Math.min(100, Math.max(0, Math.round((numberValue(consumed) / targetAmount) * 100))) : 0;
           return `<div class="chip summary-support macro-card-${key} ${remaining < 0 ? "is-exceeded" : ""}">
-            <div class="k">${label}</div>
+            <div class="k"><span class="label-text">${label}</span><span class="label-unit">${unit}</span></div>
             <div class="v">
-              <span class="value-main">${round1(consumed)} / ${round1(targetAmount)}</span>
-              <span class="value-unit">${unit}</span>
+              <span class="value-main">${round1(consumed)}/${round1(targetAmount)}</span>
             </div>
             <div class="mini-progress" aria-hidden="true"><i style="width:${pct}%"></i></div>
             <div class="h ${remaining < 0 ? "is-exceeded" : ""}">${headerDeltaText(remaining)}</div>

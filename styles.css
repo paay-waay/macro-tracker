@@ -227,31 +227,42 @@ select:focus-visible {
 }
 
 .chip .k {
-  font-size: 11px;
-  line-height: 1.15;
-  color: var(--macro-card-text, var(--muted));
-}
-
-.chip .v {
   display: flex;
   align-items: baseline;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
+  font-size: 11px;
+  line-height: 1.15;
+  color: var(--macro-card-text, var(--muted));
+  white-space: nowrap;
+}
+
+.chip .label-text {
+  font-weight: var(--weight-semibold);
+}
+
+.chip .label-unit {
+  font-size: 10px;
+  font-weight: var(--weight-medium);
+  opacity: 0.8;
+}
+
+.chip .v {
+  display: block;
+  min-width: 0;
   margin-top: 4px;
   white-space: nowrap;
+  overflow: hidden;
 }
 
 .chip .value-main {
   color: var(--text);
-  font-size: 13px;
+  display: block;
+  min-width: 0;
+  font-size: clamp(10px, 2.95vw, 13px);
   font-weight: var(--weight-bold);
-}
-
-.chip .value-unit {
-  color: var(--macro-card-text, var(--muted));
-  font-size: 10px;
-  font-style: normal;
-  font-weight: var(--weight-medium);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
 }
 
 .chip .h {
