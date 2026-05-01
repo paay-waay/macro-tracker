@@ -1668,6 +1668,26 @@ input.big {
   text-align: center;
 }
 
+.weight-support-meta {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  line-height: var(--line-normal);
+  text-align: center;
+}
+
+.overview-note {
+  margin-top: 8px;
+  font-size: var(--text-xs);
+  line-height: var(--line-relaxed);
+  color: var(--muted);
+  text-align: center;
+}
+
+.overview-note.warn {
+  color: var(--bad);
+}
+
 .training-calendar {
   margin-top: 14px;
   border: 1px solid var(--line);
@@ -1678,7 +1698,7 @@ input.big {
 
 .training-calendar-head {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
@@ -1771,6 +1791,12 @@ input.big {
   background: var(--surface-primary);
   border-color: var(--line);
   color: var(--muted);
+}
+
+.calendar-day.no-record {
+  background: rgba(210, 214, 217, 0.32);
+  border-color: rgba(170, 176, 182, 0.45);
+  color: rgba(95, 102, 110, 0.78);
 }
 
 .calendar-day.today {

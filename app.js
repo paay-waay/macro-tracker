@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.20.1";
+  const APP_VERSION = "1.20.2";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -127,6 +127,11 @@
       weightTrendSummaryFlat: "近期趋势基本持平。",
       weightTrendSummaryInsufficient: "记录不足，暂时无法判断趋势。",
       trainingCalendarSummary: "训练日 {training} 天 · 休息日 {rest} 天 · 已记录 {recorded} 天",
+      trainingCalendarSummaryWithMissing: "训练日 {training} 天 · 休息日 {rest} 天 · 无记录 {missing} 天",
+      recordReminderSlight: "近 7 天记录略少，趋势判断仅供参考。",
+      recordReminderInsufficient: "近 7 天记录不足，趋势判断可能不稳定。",
+      avgSleep7: "近7天平均睡眠 {score}",
+      sleepRecordLimited: "睡眠记录较少",
       weekdayMon: "一",
       weekdayTue: "二",
       weekdayWed: "三",
@@ -1530,6 +1535,8 @@
         </div>
         <div class="hint-box insight-box" style="margin-top:12px">${esc(trend.guidance)}</div>
         ${renderWeightTrendChart(summary)}
+        ${renderAverageSleepMeta(summary)}
+        ${renderRecordQualityReminder(summary)}
         <button class="context-summary secondary-summary" type="button" data-toggle-ui="weightDetailsOpen" aria-expanded="${state.ui.weightDetailsOpen ? "true" : "false"}">
           <span>${t("weightTrendDetails")}</span>
           <span class="chevron" aria-hidden="true">${state.ui.weightDetailsOpen ? "⌃" : "⌄"}</span>
@@ -1539,7 +1546,7 @@
             <div class="stat"><div class="k">${t("latestWeight")}</div><div class="v">${summary.latestWeight || "—"}</div><div class="h">kg</div></div>
             <div class="stat"><div class="k">${t("previous7Avg")}</div><div class="v">${summary.prev7Avg || "—"}</div><div class="h">kg</div></div>
             <div class="stat"><div class="k">${t("targetCountdown")}</div><div class="v">${daysLeft()}</div><div class="h">${t("targetDateValue", { date: currentSettings().targetDate })}</div></div>
-            <div class="stat"><div class="k">${t("dataCoverage")}</div><div class="v">${summary.weightEntryCount}</div><div class="h">${t("weightRecords")}</div></div>
+            <div class="stat"><div class="k">${t("avgSleep")}</div><div class="v">${summary.execution7.avgSleep || "—"}</div><div class="h">${summary.execution7.sleepDays ? t("sleepScoreFromDays", { count: summary.execution7.sleepDays }) : t("sleepRecordLimited")}</div></div>
           </div>
         ` : ""}
       </div>
@@ -1549,11 +1556,7 @@
   function renderOverviewDetails(summary) {
     return `
       <div class="card">
-        <h3>${t("moreDetails")}</h3>
-        <div class="stat-grid" style="margin-top:12px">
-          <div class="stat"><div class="k">${t("recordCompleteness")}</div><div class="v">${summary.execution7.completeDays}/7</div><div class="h">${t("daysWithFoodRecords")}</div></div>
-          <div class="stat"><div class="k">${t("avgSleep")}</div><div class="v">${summary.execution7.avgSleep || "—"}</div><div class="h">${summary.execution7.sleepDays ? t("sleepScoreFromDays", { count: summary.execution7.sleepDays }) : t("sleepNotRecorded")}</div></div>
-        </div>
+        <h3>${t("trainingCalendar")}</h3>
         ${renderTrainingCalendarMonth()}
       </div>
     `;
@@ -1577,6 +1580,7 @@
     const trainingCount = monthDates.filter((date) => state.records[date] && normalizeRecord(state.records[date]).dayType === "training").length;
     const restCount = monthDates.filter((date) => state.records[date] && normalizeRecord(state.records[date]).dayType === "rest").length;
     const recordedCount = trainingCount + restCount;
+    const noRecordCount = Math.max(0, monthDates.length - recordedCount);
     const blanks = Array.from({ length: leadingBlanks }, (_, index) => `<div class="calendar-day blank" aria-hidden="true" data-blank="${index}"></div>`).join("");
     const days = monthDates.map((date) => {
       const record = state.records[date] ? normalizeRecord(state.records[date]) : null;
@@ -1585,6 +1589,7 @@
         "calendar-day",
         dayType === "training" ? "training" : "",
         dayType === "rest" ? "rest" : "",
+        !dayType ? "no-record" : "",
         date === today ? "today" : "",
         date === state.date ? "selected" : ""
       ].filter(Boolean).join(" ");
@@ -1593,7 +1598,6 @@
     return `
       <div class="training-calendar">
         <div class="training-calendar-head">
-          <div class="training-calendar-title">${t("trainingCalendar")}</div>
           <div class="training-calendar-controls" aria-label="${t("trainingCalendar")}">
             <button class="calendar-nav-btn" type="button" data-calendar-shift="-1" aria-label="${t("previousMonth")}">‹</button>
             <span class="training-calendar-summary">${formatMonthTitle(baseDate)}</span>
@@ -1607,9 +1611,26 @@
         <div class="training-calendar-grid">
           ${blanks}${days}
         </div>
-        <div class="training-calendar-foot">${t("trainingCalendarSummary", { training: trainingCount, rest: restCount, recorded: recordedCount })}</div>
+        <div class="training-calendar-foot">${t("trainingCalendarSummaryWithMissing", { training: trainingCount, rest: restCount, missing: noRecordCount })}</div>
       </div>
     `;
+  }
+
+  function renderAverageSleepMeta(summary) {
+    const text = summary.execution7.sleepDays
+      ? t("avgSleep7", { score: summary.execution7.avgSleep })
+      : t("sleepRecordLimited");
+    return `<div class="weight-support-meta">${text}</div>`;
+  }
+
+  function renderRecordQualityReminder(summary) {
+    const count = Number(summary.rolling7?.coveredDays || 0);
+    if (count >= 6) {
+      return "";
+    }
+    const key = count >= 4 ? "recordReminderSlight" : "recordReminderInsufficient";
+    const tone = count >= 4 ? "" : " warn";
+    return `<div class="overview-note${tone}">${t(key)}</div>`;
   }
 
   function renderHistory() {
