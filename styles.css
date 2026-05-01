@@ -1581,23 +1581,23 @@ input.big {
 
 .weight-trend-line {
   fill: none;
-  stroke-width: 2;
+  stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 4 4;
-  opacity: 0.75;
+  stroke-dasharray: 6 4;
+  opacity: 0.92;
 }
 
 .weight-trend-line.down {
-  stroke: var(--ok);
+  stroke: #4c8c64;
 }
 
 .weight-trend-line.up {
-  stroke: var(--bad);
+  stroke: #c96b7a;
 }
 
 .weight-trend-line.flat {
-  stroke: var(--muted);
+  stroke: #7d8a99;
 }
 
 .weight-point {
@@ -1644,20 +1644,28 @@ input.big {
 }
 
 .weight-chart-legend i.trend.down {
-  border-color: var(--ok);
+  border-color: #4c8c64;
 }
 
 .weight-chart-legend i.trend.up {
-  border-color: var(--bad);
+  border-color: #c96b7a;
 }
 
 .weight-chart-legend i.trend.flat {
-  border-color: var(--muted);
+  border-color: #7d8a99;
 }
 
 .weight-chart-legend i.target {
   border-color: var(--warn);
   border-top-style: dashed;
+}
+
+.weight-trend-summary {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  line-height: var(--line-normal);
+  text-align: center;
 }
 
 .training-calendar {
@@ -1671,7 +1679,7 @@ input.big {
 .training-calendar-head {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   margin-bottom: 10px;
 }
@@ -1685,6 +1693,42 @@ input.big {
 .training-calendar-foot {
   font-size: var(--text-xs);
   color: var(--muted);
+}
+
+.training-calendar-controls {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+
+.calendar-nav-btn,
+.calendar-today-btn {
+  border: 1px solid rgba(216, 211, 202, 0.74);
+  background: rgba(255, 253, 248, 0.6);
+  color: var(--muted);
+  border-radius: 999px;
+  min-height: 28px;
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+}
+
+.calendar-nav-btn {
+  width: 28px;
+  padding: 0;
+  font-size: 18px;
+}
+
+.calendar-today-btn {
+  padding: 0 8px;
+  font-size: var(--text-xs);
+}
+
+.calendar-nav-btn:active,
+.calendar-today-btn:active {
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 .training-calendar-weekdays,

@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.20.0";
+  const APP_VERSION = "1.20.1";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -116,9 +116,16 @@
       rollingMacroAverageCompact: "近 7 天宏量平均",
       moreDetails: "更多细节",
       trainingCalendar: "本月训练日历",
+      calendarCurrentMonth: "本月",
+      previousMonth: "上个月",
+      nextMonth: "下个月",
       actualWeightLegend: "实际体重",
       trendLineLegend: "趋势线",
       targetLineLegend: "目标线",
+      weightTrendSummaryDown: "近期趋势下降，约每周下降 {value} kg。",
+      weightTrendSummaryUp: "近期趋势上升，约每周上升 {value} kg。",
+      weightTrendSummaryFlat: "近期趋势基本持平。",
+      weightTrendSummaryInsufficient: "记录不足，暂时无法判断趋势。",
       trainingCalendarSummary: "训练日 {training} 天 · 休息日 {rest} 天 · 已记录 {recorded} 天",
       weekdayMon: "一",
       weekdayTue: "二",
@@ -447,6 +454,7 @@
     },
     overviewMoreOpen: false,
     weightDetailsOpen: false,
+    calendarMonth: "",
     macroDetails: {}
   };
 
@@ -663,6 +671,18 @@
     }
     if (button.dataset.view) {
       state.view = button.dataset.view;
+      render();
+      return;
+    }
+    if (button.dataset.calendarShift) {
+      state.ui.calendarMonth = shiftMonth(getCalendarBaseMonth(), Number(button.dataset.calendarShift) || 0);
+      saveUiState();
+      render();
+      return;
+    }
+    if (button.dataset.calendarCurrent) {
+      state.ui.calendarMonth = yyyyMm(state.date || localDateString());
+      saveUiState();
       render();
       return;
     }
@@ -1540,7 +1560,8 @@
   }
 
   function renderTrainingCalendarMonth() {
-    const baseDate = state.date || localDateString();
+    const calendarMonth = getCalendarBaseMonth();
+    const baseDate = monthStartFromYYYYMM(calendarMonth);
     const monthDates = getMonthDates(baseDate);
     const leadingBlanks = getMonthLeadingBlankCount(baseDate);
     const today = localDateString();
@@ -1573,7 +1594,12 @@
       <div class="training-calendar">
         <div class="training-calendar-head">
           <div class="training-calendar-title">${t("trainingCalendar")}</div>
-          <div class="training-calendar-summary">${formatMonthTitle(baseDate)}</div>
+          <div class="training-calendar-controls" aria-label="${t("trainingCalendar")}">
+            <button class="calendar-nav-btn" type="button" data-calendar-shift="-1" aria-label="${t("previousMonth")}">‹</button>
+            <span class="training-calendar-summary">${formatMonthTitle(baseDate)}</span>
+            <button class="calendar-nav-btn" type="button" data-calendar-shift="1" aria-label="${t("nextMonth")}">›</button>
+            <button class="calendar-today-btn" type="button" data-calendar-current="true">${t("calendarCurrentMonth")}</button>
+          </div>
         </div>
         <div class="training-calendar-weekdays">
           ${weekdays.map((day) => `<span>${day}</span>`).join("")}
@@ -4586,7 +4612,10 @@
   function renderWeightTrendChart(summary) {
     const points = summary.recent14;
     if (!points.length) {
-      return `<div class="hint-box chart-empty" style="margin-top:12px">${t("weightChartEmpty")}</div>`;
+      return `
+        <div class="hint-box chart-empty" style="margin-top:12px">${t("weightChartEmpty")}</div>
+        <div class="weight-trend-summary">${renderWeightTrendSummary(summary, null)}</div>
+      `;
     }
     const regression = buildWeightRegression(points);
     const regressionValues = regression
@@ -4621,7 +4650,6 @@
       <div class="weight-chart" style="margin-top:12px">
         <svg viewBox="0 0 ${chartWidth} ${chartHeight}" role="img" aria-label="${t("weightChartAria")}">
           <line x1="${padX}" y1="${goalY}" x2="${chartWidth - padX}" y2="${goalY}" class="goal-line"></line>
-          ${trendPolyline ? `<polyline points="${trendPolyline}" class="weight-trend-line ${trendClass}"></polyline>` : ""}
           <polyline points="${polyline}" class="weight-line"></polyline>
           ${points.map((record, index) => {
             const cx = xFor(index);
@@ -4629,6 +4657,7 @@
             const isLast = index === points.length - 1;
             return `<circle cx="${cx}" cy="${cy}" r="${isLast ? 4.5 : 3.2}" class="${isLast ? "weight-point current" : "weight-point"}"></circle>`;
           }).join("")}
+          ${trendPolyline ? `<polyline points="${trendPolyline}" class="weight-trend-line ${trendClass}"></polyline>` : ""}
           <text x="${chartWidth - padX}" y="${goalY - 6}" text-anchor="end" class="goal-label">${t("targetKg", { weight: goalWeight })}</text>
           <text x="${padX}" y="${chartHeight - 4}" text-anchor="start" class="axis-label">${fmtDate(points[0].date)}</text>
           <text x="${chartWidth - padX}" y="${chartHeight - 4}" text-anchor="end" class="axis-label">${fmtDate(lastPoint.date)}</text>
@@ -4638,8 +4667,23 @@
           ${trendPolyline ? `<span><i class="trend ${trendClass}"></i>${t("trendLineLegend")}</span>` : ""}
           <span><i class="target"></i>${t("targetLineLegend")}</span>
         </div>
+        <div class="weight-trend-summary">${renderWeightTrendSummary(summary, regression)}</div>
       </div>
     `;
+  }
+
+  function renderWeightTrendSummary(summary, regression = buildWeightRegression(summary.recent14)) {
+    if (!regression || !Number.isFinite(regression.weeklyChange)) {
+      return t("weightTrendSummaryInsufficient");
+    }
+    const weeklyChange = round1(regression.weeklyChange);
+    if (weeklyChange <= -0.1) {
+      return t("weightTrendSummaryDown", { value: Math.abs(weeklyChange) });
+    }
+    if (weeklyChange >= 0.1) {
+      return t("weightTrendSummaryUp", { value: Math.abs(weeklyChange) });
+    }
+    return t("weightTrendSummaryFlat");
   }
 
   function buildWeightRegression(points) {
@@ -4911,6 +4955,27 @@
       return "";
     }
     return `${parsed.getFullYear()} 年 ${parsed.getMonth() + 1} 月`;
+  }
+
+  function yyyyMm(dateText) {
+    const text = String(dateText || localDateString());
+    return /^\d{4}-\d{2}/.test(text) ? text.slice(0, 7) : localDateString().slice(0, 7);
+  }
+
+  function getCalendarBaseMonth() {
+    const value = String(state.ui.calendarMonth || "");
+    return /^\d{4}-\d{2}$/.test(value) ? value : yyyyMm(state.date || localDateString());
+  }
+
+  function monthStartFromYYYYMM(monthText) {
+    const value = /^\d{4}-\d{2}$/.test(String(monthText || "")) ? monthText : yyyyMm(state.date || localDateString());
+    return `${value}-01`;
+  }
+
+  function shiftMonth(monthText, delta) {
+    const baseDate = new Date(`${monthStartFromYYYYMM(monthText)}T00:00:00`);
+    baseDate.setMonth(baseDate.getMonth() + Number(delta || 0));
+    return yyyyMm(localDateString(baseDate));
   }
 
   function nowIso() {
