@@ -1,11 +1,10 @@
 (() => {
-  const APP_VERSION = "1.19.4";
+  const APP_VERSION = "1.20.0";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
   const LEGACY_FAVORITE_KEY = "macro_tracker_favorites_v8";
   const UI_STATE_KEY = "macro_tracker_ui_v17";
-  const LANGUAGE_KEY = "macroTrackerLanguage";
   const DEFAULT_DAY_TYPE = "training";
   const MAX_FAVORITES = 30;
   const MEAL_LABELS = ["第一餐", "第二餐", "第三餐", "第四餐"];
@@ -61,8 +60,7 @@
     medium: { label: "中", score: 2 },
     high: { label: "高", score: 3 }
   };
-  const I18N = {
-    zh: {
+  const TEXT = {
       appTitle: "宏量追踪",
       today: "今天",
       history: "历史",
@@ -73,9 +71,6 @@
       closeSettings: "关闭设置",
       closeHelp: "关闭使用说明",
       saveSettings: "保存设置并生成未来目标",
-      language: "语言",
-      chinese: "中文",
-      spanish: "Español",
       calories: "热量",
       protein: "蛋白质",
       carbs: "碳水",
@@ -120,6 +115,18 @@
       rollingMacroAverage: "近 7 天宏量平均",
       rollingMacroAverageCompact: "近 7 天宏量平均",
       moreDetails: "更多细节",
+      trainingCalendar: "本月训练日历",
+      actualWeightLegend: "实际体重",
+      trendLineLegend: "趋势线",
+      targetLineLegend: "目标线",
+      trainingCalendarSummary: "训练日 {training} 天 · 休息日 {rest} 天 · 已记录 {recorded} 天",
+      weekdayMon: "一",
+      weekdayTue: "二",
+      weekdayWed: "三",
+      weekdayThu: "四",
+      weekdayFri: "五",
+      weekdaySat: "六",
+      weekdaySun: "日",
       backupFilters: "备份与筛选",
       backupFiltersHelp: "CSV 备份 · 导入 · 历史筛选",
       exportBackup: "导出备份",
@@ -405,351 +412,6 @@
       targetDateInvalid: "目标日期格式不正确",
       targetDateAfterToday: "目标日期需要晚于今天",
       weeklyTrainingDaysRange: "每周训练天数需在 0 到 7 之间"
-    },
-    es: {
-      appTitle: "Seguimiento de macros",
-      today: "Hoy",
-      history: "Historial",
-      overview: "Resumen",
-      save: "Guardar",
-      settings: "Ajustes",
-      help: "Ayuda",
-      closeSettings: "Cerrar ajustes",
-      closeHelp: "Cerrar ayuda",
-      saveSettings: "Guardar y generar objetivos",
-      language: "Idioma",
-      chinese: "中文",
-      spanish: "Español",
-      calories: "Calorías",
-      protein: "Proteína",
-      carbs: "Carbohidratos",
-      fat: "Grasas",
-      currentMeal: "Comida actual",
-      draftAutoSave: "Borrador automático",
-      saveFavorite: "Guardar como frecuente",
-      addItem: "Añadir",
-      nextMeal: "Siguiente comida",
-      mealTotal: "Total de comida",
-      meal1: "Comida 1",
-      meal2: "Comida 2",
-      meal3: "Comida 3",
-      meal4: "Comida 4",
-      todaySettings: "Ajustes de hoy",
-      mealRecords: "Registro de comidas",
-      name: "Nombre",
-      delete: "Eliminar",
-      trainingDay: "Día de entreno",
-      restDay: "Día de descanso",
-      noWeight: "Sin peso",
-      noSleep: "Sin sueño",
-      sleepScore: "Sueño",
-      notRecorded: "Sin registrar",
-      trainingPerformance: "Rendimiento",
-      hunger: "Hambre",
-      poor: "Bajo",
-      normal: "Normal",
-      great: "Muy bien",
-      low: "Baja",
-      medium: "Media",
-      high: "Alta",
-      favoriteQuick: "Frecuentes · {count} guardadas",
-      noFavorites: "Sin comidas frecuentes",
-      noFavoritesHelp: "Guarda una comida para usarla rápido.",
-      selectFavorite: "Elegir frecuente",
-      chooseFavorite: "Elegir comida frecuente",
-      apply: "Usar",
-      clear: "Vaciar",
-      systemInsight: "Evaluación",
-      weightTrend: "Tendencia de peso",
-      rollingMacroAverage: "Promedio 7 días",
-      rollingMacroAverageCompact: "Promedio 7 días",
-      moreDetails: "Más detalles",
-      backupFilters: "Copia y filtros",
-      backupFiltersHelp: "CSV · Importar · Filtros",
-      exportBackup: "Exportar copia",
-      importCsv: "Importar CSV",
-      records: "Registros",
-      favorites: "Comidas frecuentes",
-      collapse: "Cerrar",
-      expand: "Abrir",
-      showMore: "Mostrar más",
-      savedDaysLatest: "{count} días · Último {date}",
-      savedCount: "{count} guardadas",
-      planStart: "Punto de partida",
-      planGoal: "Objetivo final",
-      executionParams: "Parámetros",
-      trendReference: "Referencia actual",
-      planPreview: "Vista del plan",
-      bodyAndGoals: "Datos y objetivos",
-      date: "Fecha",
-      dayType: "Tipo de día",
-      bodyWeight: "Peso en ayunas",
-      targetWeight: "Peso objetivo",
-      loading: "Cargando",
-      loadingBody: "Leyendo datos y borradores locales…",
-      reading: "Leyendo…",
-      draftSaving: "Guardando borrador…",
-      draftSaved: "Borrador guardado {time}",
-      unsavedChanges: "Cambios sin guardar",
-      exportReminder: "Conviene exportar copia",
-      savedAt: "Guardado {time}",
-      noHistory: "Aún no hay registros. Guarda algunos días y aquí aparecerá la lista.",
-      noHistoryFiltered: "No hay registros que coincidan con el filtro.",
-      noRecords: "Sin registros",
-      historyToolsHint: "La exportación incluye registros y comidas frecuentes; antes de importar se mostrará una vista previa de conflictos.",
-      jumpByDate: "Ir por fecha",
-      filterByType: "Filtrar por tipo",
-      all: "Todo",
-      quickSearch: "Búsqueda rápida",
-      historySearchPlaceholder: "Buscar fecha, peso o entreno/descanso",
-      filteredRecords: "Filtro actual: {count} registros.",
-      favoriteSearch: "Buscar comidas frecuentes",
-      favoriteSearchPlaceholder: "Buscar por nombre",
-      favoriteSortSummary: "Ordenado por uso y uso reciente. Mostrando {count}.",
-      noFavoriteFiltered: "No hay comidas frecuentes que coincidan.",
-      noFavoriteHistory: "No hay comidas frecuentes. Registra una comida en Hoy y guárdala como frecuente.",
-      incompleteItems: "{count} elementos pendientes",
-      foodItem: "Alimento {index}",
-      foodItemCompact: "Alimento {index}",
-      deleteFoodAria: "Eliminar alimento {index} de {meal}",
-      clearFoodAria: "Vaciar alimento {index}",
-      deleteFavoriteFoodAria: "Eliminar alimento frecuente {index}",
-      itemFoodUsage: "{count} alimentos · Usada {uses} veces{last}",
-      lastUsedAt: " · Último uso {time}",
-      favoriteQuickListAria: "Lista rápida de comidas frecuentes",
-      foodSummaryMore: "{items} y {count} más",
-      favoriteName: "Nombre frecuente",
-      currentSummary: "Resumen actual",
-      addFoodItem: "Añadir alimento",
-      edit: "Editar",
-      cancel: "Cancelar",
-      open: "Abrir",
-      openRecordAria: "Abrir registro de {date}",
-      deleteRecordAria: "Eliminar registro de {date}",
-      savedAtLine: "Guardado {time}",
-      noSavedTime: "Sin hora de guardado",
-      recordItemCount: "{count} elementos",
-      hungerLine: "Hambre {level}",
-      trainingLine: "Entreno {level}",
-      sleepLine: "Sueño {score}",
-      mealNormal: "Normal",
-      mealHigh: "Alta",
-      mealLarge: "Muy alta",
-      fatHigh: "Grasa alta",
-      fatVeryHigh: "Grasa muy alta",
-      mealCalorieBadGuidance: "Esta comida es alta en calorías y ya ocupa el {share}% del objetivo diario",
-      mealCalorieWarnGuidance: "Esta comida es grande; conviene cuidar la distribución del resto del día",
-      mealFatGuidance: "La grasa de esta comida es alta; cuida la estructura del resto del día",
-      mealRoomTightGuidance: "Esta comida reduce claramente el margen calórico de hoy",
-      rollingCoverage: "Ventana actual: {count}/7 días registrados{datePart}",
-      rollingCoverageDatePart: " · Hasta {date}",
-      anomalyTitle: "Alertas de datos",
-      weightEntryCount: "{count} registros",
-      avg7Weight: "Promedio de 7 registros",
-      currentTrend: "Tendencia actual",
-      weeklyChange: "Cambio semanal",
-      requiredPace: "Ritmo necesario",
-      toTargetDate: "Para la fecha objetivo",
-      distanceToGoal: "Hasta el objetivo",
-      targetKg: "Objetivo {weight} kg",
-      weightTrendDetails: "Detalles de tendencia de peso",
-      latestWeight: "Peso reciente",
-      previous7Avg: "Promedio anterior de 7",
-      targetCountdown: "Cuenta al objetivo",
-      dataCoverage: "Cobertura",
-      weightRecords: "registros de peso",
-      recordCompleteness: "Registro completo",
-      daysWithFoodRecords: "Días con comidas registradas",
-      avgSleep: "Sueño medio",
-      sleepScoreFromDays: "De {count} días puntuados",
-      sleepNotRecorded: "Sueño sin registrar",
-      highHunger: "Hambre alta",
-      past7Days: "Últimos 7 días",
-      trainingPerformanceSummary: "Rendimiento",
-      greatTrainingDays: "Muy bien / días de entreno",
-      planStartHint: "Estos datos sirven como base para generar objetivos futuros; la evaluación real usará la tendencia de peso y la calidad de los registros.",
-      planStartDate: "Fecha de inicio",
-      planStartWeight: "Peso inicial kg",
-      planStartBmr: "BMR inicial (kcal/día)",
-      planStartBodyFat: "Grasa inicial % (opcional)",
-      targetBodyFat: "Grasa objetivo %",
-      targetEndDate: "Fecha objetivo",
-      weeklyTrainingDays: "Entrenos por semana",
-      goalMode: "Modo objetivo",
-      dailyActivity: "Actividad diaria",
-      trackingBuffer: "Margen de registro",
-      settingsAutoEstimateHint: "El sistema estima actividad, proteína, grasa y extra de entreno; cada día solo eliges entreno o descanso.",
-      recentWeight: "Peso reciente",
-      requiredWeeklyPace: "Ritmo semanal necesario",
-      trendReferenceHint: "Solo como referencia; no hace falta editar manualmente el peso de tendencia actual.",
-      estimatedTdee: "TDEE estimado",
-      activityFactor: "Factor de actividad {value}",
-      plannedAverageCalories: "Calorías medias plan",
-      trackingBufferIncluded: "Incluye margen de registro",
-      trainingDayTarget: "Objetivo de entreno",
-      restDayTarget: "Objetivo de descanso",
-      expectedWeeklyChange: "Cambio semanal esperado",
-      daysRemaining: "Días restantes",
-      fromTomorrowToTarget: "De mañana a la fecha objetivo",
-      kgPerWeek: "kg/semana",
-      trend14: "Tendencia 14 días",
-      trendComparison: "7 días previos {previous} kg → 7 días recientes {current} kg",
-      actualVsPlanned: "Cambio real {actual} kg; cambio plan {expected} kg",
-      settingsCanGenerate: "La configuración actual puede generar objetivos futuros.",
-      importSummary: "Se importarán <strong>{rows}</strong> filas de registros, de <strong>{dates}</strong> fechas; además <strong>{favoriteRows}</strong> filas de comidas frecuentes, de <strong>{favorites}</strong> comidas frecuentes.",
-      importRecordSummary: "Fechas nuevas: <strong>{newCount}</strong>; registros a reemplazar: <strong>{collisionCount}</strong>; sin cambios: <strong>{unchangedCount}</strong>.",
-      importFavoriteSummary: "Comidas frecuentes nuevas: <strong>{newCount}</strong>; a reemplazar: <strong>{collisionCount}</strong>; sin cambios: <strong>{unchangedCount}</strong>.",
-      importCollisionDates: "Estas fechas ya tienen registros y se reemplazarán completas:",
-      importFavoriteCollisions: "Estas comidas frecuentes ya existen y se reemplazarán completas:",
-      andMoreDates: "y {count} fechas más",
-      andMoreFavorites: "y {count} comidas frecuentes más",
-      invalidRowsTitle: "Estas filas no son válidas y bloquean la importación:",
-      invalidRow: "Fila {row}: {reason}",
-      importSafeNote: "La importación no modifica los objetivos. Si se reemplaza la fecha actual, también se borrará el borrador no guardado de ese día. Si un CSV antiguo no tiene rendimiento, hambre o sueño, se importará con valores predeterminados.",
-      insightNeedRecordsTitle: "Registra más datos primero",
-      insightNeedRecordsBody: "Aún no hay suficientes registros válidos de los últimos 7 días. Por ahora no se recomienda ajustar los objetivos. Sigue registrando comidas, rendimiento, hambre y sueño para obtener una evaluación más fiable.",
-      insightRecoveryTitle: "Prioriza la recuperación",
-      insightRecoveryBody: "Hay señales recientes de presión en rendimiento, hambre o sueño. Aunque el peso no baje claramente, no conviene seguir reduciendo calorías; prioriza mantener o subir carbohidratos en días de entreno.",
-      insightFastLossTitle: "Bajada rápida",
-      insightFastLossBody: "El promedio reciente de 7 registros está bajando rápido. Si también empeoran el rendimiento o el sueño, el próximo ajuste debería proteger más el rendimiento.",
-      insightMaintainTitle: "Mantener",
-      insightMaintainBody: "La ejecución calórica está cerca del objetivo y la tendencia de peso no se desvía claramente. Conviene seguir observando antes de ajustar con frecuencia.",
-      insightFixExecutionTitle: "Corrige la ejecución primero",
-      insightFixExecutionBody: "El promedio de ingesta de los últimos 7 días está bastante por encima del objetivo. Prioriza reducir errores de registro o calorías de comidas fuera antes de cambiar la fórmula.",
-      insightControlledTitle: "Tendencia controlada",
-      insightControlledBody: "Los datos actuales no muestran necesidad de un gran ajuste. Mantén registros completos para que el sistema evalúe mejor en la ventana de 14 días.",
-      recordProgress: "Registros {count}/7",
-      sleepBadge: "Sueño {score}",
-      calorieBadge: "Calorías {value} kcal",
-      trendInsufficient: "Datos insuficientes",
-      trendFluctuation: "Fluctuación corta",
-      trendNormal: "Tendencia normal",
-      trendSlow: "Bajada lenta",
-      trendFast: "Bajada rápida",
-      trendRecoveryHigh: "Presión de recuperación alta",
-      trendFixExecution: "Corrige la ejecución primero",
-      trendInsufficientGuidance: "Sigue registrando el peso en ayunas; con al menos 4 registros la tendencia será más útil.",
-      trendEarlyGuidance: "Los datos iniciales pueden variar por agua, sodio y glucógeno. Sigue registrando sin ajustar todavía.",
-      trendWait14Guidance: "El promedio actual ya sirve de referencia, pero conviene esperar 14 registros antes de sacar conclusiones fuertes.",
-      trendRecoveryGuidance: "Sueño, hambre o rendimiento muestran señales de presión. No sigas bajando calorías hasta estabilizar la recuperación.",
-      trendNormalGuidance: "La tendencia de peso encaja bastante con el plan. Mantén los objetivos actuales 7 días más.",
-      trendFastGuidance: "El peso baja rápido. Si empeora la recuperación, considera añadir 100-150 kcal en días de entreno.",
-      trendFixExecutionGuidance: "La tendencia va más lenta que el plan, pero la ingesta supera el objetivo. Corrige la ejecución antes de cambiar objetivos.",
-      trendSlowGuidance: "La tendencia va más lenta que el plan. Si continúa 7 días más, considera reducir 100-150 kcal o mejorar la precisión del registro.",
-      trendWaterGuidance: "Una subida diaria suele venir de agua, sodio o glucógeno. Usa el promedio de 7 registros para decidir.",
-      weeklyPercent: "{percent}% del peso por semana",
-      need14Records: "Requiere 14 registros",
-      weightChartEmpty: "Cuando registres varios días de peso, aquí aparecerá la tendencia reciente de 14 registros y la línea objetivo.",
-      weightChartAria: "Gráfico de tendencia de peso de los últimos 14 registros",
-      unnamedFavorite: "Comida frecuente sin nombre",
-      helpTitle: "Guía rápida",
-      helpStep1: "En la pestaña Hoy, elige la fecha, el día de entreno/descanso y completa el peso en ayunas.",
-      helpStep2: "Cada comida empieza con un bloque. Si una comida tiene varios alimentos, pulsa Añadir para seguir registrando.",
-      helpStep3: "Solo hace falta nombre, kcal, P, C y F. El sistema calcula automáticamente la comida y el total diario.",
-      helpStep4: "El sistema guarda el borrador del día automáticamente; solo al pulsar Guardar se mueve al historial.",
-      helpStep5: "En Ajustes puedes generar objetivos futuros; en Historial puedes exportar CSV e importar con vista previa.",
-      helpVersion: "Versión: {version}",
-      importTitle: "Confirmar importación",
-      importCancel: "Cancelar",
-      importConfirm: "Confirmar importación",
-      helpOpen: "Abrir ayuda",
-      helpClose: "Cerrar ayuda",
-      settingsOpen: "Abrir ajustes",
-      settingsClose: "Cerrar ajustes",
-      closeImport: "Cerrar confirmación de importación",
-      noSelectedFavorite: "Primero selecciona una comida frecuente en el menú",
-      noSavedCurrentMeal: "Esta comida aún no tiene datos para guardar",
-      updated: "Actualizado",
-      deleted: "Eliminado",
-      saved: "Guardado",
-      exported: "Exportado",
-      imported: "Importado",
-      applied: "Aplicado",
-      noImportData: "El CSV no contiene registros o comidas frecuentes para importar",
-      csvEmpty: "El CSV está vacío o no tiene el formato correcto",
-      csvHeaderMismatch: "La cabecera del CSV no coincide. Importa un archivo exportado por esta app",
-      csvFavoriteHeaderMismatch: "La cabecera del bloque de comidas frecuentes no coincide. Vuelve a exportar e importar",
-      importInvalidRowCount: "Error de importación: se encontraron {count} filas inválidas",
-      importInvalidRows: "Este CSV contiene filas inválidas. Corrígelo antes de importar",
-      importOverwriteConfirm: "La importación reemplazará la fecha actual y borrará el borrador no guardado. ¿Continuar?",
-      noImportNeeded: "No hace falta importar",
-      importMissingDate: "Falta la fecha",
-      importInvalidDateFormat: "El formato de fecha debe ser “año-mes-día”",
-      importSleepScoreInvalid: "La puntuación de sueño debe ser un número entre 0 y 100",
-      importMealIndexInvalid: "La columna de comida debe ser un entero entre 1 y 4",
-      importItemIndexInvalid: "La columna de elemento debe ser un entero mayor o igual a 1",
-      importFavoriteIdMissing: "El bloque de comidas frecuentes no tiene ID",
-      importFavoriteNameMissing: "El bloque de comidas frecuentes no tiene nombre",
-      importFavoriteItemIndexInvalid: "La columna de elemento del bloque frecuente debe ser un entero mayor o igual a 1",
-      importFavoriteUsageCountInvalid: "Las veces de uso del bloque frecuente deben ser un entero mayor o igual a 0",
-      importFavoriteNameMismatch: "El mismo ID de comida frecuente tiene nombres distintos",
-      settingsSaved: "Ajustes guardados",
-      updateDetected: "Se detectó una actualización; se aplicará al volver a abrir la app",
-      failedToLoad: "No se pudo inicializar la base de datos local. Prueba en Safari o Chrome.",
-      failedToContinue: "No se puede seguir cargando",
-      operationFailed: "La operación ha fallado. Inténtalo de nuevo más tarde",
-      draftRestored: "Se restauró el borrador sin guardar de {date}",
-      confirmLeaveDraft: "Este día tiene cambios sin guardar. El borrador se guarda solo, pero conviene confirmar antes de cambiar de fecha. ¿Continuar?",
-      confirmOverwriteSave: "Estás modificando contenido ya guardado de {date}. ¿Seguro que quieres sobrescribirlo?",
-      confirmDeleteRecord: "¿Eliminar el registro de {date}? Esta acción no se puede deshacer.",
-      confirmImportOverwriting: "La importación reemplazará la fecha actual y borrará los cambios sin guardar. ¿Continuar?",
-      importSuccessDetails: "{records} fechas de registros{favorites}",
-      importSuccessFavorites: ", {count} comidas frecuentes",
-      goalModeCut: "Prioridad a pérdida",
-      goalModeCutDesc: "Bajada estable de peso conservando rendimiento",
-      goalModeRecomp: "Equilibrio recomposición",
-      goalModeRecompDesc: "Déficit pequeño con prioridad al rendimiento",
-      goalModePerformance: "Prioridad al rendimiento",
-      goalModePerformanceDesc: "Cerca de mantenimiento, más carbohidratos en entreno",
-      activityLow: "Baja",
-      activityLowDesc: "Trabajo sedentario y pocos pasos diarios",
-      activityMedium: "Media",
-      activityMediumDesc: "Desplazamiento y movimiento normales",
-      activityHigh: "Alta",
-      activityHighDesc: "Mucho movimiento diario o trabajo activo",
-      trackingLow: "Bajo",
-      trackingLowDesc: "Pesaje estricto y pocas comidas fuera",
-      trackingMedium: "Medio",
-      trackingMediumDesc: "Registro normal, con margen prudente",
-      trackingHigh: "Alto",
-      trackingHighDesc: "Muchas comidas fuera y aceite difícil de estimar",
-      mealSwitcherAria: "Cambio de comida",
-      targetDateValue: "{date}",
-      averageTargetLabel: "Objetivo medio",
-      detail: "Detalle",
-      recordSummaryTitle: "Registros",
-      favoritesSummaryTitle: "Comidas frecuentes",
-      todayMealTitle: "Comida actual",
-      currentMealEmpty: "Esta comida aún no tiene datos para guardar",
-      mealNeedComplete: "{meal} · Alimento {index} incompleto; completa nombre, kcal, P, C y F",
-      favoriteNeedName: "Comida frecuente · Falta el nombre del alimento {index}",
-      mealNeedName: "{meal} · Falta el nombre del alimento {index}",
-      favoriteNeedValue: "Comida frecuente · {message}",
-      mealNeedValue: "{meal} · {message}",
-      rowPrefix: "Fila {row} · ",
-      csvRowPrefix: "Fila {row} · ",
-      atLeastOneFavoriteEntry: "Debes dejar al menos 1 alimento completo",
-      macroCheckOk: "Calorías correctas",
-      macroCheckDetail: "Detalles de calorías",
-      macroCheckDerived: "Calculado por macros",
-      macroCheckDifference: "Diferencia",
-      macroCheckReview: "Conviene revisar el envase o el registro.",
-      todayTrainingTip: "Hoy es un día de entreno; aún faltan {value} g de carbohidratos. Prioriza arroz, batata, pan o fruta.",
-      proteinTip: "Aún faltan {value} g de proteína; en la próxima comida prioriza pollo, camarones, yogur griego, tofu o whey.",
-      calorieOverTip: "Las calorías ya se pasaron, pero aún falta proteína. Prioriza opciones altas en proteína y bajas en grasa.",
-      fatOverTip: "La grasa ya se pasó claramente; reduce aceite, frutos secos y yemas en lo siguiente.",
-      todayRestTip: "Hoy es descanso y los carbohidratos están altos; después puedes reducir un poco la ración de almidones.",
-      balancedTip: "La estructura actual está bastante equilibrada; completa la última comida según el objetivo restante.",
-      calorieGapWarning: "La diferencia entre las calorías registradas y las calculadas por macros es de {value} kcal. Conviene revisarlo.",
-      entryCalorieGapWarning: "{meal}{name} tiene una diferencia de {value} kcal; conviene revisarlo.",
-      requiredFieldEmpty: "{label} no puede estar vacío",
-      numericOnly: "{label} solo puede ser numérico",
-      rangeBetween: "{label} debe estar entre {min} y {max}",
-      planStartDateInvalid: "La fecha de inicio no es válida",
-      targetDateInvalid: "La fecha objetivo no es válida",
-      targetDateAfterToday: "La fecha objetivo debe ser posterior a hoy",
-      weeklyTrainingDaysRange: "Los entrenos semanales deben estar entre 0 y 7"
-    }
   };
   const MIN_DAILY_DEFICIT = 250;
   const MAX_DAILY_DEFICIT = 650;
@@ -859,6 +521,11 @@
   });
 
   async function bootstrap() {
+    try {
+      window.localStorage.removeItem("macroTrackerLanguage");
+    } catch {
+      // Optional cleanup should never block the app shell.
+    }
     dom.subtitle.textContent = "";
     bindEvents();
     renderLoading();
@@ -996,11 +663,6 @@
     }
     if (button.dataset.view) {
       state.view = button.dataset.view;
-      render();
-      return;
-    }
-    if (button.dataset.language) {
-      setCurrentLanguage(button.dataset.language);
       render();
       return;
     }
@@ -1373,18 +1035,8 @@
     return String(value).replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
   }
 
-  function getCurrentLanguage() {
-    const value = window.localStorage.getItem(LANGUAGE_KEY);
-    return value === "es" ? "es" : "zh";
-  }
-
-  function setCurrentLanguage(language) {
-    window.localStorage.setItem(LANGUAGE_KEY, language === "es" ? "es" : "zh");
-  }
-
   function t(key, params = {}) {
-    const lang = getCurrentLanguage();
-    const template = I18N[lang]?.[key] || I18N.zh[key] || key;
+    const template = TEXT[key] || key;
     return String(template).replace(/\{(\w+)\}/g, (_, name) => (params[name] ?? ""));
   }
 
@@ -1394,9 +1046,7 @@
   }
 
   function applyLanguageShell() {
-    const lang = getCurrentLanguage();
-    document.documentElement.lang = lang === "es" ? "es" : "zh-CN";
-    document.body.classList.toggle("lang-es", lang === "es");
+    document.documentElement.lang = "zh-CN";
     document.title = t("appTitle");
     const title = document.querySelector(".title");
     if (title) title.textContent = t("appTitle");
@@ -1883,9 +1533,55 @@
         <div class="stat-grid" style="margin-top:12px">
           <div class="stat"><div class="k">${t("recordCompleteness")}</div><div class="v">${summary.execution7.completeDays}/7</div><div class="h">${t("daysWithFoodRecords")}</div></div>
           <div class="stat"><div class="k">${t("avgSleep")}</div><div class="v">${summary.execution7.avgSleep || "—"}</div><div class="h">${summary.execution7.sleepDays ? t("sleepScoreFromDays", { count: summary.execution7.sleepDays }) : t("sleepNotRecorded")}</div></div>
-          <div class="stat"><div class="k">${t("highHunger")}</div><div class="v">${summary.execution7.highHungerDays}</div><div class="h">${t("past7Days")}</div></div>
-          <div class="stat"><div class="k">${t("trainingPerformanceSummary")}</div><div class="v">${summary.execution7.goodTrainingDays}/${summary.execution7.trainingDays}</div><div class="h">${t("greatTrainingDays")}</div></div>
         </div>
+        ${renderTrainingCalendarMonth()}
+      </div>
+    `;
+  }
+
+  function renderTrainingCalendarMonth() {
+    const baseDate = state.date || localDateString();
+    const monthDates = getMonthDates(baseDate);
+    const leadingBlanks = getMonthLeadingBlankCount(baseDate);
+    const today = localDateString();
+    const weekdays = [
+      t("weekdayMon"),
+      t("weekdayTue"),
+      t("weekdayWed"),
+      t("weekdayThu"),
+      t("weekdayFri"),
+      t("weekdaySat"),
+      t("weekdaySun")
+    ];
+    const trainingCount = monthDates.filter((date) => state.records[date] && normalizeRecord(state.records[date]).dayType === "training").length;
+    const restCount = monthDates.filter((date) => state.records[date] && normalizeRecord(state.records[date]).dayType === "rest").length;
+    const recordedCount = trainingCount + restCount;
+    const blanks = Array.from({ length: leadingBlanks }, (_, index) => `<div class="calendar-day blank" aria-hidden="true" data-blank="${index}"></div>`).join("");
+    const days = monthDates.map((date) => {
+      const record = state.records[date] ? normalizeRecord(state.records[date]) : null;
+      const dayType = record?.dayType || "";
+      const classes = [
+        "calendar-day",
+        dayType === "training" ? "training" : "",
+        dayType === "rest" ? "rest" : "",
+        date === today ? "today" : "",
+        date === state.date ? "selected" : ""
+      ].filter(Boolean).join(" ");
+      return `<div class="${classes}" aria-label="${esc(`${fmtDate(date)} ${dayType === "training" ? t("trainingDay") : (dayType === "rest" ? t("restDay") : t("notRecorded"))}`)}">${Number(date.slice(-2))}</div>`;
+    }).join("");
+    return `
+      <div class="training-calendar">
+        <div class="training-calendar-head">
+          <div class="training-calendar-title">${t("trainingCalendar")}</div>
+          <div class="training-calendar-summary">${formatMonthTitle(baseDate)}</div>
+        </div>
+        <div class="training-calendar-weekdays">
+          ${weekdays.map((day) => `<span>${day}</span>`).join("")}
+        </div>
+        <div class="training-calendar-grid">
+          ${blanks}${days}
+        </div>
+        <div class="training-calendar-foot">${t("trainingCalendarSummary", { training: trainingCount, rest: restCount, recorded: recordedCount })}</div>
       </div>
     `;
   }
@@ -2131,13 +1827,6 @@
       `)}
       ${renderSettingsGroup("trend", t("trendReference"), `<div id="settingsTrendBody">${renderSettingsTrendReference()}</div>`)}
       ${renderSettingsGroup("preview", t("planPreview"), `<div id="settingsPreviewBody">${renderSettingsPreview(draft)}</div>`)}
-      <div class="settings-section language-section compact-language-section">
-        <span class="label">${t("language")}</span>
-        <div class="segmented language-toggle" role="radiogroup" aria-label="${t("language")}">
-          <button type="button" class="segment ${getCurrentLanguage() === "zh" ? "active" : ""}" data-language="zh" role="radio" aria-checked="${getCurrentLanguage() === "zh" ? "true" : "false"}">${t("chinese")}</button>
-          <button type="button" class="segment ${getCurrentLanguage() === "es" ? "active" : ""}" data-language="es" role="radio" aria-checked="${getCurrentLanguage() === "es" ? "true" : "false"}">${t("spanish")}</button>
-        </div>
-      </div>
     `;
   }
 
@@ -3332,7 +3021,7 @@
         if (numberValue(entry.calories) > 0 && Math.abs(diff) > 80) {
           anomalies.push(t("entryCalorieGapWarning", {
             meal: mealLabel(meal.id),
-            name: entry.name ? (getCurrentLanguage() === "es" ? ` (${entry.name})` : `（${entry.name}）`) : "",
+            name: entry.name ? `（${entry.name}）` : "",
             value: Math.abs(diff)
           }));
         }
@@ -3647,13 +3336,12 @@
   }
 
   function entryPlaceholderSuggestions() {
-    const es = getCurrentLanguage() === "es";
     const fallback = {
-      name: es ? "Sugerencia: entrada normal" : "建议：正常输入",
-      calories: es ? "Sugerencia: entrada normal" : "建议：正常输入",
-      protein: es ? "Sugerencia: entrada normal" : "建议：正常输入",
-      carbs: es ? "Sugerencia: entrada normal" : "建议：正常输入",
-      fat: es ? "Sugerencia: entrada normal" : "建议：正常输入"
+      name: "建议：正常输入",
+      calories: "建议：正常输入",
+      protein: "建议：正常输入",
+      carbs: "建议：正常输入",
+      fat: "建议：正常输入"
     };
     try {
       const overview = stats();
@@ -3695,103 +3383,98 @@
   }
 
   function suggestedFoodName(remaining, targetValues) {
-    const es = getCurrentLanguage() === "es";
     if (!Number.isFinite(numberValue(targetValues.calories))) {
-      return es ? "Sugerencia: entrada normal" : "建议：正常输入";
+      return "建议：正常输入";
     }
     if (numberValue(remaining.calories) <= 0) {
       return numberValue(remaining.protein) > 15
-        ? (es ? "Sugerencia: alta proteína y baja grasa" : "建议：高蛋白低脂食物")
-        : (es ? "Sugerencia: comida ligera / porción pequeña" : "建议：轻量加餐 / 小份食物");
+        ? "建议：高蛋白低脂食物"
+        : "建议：轻量加餐 / 小份食物";
     }
     if (numberValue(remaining.fat) <= 6) {
-      return es ? "Sugerencia: elegir baja grasa" : "建议：选择低脂食物";
+      return "建议：选择低脂食物";
     }
     if (numberValue(remaining.protein) >= Math.max(25, targetValues.protein * 0.18)) {
-      return es ? "Sugerencia: proteína alta (pollo / camarón / batido)" : "建议：高蛋白食物（鸡胸肉 / 虾 / 蛋白饮料）";
+      return "建议：高蛋白食物（鸡胸肉 / 虾 / 蛋白饮料）";
     }
     if (numberValue(remaining.carbs) >= Math.max(35, targetValues.carbs * 0.2)) {
-      return es ? "Sugerencia: añadir carbohidratos (arroz / pasta / fruta)" : "建议：补充碳水（米饭 / 面 / 水果）";
+      return "建议：补充碳水（米饭 / 面 / 水果）";
     }
     if (numberValue(remaining.calories) <= Math.max(220, targetValues.calories * 0.12)) {
-      return es ? "Sugerencia: comida ligera / porción pequeña" : "建议：轻量加餐 / 小份食物";
+      return "建议：轻量加餐 / 小份食物";
     }
-    return es ? "Sugerencia: comida normal" : "建议：正常一餐";
+    return "建议：正常一餐";
   }
 
   function suggestedCalories(remainingCalories, mealSlots) {
-    const es = getCurrentLanguage() === "es";
     const remaining = numberValue(remainingCalories);
     if (!Number.isFinite(remaining)) {
-      return es ? "Sugerencia: entrada normal" : "建议：正常输入";
+      return "建议：正常输入";
     }
     if (remaining <= 0) {
-      return es ? "Sugerencia: evitar más calorías" : "建议：尽量不再增加热量";
+      return "建议：尽量不再增加热量";
     }
     const perMeal = remaining / Math.max(1, mealSlots);
     if (perMeal <= 220) {
-      return es ? "Sugerencia: mantener bajo 200 kcal" : "建议：本餐控制在 200 kcal 内";
+      return "建议：本餐控制在 200 kcal 内";
     }
     const lower = clamp(roundToStep(perMeal * 0.75, 50), 150, 900);
     const upper = clamp(roundToStep(perMeal * 1.2, 50), lower + 50, 1000);
-    return es ? `Sugerencia: ${lower}-${upper} kcal` : `建议：本餐约 ${lower}-${upper} kcal`;
+    return `建议：本餐约 ${lower}-${upper} kcal`;
   }
 
   function suggestedProtein(remainingProtein) {
-    const es = getCurrentLanguage() === "es";
     const remaining = numberValue(remainingProtein);
     if (!Number.isFinite(remaining)) {
-      return es ? "Sugerencia: entrada normal" : "建议：正常输入";
+      return "建议：正常输入";
     }
     if (remaining <= 0) {
-      return es ? "Sugerencia: moderar proteína" : "建议：控制蛋白质摄入";
+      return "建议：控制蛋白质摄入";
     }
     if (remaining >= 35) {
-      return es ? "Sugerencia: 30-50 g" : "建议：30-50 g";
+      return "建议：30-50 g";
     }
     if (remaining >= 20) {
-      return es ? "Sugerencia: 20-30 g" : "建议：20-30 g";
+      return "建议：20-30 g";
     }
     if (remaining >= 10) {
-      return es ? "Sugerencia: 10-20 g" : "建议：10-20 g";
+      return "建议：10-20 g";
     }
-    return es ? "Sugerencia: poca proteína" : "建议：少量蛋白质";
+    return "建议：少量蛋白质";
   }
 
   function suggestedCarbs(remainingCarbs) {
-    const es = getCurrentLanguage() === "es";
     const remaining = numberValue(remainingCarbs);
     if (!Number.isFinite(remaining)) {
-      return es ? "Sugerencia: entrada normal" : "建议：正常输入";
+      return "建议：正常输入";
     }
     if (remaining <= 0) {
-      return es ? "Sugerencia: evitar alto carbohidrato" : "建议：避免高碳水";
+      return "建议：避免高碳水";
     }
     if (remaining >= 60) {
-      return es ? "Sugerencia: 40-80 g" : "建议：40-80 g";
+      return "建议：40-80 g";
     }
     if (remaining >= 25) {
-      return es ? "Sugerencia: 20-40 g" : "建议：20-40 g";
+      return "建议：20-40 g";
     }
-    return es ? "Sugerencia: pocos carbohidratos" : "建议：少量碳水";
+    return "建议：少量碳水";
   }
 
   function suggestedFat(remainingFat) {
-    const es = getCurrentLanguage() === "es";
     const remaining = numberValue(remainingFat);
     if (!Number.isFinite(remaining)) {
-      return es ? "Sugerencia: entrada normal" : "建议：正常输入";
+      return "建议：正常输入";
     }
     if (remaining <= 0) {
-      return es ? "Sugerencia: evitar grasa" : "建议：避免脂肪摄入";
+      return "建议：避免脂肪摄入";
     }
     if (remaining <= 10) {
-      return es ? "Sugerencia: muy bajo en grasa" : "建议：尽量低脂";
+      return "建议：尽量低脂";
     }
     if (remaining >= 20) {
-      return es ? "Sugerencia: 10-20 g" : "建议：10-20 g";
+      return "建议：10-20 g";
     }
-    return es ? "Sugerencia: 5-10 g" : "建议：5-10 g";
+    return "建议：5-10 g";
   }
 
   function roundToStep(value, step) {
@@ -4040,49 +3723,7 @@
   }
 
   function translateSystemMessage(message) {
-    const text = String(message ?? "");
-    if (getCurrentLanguage() !== "es") {
-      return text;
-    }
-    const exact = {
-      "请先从下拉菜单中选择一个常用餐": t("noSelectedFavorite"),
-      "当前这餐还没有可保存的数据": t("noSavedCurrentMeal"),
-      "已更新": t("updated"),
-      "已删除": t("deleted"),
-      "已保存常用餐": t("saved"),
-      "已套用": t("applied"),
-      "已保存": t("saved"),
-      "已导出": t("exported"),
-      "CSV 内容为空或格式不对": t("csvEmpty"),
-      "CSV 表头不匹配，请导入本应用导出的文件": t("csvHeaderMismatch"),
-      "CSV 中的常用餐区块表头不匹配，请重新导出后再导入": t("csvFavoriteHeaderMismatch"),
-      "CSV 中没有可导入的记录或常用餐": t("noImportData"),
-      "当前 CSV 含有无效行，请修正后再导入": t("importInvalidRows"),
-      "无需导入": t("noImportNeeded"),
-      "设置已保存": t("settingsSaved"),
-      "操作失败，请稍后重试": t("operationFailed"),
-      "无法继续加载": t("failedToContinue")
-    };
-    if (exact[text]) {
-      return exact[text];
-    }
-    const restored = text.match(/^已恢复 (.+) 的未保存草稿$/);
-    if (restored) {
-      return t("draftRestored", { date: restored[1] });
-    }
-    const importFailed = text.match(/^导入失败：发现 (\d+) 行无效数据$/);
-    if (importFailed) {
-      return t("importInvalidRowCount", { count: importFailed[1] });
-    }
-    const overwrite = text.match(/^你正在修改 (.+) 已保存过的内容。确定覆盖保存吗？$/);
-    if (overwrite) {
-      return t("confirmOverwriteSave", { date: overwrite[1] });
-    }
-    const remove = text.match(/^确定删除 (.+) 的记录吗？此操作不能撤销。$/);
-    if (remove) {
-      return t("confirmDeleteRecord", { date: remove[1] });
-    }
-    return text;
+    return String(message ?? "");
   }
 
   function setNotice(message, options = {}) {
@@ -4363,9 +4004,7 @@
     let goalPhase = "maintenance";
 
     if (daysRemaining <= 0) {
-      warnings.push(getCurrentLanguage() === "es"
-        ? "La fecha objetivo debe ser posterior a hoy; el sistema no generará objetivos para hoy ni para el pasado."
-        : "目标日期需要晚于今天，系统不会生成过去或今天的目标。");
+      warnings.push("目标日期需要晚于今天，系统不会生成过去或今天的目标。");
     }
     if (weightLossKg > 0) {
       goalPhase = settings.goalMode === "recomp" ? "recomp" : "cut";
@@ -4374,16 +4013,12 @@
         plannedDailyDeficit = Math.max(MIN_DAILY_DEFICIT, plannedDailyDeficit);
       }
       if (dailyDeficitByDate > modeDailyDeficit) {
-        warnings.push(getCurrentLanguage() === "es"
-          ? "La línea temporal objetivo exige un déficit mayor; el sistema limita el déficit según el modo actual para proteger el rendimiento."
-          : "目标时间线需要更大缺口，系统已按当前目标模式限制缺口以保护训练表现。");
+        warnings.push("目标时间线需要更大缺口，系统已按当前目标模式限制缺口以保护训练表现。");
       }
     } else if (weightLossKg < 0) {
       goalPhase = "maintenance";
       plannedDailyDeficit = settings.goalMode === "performance" ? 0 : Math.min(100, modeDailyDeficit);
-      warnings.push(getCurrentLanguage() === "es"
-        ? "Esta versión está pensada para objetivos de pérdida de grasa, recomposición y mantenimiento del rendimiento."
-        : "当前版本更适合减脂、重组和维持表现目标。");
+      warnings.push("当前版本更适合减脂、重组和维持表现目标。");
     } else {
       plannedDailyDeficit = settings.goalMode === "performance" ? 0 : Math.min(100, modeDailyDeficit);
     }
@@ -4406,14 +4041,10 @@
     const trainingCarbs = Math.max(0, Math.round((split.trainingCalories - proteinTarget * 4 - fatTarget * 9) / 4));
     const restCarbs = Math.max(0, Math.round((split.restCalories - proteinTarget * 4 - fatTarget * 9) / 4));
     if (trainingCarbs < 180 || restCarbs < 120) {
-      warnings.push(getCurrentLanguage() === "es"
-        ? "Los carbohidratos están algo bajos para la frecuencia de entreno actual. Considera reducir el déficit, subir calorías o bajar la grasa objetivo."
-        : "当前训练频率下碳水偏低。可考虑降低缺口、提高热量，或下调脂肪目标。");
+      warnings.push("当前训练频率下碳水偏低。可考虑降低缺口、提高热量，或下调脂肪目标。");
     }
     if (buffer.calories && (trainingCarbs < 180 || restCarbs < 120)) {
-      warnings.push(getCurrentLanguage() === "es"
-        ? "El margen de error del registro está activo, pero el espacio de carbohidratos sigue apretado."
-        : "记录误差缓冲已生效，但当前碳水空间偏紧。");
+      warnings.push("记录误差缓冲已生效，但当前碳水空间偏紧。");
     }
 
     return {
@@ -4459,9 +4090,7 @@
       const maxBoost = Math.max(0, ((finalAverageCalories - minCalories) * restDays) / trainingDays);
       boost = Math.min(boost, maxBoost);
       restCalories = finalAverageCalories - (trainingDays * boost) / restDays;
-      warnings.push(getCurrentLanguage() === "es"
-        ? "Las calorías del día de descanso tocaron el mínimo de protección; se redujo automáticamente el extra calórico del día de entreno."
-        : "休息日热量触及最低保护线，已自动降低训练日热量加成。");
+      warnings.push("休息日热量触及最低保护线，已自动降低训练日热量加成。");
     }
     return {
       trainingCalories: finalAverageCalories + boost,
@@ -4515,9 +4144,7 @@
       return {
         adjustmentKcal: 0,
         evaluated: false,
-        message: getCurrentLanguage() === "es"
-          ? "No hay suficientes registros completos; por ahora no se ajustarán los objetivos automáticamente."
-          : "完整记录不足，暂不自动调整目标。"
+        message: "完整记录不足，暂不自动调整目标。"
       };
     }
     const previousRecords = completeRecords.filter((record) => record.date < addDays(today, -6));
@@ -4526,9 +4153,7 @@
       return {
         adjustmentKcal: 0,
         evaluated: false,
-        message: getCurrentLanguage() === "es"
-          ? "No hay suficientes registros completos; por ahora no se ajustarán los objetivos automáticamente."
-          : "完整记录不足，暂不自动调整目标。"
+        message: "完整记录不足，暂不自动调整目标。"
       };
     }
     const current7DayAvg = averageBodyWeight(currentRecords);
@@ -4545,9 +4170,7 @@
         actualChange,
         expectedChange,
         quality,
-        message: getCurrentLanguage() === "es"
-          ? "El sueño está bajo; por ahora no conviene seguir bajando calorías por la tendencia de peso."
-          : "睡眠评分偏低，暂不因为体重趋势继续压低热量。"
+        message: "睡眠评分偏低，暂不因为体重趋势继续压低热量。"
       };
     }
     if (quality.highHungerDays >= 4) {
@@ -4559,9 +4182,7 @@
         actualChange,
         expectedChange,
         quality,
-        message: getCurrentLanguage() === "es"
-          ? "El hambre ha estado alta en los últimos 14 días; por ahora no conviene bajar más las calorías."
-          : "近 14 天饥饿感偏高，暂不继续降低热量。"
+        message: "近 14 天饥饿感偏高，暂不继续降低热量。"
       };
     }
     if (quality.poorPerformanceDays >= 2 || (expectedChange > 0 && actualChange > expectedChange * 1.25)) {
@@ -4573,9 +4194,7 @@
         actualChange,
         expectedChange,
         quality,
-        message: getCurrentLanguage() === "es"
-          ? "La tendencia de 14 días baja demasiado rápido; el objetivo futuro sube un poco las calorías para proteger el rendimiento."
-          : "14 天趋势下降偏快，未来目标已小幅增加热量以保护训练表现。"
+        message: "14 天趋势下降偏快，未来目标已小幅增加热量以保护训练表现。"
       };
     }
     if (expectedChange > 0 && actualChange < expectedChange * 0.5) {
@@ -4587,9 +4206,7 @@
         actualChange,
         expectedChange,
         quality,
-        message: getCurrentLanguage() === "es"
-          ? "La tendencia de 14 días baja más lento de lo previsto; el objetivo futuro reduce ligeramente las calorías."
-          : "14 天趋势下降偏慢，未来目标已小幅降低热量。"
+        message: "14 天趋势下降偏慢，未来目标已小幅降低热量。"
       };
     }
     return {
@@ -4971,9 +4588,14 @@
     if (!points.length) {
       return `<div class="hint-box chart-empty" style="margin-top:12px">${t("weightChartEmpty")}</div>`;
     }
+    const regression = buildWeightRegression(points);
+    const regressionValues = regression
+      ? points.map((record) => regression.yForDate(record.date)).filter((value) => Number.isFinite(value))
+      : [];
     const values = points.map((record) => numberValue(record.bodyWeight));
     const goalWeight = summary.goalWeight || currentSettings().targetWeightKg;
     values.push(goalWeight);
+    values.push(...regressionValues);
     const minValue = Math.min(...values) - 0.6;
     const maxValue = Math.max(...values) + 0.6;
     const chartWidth = 320;
@@ -4987,12 +4609,19 @@
       ? chartWidth / 2
       : padX + (index / (points.length - 1)) * usableWidth;
     const polyline = points.map((record, index) => `${xFor(index)},${yFor(numberValue(record.bodyWeight))}`).join(" ");
+    const trendPolyline = regression
+      ? points.map((record, index) => `${xFor(index)},${yFor(regression.yForDate(record.date))}`).join(" ")
+      : "";
+    const trendClass = regression
+      ? (regression.weeklyChange < -0.1 ? "down" : (regression.weeklyChange > 0.1 ? "up" : "flat"))
+      : "";
     const goalY = yFor(goalWeight);
     const lastPoint = points[points.length - 1];
     return `
       <div class="weight-chart" style="margin-top:12px">
         <svg viewBox="0 0 ${chartWidth} ${chartHeight}" role="img" aria-label="${t("weightChartAria")}">
           <line x1="${padX}" y1="${goalY}" x2="${chartWidth - padX}" y2="${goalY}" class="goal-line"></line>
+          ${trendPolyline ? `<polyline points="${trendPolyline}" class="weight-trend-line ${trendClass}"></polyline>` : ""}
           <polyline points="${polyline}" class="weight-line"></polyline>
           ${points.map((record, index) => {
             const cx = xFor(index);
@@ -5004,8 +4633,42 @@
           <text x="${padX}" y="${chartHeight - 4}" text-anchor="start" class="axis-label">${fmtDate(points[0].date)}</text>
           <text x="${chartWidth - padX}" y="${chartHeight - 4}" text-anchor="end" class="axis-label">${fmtDate(lastPoint.date)}</text>
         </svg>
+        <div class="weight-chart-legend" aria-hidden="true">
+          <span><i class="actual"></i>${t("actualWeightLegend")}</span>
+          ${trendPolyline ? `<span><i class="trend ${trendClass}"></i>${t("trendLineLegend")}</span>` : ""}
+          <span><i class="target"></i>${t("targetLineLegend")}</span>
+        </div>
       </div>
     `;
+  }
+
+  function buildWeightRegression(points) {
+    if (!Array.isArray(points) || points.length < 3) {
+      return null;
+    }
+    const validPoints = points
+      .filter((record) => record?.date && Number.isFinite(numberValue(record.bodyWeight)));
+    if (validPoints.length < 3) {
+      return null;
+    }
+    const firstDate = validPoints[0].date;
+    const xs = validPoints.map((record) => daysBetween(firstDate, record.date));
+    const ys = validPoints.map((record) => numberValue(record.bodyWeight));
+    const n = validPoints.length;
+    const meanX = xs.reduce((sum, value) => sum + value, 0) / n;
+    const meanY = ys.reduce((sum, value) => sum + value, 0) / n;
+    const numerator = xs.reduce((sum, x, index) => sum + (x - meanX) * (ys[index] - meanY), 0);
+    const denominator = xs.reduce((sum, x) => sum + Math.pow(x - meanX, 2), 0);
+    if (!denominator) {
+      return null;
+    }
+    const slopePerDay = numerator / denominator;
+    const intercept = meanY - slopePerDay * meanX;
+    return {
+      slopePerDay,
+      weeklyChange: round1(slopePerDay * 7),
+      yForDate: (date) => intercept + slopePerDay * daysBetween(firstDate, date)
+    };
   }
 
   function renderRollingAverageStat(label, actual, expected, unit) {
@@ -5222,13 +4885,41 @@
     return dates;
   }
 
+  function getMonthDates(baseDate) {
+    const parsed = new Date(`${baseDate || localDateString()}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) {
+      return [];
+    }
+    const year = parsed.getFullYear();
+    const month = parsed.getMonth();
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    return Array.from({ length: lastDay }, (_, index) => localDateString(new Date(year, month, index + 1)));
+  }
+
+  function getMonthLeadingBlankCount(baseDate) {
+    const dates = getMonthDates(baseDate);
+    if (!dates.length) {
+      return 0;
+    }
+    const weekday = new Date(`${dates[0]}T00:00:00`).getDay();
+    return (weekday + 6) % 7;
+  }
+
+  function formatMonthTitle(baseDate) {
+    const parsed = new Date(`${baseDate || localDateString()}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) {
+      return "";
+    }
+    return `${parsed.getFullYear()} 年 ${parsed.getMonth() + 1} 月`;
+  }
+
   function nowIso() {
     return new Date().toISOString();
   }
 
   function fmtDate(dateText) {
     try {
-      return new Date(`${dateText}T00:00:00`).toLocaleDateString(getCurrentLanguage() === "es" ? "es-ES" : "zh-CN", {
+      return new Date(`${dateText}T00:00:00`).toLocaleDateString("zh-CN", {
         month: "numeric",
         day: "numeric",
         weekday: "short"
@@ -5240,7 +4931,7 @@
 
   function fmtDateTime(isoText) {
     try {
-      return new Date(isoText).toLocaleString(getCurrentLanguage() === "es" ? "es-ES" : "zh-CN", {
+      return new Date(isoText).toLocaleString("zh-CN", {
         hour12: false,
         month: "numeric",
         day: "numeric",
@@ -5254,7 +4945,7 @@
 
   function fmtTime(isoText) {
     try {
-      return new Date(isoText).toLocaleTimeString(getCurrentLanguage() === "es" ? "es-ES" : "zh-CN", {
+      return new Date(isoText).toLocaleTimeString("zh-CN", {
         hour12: false,
         hour: "2-digit",
         minute: "2-digit"
