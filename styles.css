@@ -1545,6 +1545,7 @@ input.big {
   padding: 12px;
   box-shadow: none;
   margin-top: 10px;
+  scroll-margin-top: 156px;
 }
 
 .entry-card.compact {
@@ -1556,6 +1557,21 @@ input.big {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+}
+
+.entry-actions {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.entry-favorite-btn {
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 12px;
+  font-size: 12px;
 }
 
 .entry-icon-btn {
@@ -1591,6 +1607,14 @@ input.big {
 
 .entry-icon-btn:active {
   background: rgba(245, 241, 234, 0.9);
+}
+
+.entry-favorite-panel {
+  margin-top: 10px;
+  padding: 8px;
+  border: 1px solid rgba(216, 209, 198, 0.58);
+  border-radius: 16px;
+  background: rgba(245, 241, 234, 0.48);
 }
 
 .history-toolbar {

@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.20.8";
+  const APP_VERSION = "1.20.9";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -200,6 +200,7 @@
       favoriteQuickListAria: "常用餐快捷套用列表",
       foodSummaryMore: "{items}等 {count} 项",
       favoriteName: "常用餐名称",
+      entryFavoriteApply: "套用常用",
       currentSummary: "当前汇总",
       addFoodItem: "新增食物项",
       edit: "编辑",
@@ -646,6 +647,7 @@
       favoriteQuickListAria: "Lista rápida de comidas frecuentes",
       foodSummaryMore: "{items} y {count} más",
       favoriteName: "Nombre frecuente",
+      entryFavoriteApply: "Usar frecuente",
       currentSummary: "Resumen actual",
       addFoodItem: "Agregar alimento",
       edit: "Editar",
@@ -1018,6 +1020,7 @@
     editingFavId: null,
     favoriteDraft: null,
     favoriteSelectionId: "",
+    entryFavoriteTarget: "",
     historyDateFilter: "",
     historySearchText: "",
     historyDayTypeFilter: "all",
@@ -1290,6 +1293,19 @@
     }
     if (button.dataset.applyFavorite) {
       await applyFavorite(button.dataset.applyFavorite, button.dataset.applyFavoriteMeal);
+      return;
+    }
+    if (button.dataset.entryFavoriteTarget) {
+      state.entryFavoriteTarget = state.entryFavoriteTarget === button.dataset.entryFavoriteTarget
+        ? ""
+        : button.dataset.entryFavoriteTarget;
+      render();
+      const [mealId, entryIndex] = button.dataset.entryFavoriteTarget.split("-").map(Number);
+      scrollEntryIntoView(mealId, entryIndex);
+      return;
+    }
+    if (button.dataset.applyFavoriteEntry) {
+      await applyFavorite(button.dataset.applyFavoriteEntry, button.dataset.applyFavoriteMeal, button.dataset.applyFavoriteEntryIndex);
       return;
     }
     if (button.id === "nextMealBtn") {
@@ -2027,29 +2043,35 @@
   function renderEntry(meal, entry, entryIndex) {
     const suggestion = entryPlaceholderSuggestions();
     const canDelete = meal.entries.length > 1;
+    const entryTarget = `${meal.id}-${entryIndex}`;
+    const favoriteOpen = state.entryFavoriteTarget === entryTarget;
     const actionLabel = canDelete
       ? t("deleteFoodAria", { meal: mealLabel(meal.id), index: entryIndex + 1 })
       : t("clearFoodAria", { index: entryIndex + 1 });
     return `
-      <div class="entry-card">
+      <div class="entry-card" id="entry-${meal.id}-${entryIndex}" data-entry-card="${entryTarget}">
         <div class="entry-head">
           <div><div class="item-title">${t("foodItem", { index: entryIndex + 1 })}</div></div>
-          <button
-            class="entry-icon-btn ${canDelete ? "danger" : ""}"
-            type="button"
-            data-delete-entry="${meal.id}-${entryIndex}"
-            aria-label="${actionLabel}"
-            title="${actionLabel}"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M9 3h6"/>
-              <path d="M4 6h16"/>
-              <path d="M7 6l1 13a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-13"/>
-              <path d="M10 10v7"/>
-              <path d="M14 10v7"/>
-            </svg>
-          </button>
+          <div class="entry-actions">
+            <button class="mini-btn ghost entry-favorite-btn" type="button" data-entry-favorite-target="${entryTarget}" aria-expanded="${favoriteOpen ? "true" : "false"}">${t("entryFavoriteApply")}</button>
+            <button
+              class="entry-icon-btn ${canDelete ? "danger" : ""}"
+              type="button"
+              data-delete-entry="${meal.id}-${entryIndex}"
+              aria-label="${actionLabel}"
+              title="${actionLabel}"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M9 3h6"/>
+                <path d="M4 6h16"/>
+                <path d="M7 6l1 13a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-13"/>
+                <path d="M10 10v7"/>
+                <path d="M14 10v7"/>
+              </svg>
+            </button>
+          </div>
         </div>
+        ${favoriteOpen ? renderEntryFavoritePicker(meal.id, entryIndex) : ""}
         <div style="margin-top:10px">
           <label class="label">${t("name")}</label>
           <input data-entry="${meal.id}-${entryIndex}-name" autocomplete="off" spellcheck="false" placeholder="${esc(entry.name ? "" : suggestion.name)}" value="${esc(entry.name)}" />
@@ -2073,6 +2095,26 @@
           </div>
         </div>
         <div data-entry-preview="${meal.id}-${entryIndex}">${entryPreviewMarkup(entry, `${meal.id}-${entryIndex}`)}</div>
+      </div>
+    `;
+  }
+
+  function renderEntryFavoritePicker(mealId, entryIndex) {
+    return `
+      <div class="entry-favorite-panel">
+        ${state.favorites.length
+          ? `<div class="favorite-quick-list" role="list" aria-label="${t("favoriteQuickListAria")}">
+              ${state.favorites.map((favorite) => {
+                const totals = favoriteTotals(favorite);
+                return `
+                  <button class="favorite-quick-item" type="button" data-apply-favorite-entry="${favorite.id}" data-apply-favorite-meal="${mealId}" data-apply-favorite-entry-index="${entryIndex}" role="listitem" aria-label="${t("apply")} ${esc(favorite.name)}">
+                    <span class="favorite-quick-name">${esc(favorite.name)}</span>
+                    <span class="favorite-quick-macros">${round1(totals.calories)} kcal · P ${round1(totals.protein)} · C ${round1(totals.carbs)} · F ${round1(totals.fat)}</span>
+                  </button>
+                `;
+              }).join("")}
+            </div>`
+          : `<div class="hint-box empty-state"><div class="empty-icon">☆</div><strong>${t("noFavorites")}</strong><span>${t("noFavoritesHelp")}</span></div>`}
       </div>
     `;
   }
@@ -2896,8 +2938,11 @@
     setNotice(t("saved"), { tone: "ok" });
   }
 
-  async function applyFavorite(id, targetMealId = state.activeMeal) {
+  async function applyFavorite(id, targetMealId = state.activeMeal, targetEntryIndex = null) {
     const mealId = clampMealId(targetMealId);
+    const entryIndex = targetEntryIndex === null || targetEntryIndex === undefined || targetEntryIndex === ""
+      ? null
+      : Math.max(0, Math.round(Number(targetEntryIndex) || 0));
     const existing = state.favorites.find((item) => item.id === id);
     const favorite = existing ? normalizeFavorite({
       ...existing,
@@ -2910,26 +2955,47 @@
     await storage.putFavorite(favorite);
     state.favorites = [favorite, ...state.favorites.filter((item) => item.id !== favorite.id)].sort(sortFavorites);
     state.activeMeal = mealId;
-    state.meals[mealId - 1].entries = favorite.entries.map((entry) => normalizeEntry(entry));
+    const favoriteEntries = favorite.entries.map((entry) => normalizeEntry(entry));
+    if (entryIndex === null) {
+      state.meals[mealId - 1].entries = favoriteEntries;
+    } else {
+      const meal = state.meals[mealId - 1];
+      while (meal.entries.length <= entryIndex) {
+        meal.entries.push(makeEntry());
+      }
+      meal.entries.splice(entryIndex, 1, ...favoriteEntries);
+      state.entryFavoriteTarget = "";
+    }
     state.ui.favoriteQuickOpen = false;
     state.favoriteSelectionId = "";
     saveUiState();
     markDirty();
     render();
-    scrollCurrentMealIntoView();
+    if (entryIndex === null) {
+      scrollCurrentMealIntoView();
+    } else {
+      scrollEntryIntoView(mealId, entryIndex);
+    }
     setNotice(t("applied"), { tone: "ok" });
   }
 
   function addEntryToActiveMeal() {
-    state.meals[state.activeMeal - 1].entries.push(makeEntry());
+    const meal = state.meals[state.activeMeal - 1];
+    meal.entries.push(makeEntry());
+    const entryIndex = meal.entries.length - 1;
+    state.entryFavoriteTarget = `${state.activeMeal}-${entryIndex}`;
     markDirty();
     render();
+    scrollEntryIntoView(state.activeMeal, entryIndex, { focusName: true });
   }
 
   function deleteEntry(mealId, entryIndex) {
     const meal = state.meals[mealId - 1];
     if (!meal) {
       return;
+    }
+    if (state.entryFavoriteTarget === `${mealId}-${entryIndex}`) {
+      state.entryFavoriteTarget = "";
     }
     if (meal.entries.length <= 1) {
       meal.entries[0] = makeEntry();
@@ -4376,6 +4442,22 @@
         return;
       }
       node.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function scrollEntryIntoView(mealId, entryIndex, options = {}) {
+    window.requestAnimationFrame(() => {
+      const node = document.getElementById(`entry-${mealId}-${entryIndex}`);
+      if (!node) {
+        return;
+      }
+      node.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (options.focusName) {
+        const input = node.querySelector(`[data-entry="${mealId}-${entryIndex}-name"]`);
+        if (input && typeof input.focus === "function") {
+          input.focus({ preventScroll: true });
+        }
+      }
     });
   }
 
