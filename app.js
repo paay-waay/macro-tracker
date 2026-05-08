@@ -1802,7 +1802,11 @@
               <label class="visually-hidden" for="dateInput">${t("date")}</label>
               <input id="dateInput" class="date-compact" type="date" aria-label="${t("date")}" value="${esc(state.date)}" />
             </div>
-            <div class="daily-type-row">
+            <div class="daily-weight-type-row">
+              <div class="field-shell daily-weight-field">
+                <label class="label" for="bodyWeightInput">${t("bodyWeight")}</label>
+                <input id="bodyWeightInput" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" value="${esc(state.bodyWeight)}" placeholder="kg" />
+              </div>
               <div class="field-shell daily-type-field">
                 <span class="visually-hidden">${t("dayType")}</span>
                 ${renderSegmentedControl(t("dayType"), [

@@ -906,7 +906,7 @@ input.big {
 
 .daily-weight-type-row {
   display: grid;
-  grid-template-columns: minmax(96px, 0.75fr) minmax(160px, 1.25fr);
+  grid-template-columns: minmax(92px, 0.68fr) minmax(168px, 1.32fr);
   gap: 10px;
   align-items: end;
   min-width: 0;
@@ -928,6 +928,11 @@ input.big {
 .daily-weight-field input,
 .daily-type-field .segmented {
   min-height: 46px;
+}
+
+.daily-weight-field input {
+  height: 46px;
+  padding-inline: 10px;
 }
 
 .daily-type-field .segmented {
