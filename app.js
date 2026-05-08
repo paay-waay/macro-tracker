@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.20.7";
+  const APP_VERSION = "1.20.8";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -1279,8 +1279,9 @@
       return;
     }
     if (button.dataset.meal) {
-      state.activeMeal = Number(button.dataset.meal);
+      state.activeMeal = clampMealId(Number(button.dataset.meal));
       render();
+      scrollCurrentMealIntoView();
       return;
     }
     if (button.id === "saveFavBtn") {
@@ -1288,12 +1289,13 @@
       return;
     }
     if (button.dataset.applyFavorite) {
-      await applyFavorite(button.dataset.applyFavorite);
+      await applyFavorite(button.dataset.applyFavorite, button.dataset.applyFavoriteMeal);
       return;
     }
     if (button.id === "nextMealBtn") {
-      state.activeMeal = Math.min(MEAL_LABELS.length, state.activeMeal + 1);
+      state.activeMeal = clampMealId(state.activeMeal + 1);
       render();
+      scrollCurrentMealIntoView();
       return;
     }
     if (button.id === "addEntryBtn") {
@@ -1720,7 +1722,7 @@
       <div class="meal-accordion" aria-label="${t("mealSwitcherAria")}">
         ${state.meals.map((mealItem) => renderMealRow(mealItem)).join("")}
       </div>
-      <div class="card current-meal-card">
+      <div class="card current-meal-card" id="currentMealCard" data-current-meal="${meal.id}">
         <div class="item-top" style="margin-bottom:8px">
           <div>
             <h3>${esc(mealLabel(meal.id))}</h3>
@@ -1740,7 +1742,7 @@
           <div class="meal-guidance ${mealGuidance ? "" : "hidden"}" id="mealGuidance">${esc(mealGuidance)}</div>
         </div>
         ` : ""}
-        ${renderFavoriteQuickApply()}
+        ${renderFavoriteQuickApply(meal.id)}
         <div>${meal.entries.map((entry, entryIndex) => renderEntry(meal, entry, entryIndex)).join("")}</div>
         <div class="grid-2" style="margin-top:12px">
           <button class="btn" id="addEntryBtn" type="button">${t("addItem")}</button>
@@ -1993,7 +1995,7 @@
     return { labelKey: "great", tone: "info" };
   }
 
-  function renderFavoriteQuickApply() {
+  function renderFavoriteQuickApply(mealId = state.activeMeal) {
     const open = !!state.ui.favoriteQuickOpen;
     return `
       <div class="favorite-quick">
@@ -2008,7 +2010,7 @@
                   ${state.favorites.map((favorite) => {
                     const totals = favoriteTotals(favorite);
                     return `
-                      <button class="favorite-quick-item" type="button" data-apply-favorite="${favorite.id}" role="listitem" aria-label="${t("apply")} ${esc(favorite.name)}">
+                      <button class="favorite-quick-item" type="button" data-apply-favorite="${favorite.id}" data-apply-favorite-meal="${mealId}" role="listitem" aria-label="${t("apply")} ${esc(favorite.name)}">
                         <span class="favorite-quick-name">${esc(favorite.name)}</span>
                         <span class="favorite-quick-macros">${round1(totals.calories)} kcal · P ${round1(totals.protein)} · C ${round1(totals.carbs)} · F ${round1(totals.fat)}</span>
                       </button>
@@ -2894,7 +2896,8 @@
     setNotice(t("saved"), { tone: "ok" });
   }
 
-  async function applyFavorite(id) {
+  async function applyFavorite(id, targetMealId = state.activeMeal) {
+    const mealId = clampMealId(targetMealId);
     const existing = state.favorites.find((item) => item.id === id);
     const favorite = existing ? normalizeFavorite({
       ...existing,
@@ -2906,12 +2909,14 @@
     }
     await storage.putFavorite(favorite);
     state.favorites = [favorite, ...state.favorites.filter((item) => item.id !== favorite.id)].sort(sortFavorites);
-    state.meals[state.activeMeal - 1].entries = favorite.entries.map((entry) => normalizeEntry(entry));
+    state.activeMeal = mealId;
+    state.meals[mealId - 1].entries = favorite.entries.map((entry) => normalizeEntry(entry));
     state.ui.favoriteQuickOpen = false;
     state.favoriteSelectionId = "";
     saveUiState();
     markDirty();
     render();
+    scrollCurrentMealIntoView();
     setNotice(t("applied"), { tone: "ok" });
   }
 
@@ -4357,6 +4362,21 @@
     if (node && typeof node.focus === "function") {
       node.focus();
     }
+  }
+
+  function clampMealId(value) {
+    const mealId = Math.round(Number(value) || 1);
+    return Math.min(MEAL_LABELS.length, Math.max(1, mealId));
+  }
+
+  function scrollCurrentMealIntoView() {
+    window.requestAnimationFrame(() => {
+      const node = document.getElementById("currentMealCard");
+      if (!node) {
+        return;
+      }
+      node.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }
 
   function translateSystemMessage(message) {
