@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.20.4";
+  const APP_VERSION = "1.20.5";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -73,7 +73,7 @@
       help: "使用说明",
       closeSettings: "关闭设置",
       closeHelp: "关闭使用说明",
-      saveSettings: "保存设置并生成未来目标",
+      saveSettings: "保存设置并重新计算目标",
       calories: "热量",
       protein: "蛋白质",
       carbs: "碳水",
@@ -248,7 +248,7 @@
       past7Days: "过去 7 天",
       trainingPerformanceSummary: "训练表现",
       greatTrainingDays: "很好 / 训练日",
-      planStartHint: "这些是生成未来目标的计划基准；实际判断会参考后续体重趋势和记录质量。",
+      planStartHint: "这些是实时目标计算的计划基准；实际判断会参考后续体重趋势和记录质量。",
       planStartDate: "计划开始日期",
       planStartWeight: "计划起点体重 kg",
       planStartBmr: "计划起点 BMR（kcal/天）",
@@ -276,7 +276,23 @@
       trend14: "14 天趋势",
       trendComparison: "前 7 天 {previous} kg → 近 7 天 {current} kg",
       actualVsPlanned: "实际变化 {actual} kg；计划变化 {expected} kg",
-      settingsCanGenerate: "当前设置可生成未来目标。",
+      settingsCanGenerate: "当前设置会用于实时计算今天、历史和未来日期目标。",
+      targetCalcDetails: "目标计算详情",
+      effectiveWeight: "采用体重",
+      formulaTdee: "公式 TDEE",
+      observedTdee: "实际校准 TDEE",
+      observedTdeeUnavailable: "记录不足",
+      finalTdee: "最终 TDEE",
+      plannedDeficit: "计划缺口",
+      trackingBuffer: "记录缓冲",
+      dataSource: "数据来源",
+      sourceFormula: "公式",
+      sourceBlended: "公式+实际记录校准",
+      sourceFallback: "fallback",
+      recoveryFlag: "恢复压力",
+      recoveryFlagYes: "有",
+      recoveryFlagNo: "无",
+      targetDetailsHelp: "首页只显示最终目标；这里展示实时引擎本次采用的计算依据。",
       importSummary: "本次将导入 <strong>{rows}</strong> 行记录数据，涉及 <strong>{dates}</strong> 个日期；另含 <strong>{favoriteRows}</strong> 行常用餐数据，涉及 <strong>{favorites}</strong> 个常用餐。",
       importRecordSummary: "记录新增日期：<strong>{newCount}</strong> 个；覆盖已有记录：<strong>{collisionCount}</strong> 个；内容相同无需更新：<strong>{unchangedCount}</strong> 个。",
       importFavoriteSummary: "常用餐新增：<strong>{newCount}</strong> 个；覆盖已有常用餐：<strong>{collisionCount}</strong> 个；内容相同无需更新：<strong>{unchangedCount}</strong> 个。",
@@ -328,7 +344,7 @@
       helpStep2: "每一餐默认有 1 个输入板块；若这餐由多个食物组成，可点“新增一项”继续录入。",
       helpStep3: "每项只需填写名称、kcal、P、C、F。系统会自动汇总为本餐与全天数据。",
       helpStep4: "系统会自动保存当天草稿；只有点“保存”后，这一天才会正式进入历史记录。",
-      helpStep5: "设置页可生成未来每日目标；历史页支持导出 CSV 与带预览确认的 CSV 导入。",
+      helpStep5: "设置页会实时重算每日目标；历史页支持导出 CSV 与带预览确认的 CSV 导入。",
       helpVersion: "版本：{version}",
       importTitle: "导入确认",
       importCancel: "取消",
@@ -467,17 +483,18 @@
       suggestionVeryLowFat: "建议：尽量低脂",
       suggestionFat1020: "建议：10-20 g",
       suggestionFat510: "建议：5-10 g",
-      previewTargetDateWarning: "目标日期需要晚于今天，系统不会生成过去或今天的目标。",
+      previewTargetDateWarning: "目标日期需要晚于当前日期，系统会按最低保护线计算。",
       previewAggressiveTimelineWarning: "目标时间线需要更大缺口，系统已按当前目标模式限制缺口以保护训练表现。",
       previewGoalModeWarning: "当前版本更适合减脂、重组和维持表现目标。",
       previewLowCarbWarning: "当前训练频率下碳水偏低。可考虑降低缺口、提高热量，或下调脂肪目标。",
       previewBufferLowCarbWarning: "记录误差缓冲已生效，但当前碳水空间偏紧。",
+      previewMinCalorieWarning: "计划热量触及最低保护线，系统已避免继续下调。",
       previewRestProtectionWarning: "休息日热量触及最低保护线，已自动降低训练日热量加成。",
       trendAdjustIncomplete: "完整记录不足，暂不自动调整目标。",
       trendAdjustLowSleep: "睡眠评分偏低，暂不因为体重趋势继续压低热量。",
       trendAdjustHighHunger: "近 14 天饥饿感偏高，暂不继续降低热量。",
-      trendAdjustFastLoss: "14 天趋势下降偏快，未来目标已小幅增加热量以保护训练表现。",
-      trendAdjustSlowLoss: "14 天趋势下降偏慢，未来目标已小幅降低热量。",
+      trendAdjustFastLoss: "14 天趋势下降偏快，本次实时目标会小幅增加热量以保护训练表现。",
+      trendAdjustSlowLoss: "14 天趋势下降偏慢，本次实时目标会小幅降低热量。",
       indexedDbUnsupported: "浏览器不支持 IndexedDB",
       indexedDbOpenFailed: "IndexedDB 打开失败",
       indexedDbReadFailed: "读取 {store} 失败",
@@ -501,7 +518,7 @@
       help: "Ayuda",
       closeSettings: "Cerrar ajustes",
       closeHelp: "Cerrar ayuda",
-      saveSettings: "Guardar ajustes y generar metas",
+      saveSettings: "Guardar y recalcular metas",
       calories: "Calorías",
       protein: "Proteína",
       carbs: "Carbos",
@@ -676,7 +693,7 @@
       past7Days: "Últimos 7 días",
       trainingPerformanceSummary: "Rendimiento",
       greatTrainingDays: "Muy bien / entreno",
-      planStartHint: "Estos datos son la base del plan; el sistema usará tendencia de peso y calidad de registro.",
+      planStartHint: "Estos datos son la base del cálculo en vivo; usará tendencia de peso y calidad de registro.",
       planStartDate: "Fecha de inicio",
       planStartWeight: "Peso inicial kg",
       planStartBmr: "BMR inicial (kcal/día)",
@@ -704,7 +721,23 @@
       trend14: "Tendencia 14 días",
       trendComparison: "7 previos {previous} kg → 7 recientes {current} kg",
       actualVsPlanned: "Cambio real {actual} kg; plan {expected} kg",
-      settingsCanGenerate: "Los ajustes actuales pueden generar metas futuras.",
+      settingsCanGenerate: "Estos ajustes calculan metas en tiempo real para hoy, historial y fechas futuras.",
+      targetCalcDetails: "Detalle del cálculo",
+      effectiveWeight: "Peso usado",
+      formulaTdee: "TDEE por fórmula",
+      observedTdee: "TDEE calibrado",
+      observedTdeeUnavailable: "Datos insuficientes",
+      finalTdee: "TDEE final",
+      plannedDeficit: "Déficit plan",
+      trackingBuffer: "Margen de registro",
+      dataSource: "Fuente de datos",
+      sourceFormula: "Fórmula",
+      sourceBlended: "Fórmula + registros",
+      sourceFallback: "fallback",
+      recoveryFlag: "Presión de recuperación",
+      recoveryFlagYes: "Sí",
+      recoveryFlagNo: "No",
+      targetDetailsHelp: "Hoy solo muestra la meta final; aquí ves la base usada por el motor en tiempo real.",
       importSummary: "Se importarán <strong>{rows}</strong> filas de registros para <strong>{dates}</strong> fechas; además <strong>{favoriteRows}</strong> filas de frecuentes para <strong>{favorites}</strong> comidas.",
       importRecordSummary: "Fechas nuevas: <strong>{newCount}</strong>; se sobrescriben: <strong>{collisionCount}</strong>; sin cambios: <strong>{unchangedCount}</strong>.",
       importFavoriteSummary: "Frecuentes nuevos: <strong>{newCount}</strong>; se sobrescriben: <strong>{collisionCount}</strong>; sin cambios: <strong>{unchangedCount}</strong>.",
@@ -756,7 +789,7 @@
       helpStep2: "Cada comida empieza con 1 bloque; si tiene más alimentos, usa Agregar ítem.",
       helpStep3: "Solo llena nombre, kcal, P, C y F. El sistema suma comida y día.",
       helpStep4: "El borrador se guarda solo; el día entra al historial al tocar Guardar.",
-      helpStep5: "Ajustes genera metas futuras; Historial permite exportar e importar CSV con vista previa.",
+      helpStep5: "Ajustes recalcula metas en tiempo real; Historial exporta e importa CSV con vista previa.",
       helpVersion: "Versión: {version}",
       importTitle: "Confirmar importación",
       importCancel: "Cancelar",
@@ -895,17 +928,18 @@
       suggestionVeryLowFat: "Sugerencia: muy bajo en grasa",
       suggestionFat1020: "Sugerencia: 10-20 g",
       suggestionFat510: "Sugerencia: 5-10 g",
-      previewTargetDateWarning: "La fecha meta debe ser posterior a hoy; no se generarán metas pasadas ni de hoy.",
+      previewTargetDateWarning: "La fecha meta debe ser posterior a la fecha actual; se usará el mínimo protegido.",
       previewAggressiveTimelineWarning: "La línea de tiempo pide más déficit; se limitó para proteger rendimiento.",
       previewGoalModeWarning: "Esta versión funciona mejor para pérdida de grasa, recomposición y rendimiento.",
       previewLowCarbWarning: "Los carbos quedan bajos para esta frecuencia. Considera menor déficit, más calorías o menos grasa.",
       previewBufferLowCarbWarning: "El margen de registro está activo, pero el espacio de carbos está justo.",
+      previewMinCalorieWarning: "Las calorías tocaron el mínimo protegido; no se bajan más.",
       previewRestProtectionWarning: "El día de descanso llegó al mínimo; se redujo el extra de entreno.",
       trendAdjustIncomplete: "Faltan registros completos; no se ajustan metas.",
       trendAdjustLowSleep: "Sueño bajo; no se bajan calorías por tendencia de peso.",
       trendAdjustHighHunger: "Hambre alta en 14 días; no se bajan más calorías.",
-      trendAdjustFastLoss: "Tendencia de 14 días muy rápida; se suben un poco calorías para proteger rendimiento.",
-      trendAdjustSlowLoss: "Tendencia de 14 días lenta; se bajan un poco calorías futuras.",
+      trendAdjustFastLoss: "Tendencia de 14 días muy rápida; la meta en vivo sube un poco calorías para proteger rendimiento.",
+      trendAdjustSlowLoss: "Tendencia de 14 días lenta; la meta en vivo baja un poco calorías.",
       indexedDbUnsupported: "El navegador no soporta IndexedDB",
       indexedDbOpenFailed: "No se pudo abrir IndexedDB",
       indexedDbReadFailed: "No se pudo leer {store}",
@@ -2427,7 +2461,7 @@
         <div class="hint-box" style="margin-top:10px">${t("settingsAutoEstimateHint")}</div>
       `)}
       ${renderSettingsGroup("trend", t("trendReference"), `<div id="settingsTrendBody">${renderSettingsTrendReference()}</div>`)}
-      ${renderSettingsGroup("preview", t("planPreview"), `<div id="settingsPreviewBody">${renderSettingsPreview(draft)}</div>`)}
+      ${renderSettingsGroup("preview", t("targetCalcDetails"), `<div id="settingsPreviewBody">${renderSettingsPreview(draft)}</div>`)}
     `;
   }
 
@@ -2484,12 +2518,24 @@
   function renderSettingsPreview(draft) {
     const preview = computeSettingsPreview(draft, { includeTrend: true });
     const expectedWeekly = round1((preview.plannedDailyDeficit * 7) / 7700);
+    const sourceLabel = preview.explanation.source === "fallback"
+      ? t("sourceFallback")
+      : (preview.explanation.source === "blended" ? t("sourceBlended") : t("sourceFormula"));
+    const observedText = preview.observedTdee == null
+      ? t("observedTdeeUnavailable")
+      : `${preview.observedTdee} kcal · ${Math.round(preview.observedTdeeConfidence * 100)}%`;
     return `
       <div class="stat-grid">
-        <div class="stat"><div class="k">${t("estimatedTdee")}</div><div class="v">${preview.tdee}</div><div class="h">${t("activityFactor", { value: preview.activityFactor })}</div></div>
-        <div class="stat"><div class="k">${t("plannedAverageCalories")}</div><div class="v">${preview.finalAverageCalories}</div><div class="h">${t("trackingBufferIncluded")}</div></div>
-        <div class="stat"><div class="k">${t("trainingDayTarget")}</div><div class="v">${preview.trainingCalories}</div><div class="h">P ${preview.proteinTarget} · C ${preview.trainingCarbs} · F ${preview.fatTarget}</div></div>
-        <div class="stat"><div class="k">${t("restDayTarget")}</div><div class="v">${preview.restCalories}</div><div class="h">P ${preview.proteinTarget} · C ${preview.restCarbs} · F ${preview.fatTarget}</div></div>
+        <div class="stat"><div class="k">${t("effectiveWeight")}</div><div class="v">${preview.effectiveWeightKg}</div><div class="h">kg</div></div>
+        <div class="stat"><div class="k">BMR</div><div class="v">${preview.settings.bmr}</div><div class="h">${t("activityFactor", { value: preview.activityFactor })}</div></div>
+        <div class="stat"><div class="k">${t("formulaTdee")}</div><div class="v">${preview.formulaTdee || "—"}</div><div class="h">kcal</div></div>
+        <div class="stat"><div class="k">${t("observedTdee")}</div><div class="v">${observedText}</div><div class="h">${t("dataSource")} · ${sourceLabel}</div></div>
+        <div class="stat"><div class="k">${t("finalTdee")}</div><div class="v">${preview.finalTdee || preview.tdee}</div><div class="h">kcal</div></div>
+        <div class="stat"><div class="k">${t("plannedDeficit")}</div><div class="v">-${preview.plannedDailyDeficit}</div><div class="h">kcal</div></div>
+        <div class="stat"><div class="k">${t("trackingBuffer")}</div><div class="v">${preview.trackingBufferCalories}</div><div class="h">kcal</div></div>
+        <div class="stat"><div class="k">${t("plannedAverageCalories")}</div><div class="v">${preview.finalAverageCalories}</div><div class="h">${t("recoveryFlag")} · ${preview.explanation.recoveryFlag ? t("recoveryFlagYes") : t("recoveryFlagNo")}</div></div>
+        <div class="stat"><div class="k">${t("trainingDayTarget")}</div><div class="v">${preview.trainingCalories}</div><div class="h">P ${preview.trainingTarget.protein} · C ${preview.trainingCarbs} · F ${preview.trainingTarget.fat}</div></div>
+        <div class="stat"><div class="k">${t("restDayTarget")}</div><div class="v">${preview.restCalories}</div><div class="h">P ${preview.restTarget.protein} · C ${preview.restCarbs} · F ${preview.restTarget.fat}</div></div>
         <div class="stat"><div class="k">${t("expectedWeeklyChange")}</div><div class="v">${expectedWeekly ? `-${expectedWeekly}` : "0"}</div><div class="h">${t("kgPerWeek")}</div></div>
         <div class="stat"><div class="k">${t("daysRemaining")}</div><div class="v">${preview.daysRemaining}</div><div class="h">${t("fromTomorrowToTarget")}</div></div>
       </div>
@@ -2500,6 +2546,7 @@
           <div class="small" style="margin-top:4px">${t("actualVsPlanned", { actual: preview.trend.actualChange, expected: preview.trend.expectedChange })}</div>
         </div>
       ` : ""}
+      <div class="hint-box" style="margin-top:10px">${t("targetDetailsHelp")}</div>
       ${preview.warnings.length ? `
         <div class="list" style="margin-top:10px">
           ${preview.warnings.map((warning) => `<div class="warn-box">${esc(warning)}</div>`).join("")}
@@ -3372,25 +3419,15 @@
       settingsVersion: (state.settings?.settingsVersion || 0) + 1,
       generatedAt: nowIso()
     });
-    const generation = generateFutureTargets(settings, { includeTrend: true });
-    settings.lastTrendAdjustment = generation.trend || null;
-    if (generation.trend?.evaluated) {
+    const preview = computeSettingsPreview(settings, { includeTrend: true });
+    settings.lastTrendAdjustment = preview.trend || null;
+    if (preview.trend?.evaluated) {
       settings.lastAutoAdjustmentDate = localDateString();
     }
 
-    await Promise.all([
-      storage.putSettings(settings),
-      generation.targets.length ? storage.putTargets(generation.targets) : Promise.resolve(),
-      generation.deleteDates.length ? storage.deleteTargets(generation.deleteDates) : Promise.resolve()
-    ]);
+    await storage.putSettings(settings);
 
     state.settings = settings;
-    generation.deleteDates.forEach((date) => {
-      delete state.dailyTargets[date];
-    });
-    generation.targets.forEach((targetRow) => {
-      state.dailyTargets[targetRow.date] = normalizeDailyTarget(targetRow);
-    });
 
     closeSettingsModal();
     render();
@@ -3482,6 +3519,7 @@
   }
 
   function currentRecord() {
+    const targetValues = targetForDate(state.date, state.dayType || DEFAULT_DAY_TYPE);
     const record = normalizeRecord({
       date: state.date,
       dayType: state.dayType,
@@ -3490,6 +3528,16 @@
       hungerLevel: state.hungerLevel,
       sleepScore: state.sleepScore,
       meals: clone(state.meals),
+      targetSnapshot: {
+        date: state.date,
+        dayType: state.dayType || DEFAULT_DAY_TYPE,
+        calories: targetValues.calories,
+        protein: targetValues.protein,
+        carbs: targetValues.carbs,
+        fat: targetValues.fat,
+        computedAt: nowIso(),
+        sourceVersion: APP_VERSION
+      },
       savedAt: nowIso()
     });
     return record;
@@ -3684,7 +3732,7 @@
   }
 
   function target() {
-    return targetForDate(state.date, state.dayType || state.dailyTargets?.[state.date]?.dayType || DEFAULT_DAY_TYPE);
+    return targetForDate(state.date, state.dayType || DEFAULT_DAY_TYPE);
   }
 
   function calculateRemaining(totals) {
@@ -3840,38 +3888,7 @@
   }
 
   function targetForDate(date, dayType = DEFAULT_DAY_TYPE) {
-    const generated = state.dailyTargets?.[date];
-    if (generated && generated.dayType === dayType) {
-      return {
-        label: generated.dayType === "rest" ? t("restDay") : t("trainingDay"),
-        calories: generated.caloriesTarget,
-        protein: generated.proteinTarget,
-        carbs: generated.carbsTarget,
-        fat: generated.fatTarget
-      };
-    }
-    if (date <= localDateString()) {
-      return localizedTarget(TARGETS[dayType] || TARGETS.training);
-    }
-    if (!state.settings?.settingsVersion) {
-      return localizedTarget(TARGETS[dayType] || TARGETS.training);
-    }
-    const preview = computeSettingsPreview(currentSettings(), { includeTrend: false });
-    return dayType === "rest"
-      ? {
-        label: t("restDay"),
-        calories: preview.restCalories,
-        protein: preview.proteinTarget,
-        carbs: preview.restCarbs,
-        fat: preview.fatTarget
-      }
-      : {
-        label: t("trainingDay"),
-        calories: preview.trainingCalories,
-        protein: preview.proteinTarget,
-        carbs: preview.trainingCarbs,
-        fat: preview.fatTarget
-      };
+    return computeLiveTargets(date, dayType).selectedTarget;
   }
 
   function localizedTarget(targetValues) {
@@ -3887,8 +3904,16 @@
   function averageTargetForDates(dates) {
     const totals = dates.reduce((sum, date) => {
       const record = state.records[date] ? normalizeRecord(state.records[date]) : null;
-      const dayType = record?.dayType || state.dailyTargets?.[date]?.dayType || dayTypeForDate(currentSettings(), date);
-      const values = targetForDate(date, dayType);
+      const manual = state.dailyTargets?.[date]?.isManualOverride ? normalizeDailyTarget(state.dailyTargets[date]) : null;
+      const snapshot = record?.targetSnapshot;
+      const values = snapshot
+        ? {
+          calories: snapshot.calories,
+          protein: snapshot.protein,
+          carbs: snapshot.carbs,
+          fat: snapshot.fat
+        }
+        : targetForDate(date, record?.dayType || manual?.dayType || DEFAULT_DAY_TYPE);
       sum.calories += values.calories;
       sum.protein += values.protein;
       sum.carbs += values.carbs;
@@ -3907,9 +3932,10 @@
   function dayTypeForDate(settings, date) {
     const record = state.records[date] ? normalizeRecord(state.records[date]) : null;
     if (record) {
-      return record.dayType || state.dailyTargets?.[date]?.dayType || "rest";
+      return record.dayType || DEFAULT_DAY_TYPE;
     }
-    return "rest";
+    const manual = state.dailyTargets?.[date]?.isManualOverride ? normalizeDailyTarget(state.dailyTargets[date]) : null;
+    return manual?.dayType || DEFAULT_DAY_TYPE;
   }
 
   function lastNDates(endDate, count) {
@@ -4151,41 +4177,14 @@
 
   function generateFutureTargets(settingsInput, options = {}) {
     const settings = normalizeSettings(settingsInput);
-    const today = localDateString();
-    const startDate = addDays(today, 1);
-    const dates = dateRange(startDate, settings.targetDate);
     const preview = computeSettingsPreview(settings, {
       includeTrend: !!options.includeTrend,
       records: state.records,
-      today
+      today: options.today || localDateString()
     });
-    const generatedAt = nowIso();
-    const deleteDates = Object.values(state.dailyTargets)
-      .map(normalizeDailyTarget)
-      .filter((targetRow) => targetRow.date >= startDate && targetRow.date > settings.targetDate && !targetRow.isManualOverride)
-      .map((targetRow) => targetRow.date);
-    const targets = dates
-      .filter((date) => !state.dailyTargets[date]?.isManualOverride)
-      .map((date) => {
-        const dayType = dayTypeForDate(settings, date);
-        const values = targetValuesFromPreview(preview, dayType, settings);
-        return normalizeDailyTarget({
-          date,
-          dayType,
-          caloriesTarget: values.calories,
-          proteinTarget: values.protein,
-          carbsTarget: values.carbs,
-          fatTarget: values.fat,
-          weeklyAverageCalories: preview.weeklyAverageCalories,
-          goalPhase: preview.goalPhase,
-          generatedAt,
-          sourceSettingsVersion: settings.settingsVersion,
-          isManualOverride: false
-        });
-      });
     return {
-      targets,
-      deleteDates,
+      targets: [],
+      deleteDates: [],
       preview,
       trend: preview.trend
     };
@@ -4519,26 +4518,13 @@
     if (!preview.trend?.evaluated) {
       return;
     }
-    const generation = preview.trend.adjustmentKcal
-      ? generateFutureTargets(state.settings, { includeTrend: true })
-      : { targets: [], deleteDates: [], trend: preview.trend };
     const settings = normalizeSettings({
       ...state.settings,
       lastAutoAdjustmentDate: localDateString(),
       lastTrendAdjustment: preview.trend
     });
-    await Promise.all([
-      storage.putSettings(settings),
-      generation.targets.length ? storage.putTargets(generation.targets) : Promise.resolve(),
-      generation.deleteDates.length ? storage.deleteTargets(generation.deleteDates) : Promise.resolve()
-    ]);
+    await storage.putSettings(settings);
     state.settings = settings;
-    generation.deleteDates.forEach((date) => {
-      delete state.dailyTargets[date];
-    });
-    generation.targets.forEach((targetRow) => {
-      state.dailyTargets[targetRow.date] = normalizeDailyTarget(targetRow);
-    });
   }
 
   function sortFavorites(left, right) {
@@ -4618,27 +4604,202 @@
     return state.settings || normalizeSettings(DEFAULT_SETTINGS);
   }
 
-  function computeSettingsPreview(settingsInput = currentSettings(), options = {}) {
-    const settings = normalizeSettings(settingsInput);
-    const today = options.today || localDateString();
-    const tomorrow = addDays(today, 1);
-    const daysRemaining = Math.max(0, daysBetween(tomorrow, settings.targetDate) + 1);
-    const tdee = round1(settings.bmr * settings.activityFactor);
-    const minCalories = round1(settings.bmr * 1.15);
-    const weightLossKg = round1(settings.currentWeightKg - settings.targetWeightKg);
+  function targetDayType(dayType) {
+    return normalizeDayType(dayType) || DEFAULT_DAY_TYPE;
+  }
+
+  function recordsArray(recordsInput = state.records) {
+    if (Array.isArray(recordsInput)) {
+      return recordsInput.map(normalizeRecord);
+    }
+    return Object.values(recordsInput || {}).map(normalizeRecord);
+  }
+
+  function manualTargetForDate(date, dayType) {
+    const targetRow = state.dailyTargets?.[date] ? normalizeDailyTarget(state.dailyTargets[date]) : null;
+    if (!targetRow?.isManualOverride || targetRow.dayType !== dayType) {
+      return null;
+    }
+    return {
+      label: targetRow.dayType === "rest" ? t("restDay") : t("trainingDay"),
+      calories: targetRow.caloriesTarget,
+      protein: targetRow.proteinTarget,
+      carbs: targetRow.carbsTarget,
+      fat: targetRow.fatTarget
+    };
+  }
+
+  function getEffectiveWeightForTarget(date, options = {}) {
+    const settings = normalizeSettings(options.settings || currentSettings());
+    const liveWeight = options.bodyWeight ?? (date === state.date ? state.bodyWeight : "");
+    if (String(liveWeight || "").trim() !== "" && Number.isFinite(numberValue(liveWeight))) {
+      return round1(numberValue(liveWeight));
+    }
+    const latest = recordsArray(options.records)
+      .filter((record) => record.date <= date && record.bodyWeight !== "" && Number.isFinite(numberValue(record.bodyWeight)))
+      .sort((left, right) => right.date.localeCompare(left.date))[0];
+    if (latest) {
+      return round1(numberValue(latest.bodyWeight));
+    }
+    if (Number.isFinite(Number(settings.currentWeightKg))) {
+      return round1(Number(settings.currentWeightKg));
+    }
+    return DEFAULT_SETTINGS.currentWeightKg;
+  }
+
+  function targetRecordsWindow(date, options = {}) {
+    const startDate = addDays(date, -20);
+    return recordsArray(options.records)
+      .filter((record) => record.date >= startDate && record.date <= date)
+      .sort((left, right) => left.date.localeCompare(right.date));
+  }
+
+  function estimateObservedTdee(recordsWindow, settings) {
+    const foodRecords = recordsWindow.filter((record) => (record.totals?.calories || 0) > 0);
+    const weightRecords = recordsWindow
+      .filter((record) => record.bodyWeight !== "" && Number.isFinite(numberValue(record.bodyWeight)))
+      .sort((left, right) => left.date.localeCompare(right.date));
+    if (foodRecords.length < 8 || weightRecords.length < 6) {
+      return { observedTdee: null, confidence: 0, avgCalories: 0, daysSpan: 0 };
+    }
+    const first = weightRecords[0];
+    const last = weightRecords[weightRecords.length - 1];
+    const daysSpan = Math.max(1, daysBetween(first.date, last.date));
+    if (daysSpan < 7) {
+      return { observedTdee: null, confidence: 0, avgCalories: 0, daysSpan };
+    }
+    const averageWeightSlice = (items) => round1(items.reduce((sum, record) => sum + numberValue(record.bodyWeight), 0) / Math.max(1, items.length));
+    const startingAvgWeight = averageWeightSlice(weightRecords.slice(0, Math.min(7, weightRecords.length)));
+    const endingAvgWeight = averageWeightSlice(weightRecords.slice(-Math.min(7, weightRecords.length)));
+    const avgCalories = foodRecords.reduce((sum, record) => sum + record.totals.calories, 0) / foodRecords.length;
+    const weightChangeKg = endingAvgWeight - startingAvgWeight;
+    const rawObservedTdee = avgCalories - (weightChangeKg * 7700) / daysSpan;
+    const observedTdee = clamp(rawObservedTdee, settings.bmr * 1.1, settings.bmr * 2.4);
+    const confidence = foodRecords.length >= 12 && weightRecords.length >= 8 ? 0.5 : 0.25;
+    return {
+      observedTdee: round1(observedTdee),
+      confidence,
+      avgCalories: round1(avgCalories),
+      daysSpan,
+      startingAvgWeight,
+      endingAvgWeight,
+      weightChangeKg: round1(weightChangeKg)
+    };
+  }
+
+  function summarizeTargetRecovery(recordsWindow) {
+    const recentRecords = recordsWindow.slice(-14);
+    const quality = summarizeExecutionQuality(recentRecords);
+    const recoveryFlag = !!(
+      (quality.avgSleep && quality.avgSleep < 65)
+      || quality.highHungerDays >= 3
+      || quality.poorPerformanceDays >= 2
+    );
+    return { recoveryFlag, quality };
+  }
+
+  function macroTargetForCalories(calories, settings, effectiveWeight, plannedDailyDeficit, warnings = []) {
     const mode = GOAL_MODE_CONFIG[settings.goalMode] || GOAL_MODE_CONFIG.recomp;
-    const buffer = TRACKING_BUFFER_CONFIG[settings.trackingAccuracyBuffer] || TRACKING_BUFFER_CONFIG.medium;
-    const warnings = [];
-    const totalDeficit = weightLossKg > 0 ? round1(weightLossKg * 7700) : 0;
+    const proteinMultiplier = round1(Math.min(2.25, Math.max(1.6, mode.proteinBase + (plannedDailyDeficit >= 400 ? 0.15 : (plannedDailyDeficit >= 250 ? 0.08 : 0)))));
+    const fatMultiplier = round1(Math.min(0.9, Math.max(0.6, mode.fatBase - (plannedDailyDeficit >= 400 ? 0.05 : 0))));
+    const proteinTarget = Math.round(Math.min(effectiveWeight * 2.2, Math.max(settings.targetWeightKg * 1.8, effectiveWeight * proteinMultiplier)));
+    const fatTarget = Math.round(Math.max(45, effectiveWeight * 0.55, settings.targetWeightKg * fatMultiplier));
+    const macroFloor = proteinTarget * 4 + fatTarget * 9 + 80;
+    const adjustedCalories = Math.max(Math.round(calories), Math.round(macroFloor));
+    if (adjustedCalories > Math.round(calories)) {
+      warnings.push(t("previewLowCarbWarning"));
+    }
+    return {
+      calories: adjustedCalories,
+      protein: proteinTarget,
+      carbs: Math.max(0, Math.round((adjustedCalories - proteinTarget * 4 - fatTarget * 9) / 4)),
+      fat: fatTarget
+    };
+  }
+
+  function computeLiveTargets(date = state.date || localDateString(), dayType = DEFAULT_DAY_TYPE, options = {}) {
+    const settings = normalizeSettings(options.settings || currentSettings(), recordsArray(options.records));
+    const selectedDayType = targetDayType(dayType);
+    const manualTarget = !options.ignoreManualOverride ? manualTargetForDate(date, selectedDayType) : null;
+    const records = recordsArray(options.records);
+    const hasSavedSettings = !!(options.settings || state.settings?.settingsVersion);
+    const hasRecords = records.length > 0;
+    const liveWeightValue = options.bodyWeight ?? (date === state.date ? state.bodyWeight : "");
+    const hasLiveWeight = String(liveWeightValue || "").trim() !== "";
+
+    if (manualTarget) {
+      return {
+        date,
+        selectedDayType,
+        effectiveWeightKg: getEffectiveWeightForTarget(date, { ...options, settings }),
+        formulaTdee: 0,
+        observedTdee: null,
+        observedTdeeConfidence: 0,
+        finalTdee: 0,
+        plannedDailyDeficit: 0,
+        trackingBufferCalories: 0,
+        plannedAverageCalories: manualTarget.calories,
+        trainingTarget: selectedDayType === "training" ? manualTarget : localizedTarget(TARGETS.training),
+        restTarget: selectedDayType === "rest" ? manualTarget : localizedTarget(TARGETS.rest),
+        selectedTarget: manualTarget,
+        warnings: [],
+        explanation: {
+          activityFactor: settings.activityFactor,
+          goalPhase: "manual",
+          recoveryFlag: false,
+          source: "manual"
+        }
+      };
+    }
+
+    if (options.allowInitialFallback !== false && !hasSavedSettings && !hasRecords && !hasLiveWeight) {
+      const trainingTarget = localizedTarget(TARGETS.training);
+      const restTarget = localizedTarget(TARGETS.rest);
+      return {
+        date,
+        selectedDayType,
+        effectiveWeightKg: settings.currentWeightKg,
+        formulaTdee: 0,
+        observedTdee: null,
+        observedTdeeConfidence: 0,
+        finalTdee: 0,
+        plannedDailyDeficit: 0,
+        trackingBufferCalories: 0,
+        plannedAverageCalories: selectedDayType === "rest" ? restTarget.calories : trainingTarget.calories,
+        trainingTarget,
+        restTarget,
+        selectedTarget: selectedDayType === "rest" ? restTarget : trainingTarget,
+        warnings: [],
+        explanation: {
+          activityFactor: settings.activityFactor,
+          goalPhase: "fallback",
+          recoveryFlag: false,
+          source: "fallback"
+        }
+      };
+    }
+
+    const effectiveWeightKg = getEffectiveWeightForTarget(date, { ...options, settings });
+    const recordsWindow = targetRecordsWindow(date, options);
+    const formulaTdee = round1(settings.bmr * estimateActivityFactor(settings.activityLevel, settings.trainingDaysPerWeek));
+    const observed = estimateObservedTdee(recordsWindow, settings);
+    const observedDelta = observed.observedTdee == null ? 0 : clamp((observed.observedTdee - formulaTdee) * observed.confidence, -175, 175);
+    const finalTdee = round1(formulaTdee + observedDelta);
+    const recovery = summarizeTargetRecovery(recordsWindow);
+    const mode = GOAL_MODE_CONFIG[settings.goalMode] || GOAL_MODE_CONFIG.recomp;
+    const daysRemaining = Math.max(0, daysBetween(date, settings.targetDate));
+    const weightGapKg = round1(effectiveWeightKg - settings.targetWeightKg);
+    const totalDeficit = weightGapKg > 0 ? weightGapKg * 7700 : 0;
     const dailyDeficitByDate = daysRemaining > 0 && totalDeficit > 0 ? totalDeficit / daysRemaining : 0;
-    const modeDailyDeficit = Math.min(mode.maxDeficit, Math.max(mode.minDeficit, tdee * mode.deficitRatio));
+    const modeDailyDeficit = Math.min(mode.maxDeficit, Math.max(mode.minDeficit, finalTdee * mode.deficitRatio));
+    const warnings = [];
     let plannedDailyDeficit = 0;
     let goalPhase = "maintenance";
 
     if (daysRemaining <= 0) {
       warnings.push(t("previewTargetDateWarning"));
     }
-    if (weightLossKg > 0) {
+    if (weightGapKg > 0) {
       goalPhase = settings.goalMode === "recomp" ? "recomp" : "cut";
       plannedDailyDeficit = Math.min(dailyDeficitByDate || modeDailyDeficit, modeDailyDeficit, MAX_DAILY_DEFICIT);
       if (settings.goalMode === "cut") {
@@ -4647,7 +4808,7 @@
       if (dailyDeficitByDate > modeDailyDeficit) {
         warnings.push(t("previewAggressiveTimelineWarning"));
       }
-    } else if (weightLossKg < 0) {
+    } else if (weightGapKg < 0) {
       goalPhase = "maintenance";
       plannedDailyDeficit = settings.goalMode === "performance" ? 0 : Math.min(100, modeDailyDeficit);
       warnings.push(t("previewGoalModeWarning"));
@@ -4655,54 +4816,96 @@
       plannedDailyDeficit = settings.goalMode === "performance" ? 0 : Math.min(100, modeDailyDeficit);
     }
 
-    let finalAverageCalories = Math.max(tdee - plannedDailyDeficit, minCalories);
-    finalAverageCalories = Math.max(finalAverageCalories - buffer.calories, minCalories);
-    const trend = options.includeTrend ? evaluateTrendAdjustment(settings, plannedDailyDeficit, options.records || state.records) : null;
-    if (trend?.adjustmentKcal) {
-      finalAverageCalories = Math.max(finalAverageCalories + trend.adjustmentKcal, minCalories);
-      warnings.push(trend.message);
-    } else if (trend?.message) {
-      warnings.push(trend.message);
+    if (recovery.recoveryFlag && plannedDailyDeficit > 0) {
+      plannedDailyDeficit = Math.round(plannedDailyDeficit * 0.7);
+    }
+    const buffer = TRACKING_BUFFER_CONFIG[settings.trackingAccuracyBuffer] || TRACKING_BUFFER_CONFIG.medium;
+    const trackingBufferCalories = -Math.round(buffer.calories || 0);
+    const minCalories = Math.max(1600, round1(settings.bmr * 1.15));
+    let plannedAverageCalories = finalTdee - plannedDailyDeficit + trackingBufferCalories;
+    if (plannedAverageCalories < minCalories) {
+      plannedAverageCalories = minCalories;
+      warnings.push(t("previewMinCalorieWarning"));
     }
 
-    const split = splitCaloriesByDayType(settings, finalAverageCalories, minCalories, warnings);
-    const proteinMultiplier = automaticProteinMultiplier(settings, plannedDailyDeficit);
-    const fatMultiplier = automaticFatMultiplier(settings, plannedDailyDeficit);
-    const proteinTarget = calculateProteinTarget(settings, proteinMultiplier);
-    const fatTarget = calculateFatTarget(settings, fatMultiplier);
-    const trainingCarbs = Math.max(0, Math.round((split.trainingCalories - proteinTarget * 4 - fatTarget * 9) / 4));
-    const restCarbs = Math.max(0, Math.round((split.restCalories - proteinTarget * 4 - fatTarget * 9) / 4));
-    if (trainingCarbs < 180 || restCarbs < 120) {
-      warnings.push(t("previewLowCarbWarning"));
-    }
-    if (buffer.calories && (trainingCarbs < 180 || restCarbs < 120)) {
-      warnings.push(t("previewBufferLowCarbWarning"));
+    const split = splitCaloriesByDayType(settings, plannedAverageCalories, minCalories, warnings);
+    const trainingTarget = {
+      label: t("trainingDay"),
+      ...macroTargetForCalories(split.trainingCalories, settings, effectiveWeightKg, plannedDailyDeficit, warnings)
+    };
+    const restTarget = {
+      label: t("restDay"),
+      ...macroTargetForCalories(split.restCalories, settings, effectiveWeightKg, plannedDailyDeficit, warnings)
+    };
+    const source = observed.confidence ? "blended" : "formula";
+
+    return {
+      date,
+      selectedDayType,
+      effectiveWeightKg,
+      formulaTdee: round1(formulaTdee),
+      observedTdee: observed.observedTdee,
+      observedTdeeConfidence: observed.confidence,
+      finalTdee: round1(finalTdee),
+      plannedDailyDeficit: round1(plannedDailyDeficit),
+      trackingBufferCalories,
+      plannedAverageCalories: round1(plannedAverageCalories),
+      trainingTarget,
+      restTarget,
+      selectedTarget: selectedDayType === "rest" ? restTarget : trainingTarget,
+      warnings: Array.from(new Set(warnings)),
+      explanation: {
+        activityFactor: estimateActivityFactor(settings.activityLevel, settings.trainingDaysPerWeek),
+        goalPhase,
+        recoveryFlag: recovery.recoveryFlag,
+        quality: recovery.quality,
+        observed,
+        effectiveBoost: round1(split.effectiveBoost),
+        source
+      }
+    };
+  }
+
+  function computeSettingsPreview(settingsInput = currentSettings(), options = {}) {
+    const settings = normalizeSettings(settingsInput);
+    const date = options.today || options.date || state.date || localDateString();
+    const live = computeLiveTargets(date, options.dayType || state.dayType || DEFAULT_DAY_TYPE, {
+      settings,
+      records: options.records || state.records,
+      bodyWeight: options.bodyWeight,
+      allowInitialFallback: false,
+      ignoreManualOverride: true
+    });
+    const trend = options.includeTrend ? evaluateTrendAdjustment(settings, live.plannedDailyDeficit, options.records || state.records) : null;
+    const warnings = [...live.warnings];
+    if (trend?.message) {
+      warnings.push(trend.message);
     }
 
     return {
+      ...live,
       settings,
-      tdee: round1(tdee),
-      minCalories,
-      totalDeficit: round1(totalDeficit),
-      daysRemaining,
-      dailyDeficitByDate: round1(dailyDeficitByDate),
-      plannedDailyDeficit: round1(plannedDailyDeficit),
-      finalAverageCalories: round1(finalAverageCalories),
-      trainingCalories: Math.round(split.trainingCalories),
-      restCalories: Math.round(split.restCalories),
-      proteinTarget,
-      fatTarget,
-      proteinMultiplier,
-      fatMultiplier,
-      activityFactor: settings.activityFactor,
-      effectiveBoost: Math.round(split.effectiveBoost),
-      trainingCarbs,
-      restCarbs,
+      tdee: live.finalTdee,
+      minCalories: Math.max(1600, round1(settings.bmr * 1.15)),
+      totalDeficit: round1(Math.max(0, (live.effectiveWeightKg - settings.targetWeightKg) * 7700)),
+      daysRemaining: Math.max(0, daysBetween(date, settings.targetDate)),
+      dailyDeficitByDate: round1(Math.max(0, (live.effectiveWeightKg - settings.targetWeightKg) * 7700) / Math.max(1, daysBetween(date, settings.targetDate))),
+      finalAverageCalories: live.plannedAverageCalories,
+      trainingCalories: live.trainingTarget.calories,
+      restCalories: live.restTarget.calories,
+      proteinTarget: live.selectedTarget.protein,
+      fatTarget: live.selectedTarget.fat,
+      proteinMultiplier: automaticProteinMultiplier(settings, live.plannedDailyDeficit),
+      fatMultiplier: automaticFatMultiplier(settings, live.plannedDailyDeficit),
+      activityFactor: live.explanation.activityFactor,
+      effectiveBoost: live.explanation.effectiveBoost,
+      trainingCarbs: live.trainingTarget.carbs,
+      restCarbs: live.restTarget.carbs,
       targetLeanMass: round1(settings.targetWeightKg * (1 - settings.targetBodyFatPercent / 100)),
-      weeklyAverageCalories: round1(finalAverageCalories),
-      goalPhase,
+      weeklyAverageCalories: live.plannedAverageCalories,
+      goalPhase: live.explanation.goalPhase,
       trend,
-      warnings: Array.from(new Set(warnings))
+      warnings: Array.from(new Set(warnings.filter(Boolean)))
     };
   }
 
@@ -5112,7 +5315,29 @@
       sleepScore: normalizeSleepScore(record.sleepScore),
       meals,
       totals: dayTotals(meals),
+      targetSnapshot: normalizeTargetSnapshot(record.targetSnapshot),
       savedAt: record.savedAt || nowIso()
+    };
+  }
+
+  function normalizeTargetSnapshot(snapshot) {
+    if (!snapshot || typeof snapshot !== "object") {
+      return null;
+    }
+    const values = ["calories", "protein", "carbs", "fat"].reduce((sum, key) => {
+      const value = Number(snapshot[key]);
+      sum[key] = Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
+      return sum;
+    }, {});
+    if (!values.calories || !values.protein || !values.carbs || !values.fat) {
+      return null;
+    }
+    return {
+      date: /^\d{4}-\d{2}-\d{2}$/.test(String(snapshot.date || "")) ? String(snapshot.date) : "",
+      dayType: normalizeDayType(snapshot.dayType) || DEFAULT_DAY_TYPE,
+      ...values,
+      computedAt: String(snapshot.computedAt || ""),
+      sourceVersion: String(snapshot.sourceVersion || "")
     };
   }
 
