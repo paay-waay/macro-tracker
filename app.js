@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.20.6";
+  const APP_VERSION = "1.20.7";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
