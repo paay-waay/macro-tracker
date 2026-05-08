@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.20.5";
+  const APP_VERSION = "1.20.6";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -413,6 +413,7 @@
       mealSwitcherAria: "餐次切换",
       targetDateValue: "{date}",
       averageTargetLabel: "目标均值",
+      averageDeltaLabel: "差值",
       detail: "详情",
       recordSummaryTitle: "记录",
       favoritesSummaryTitle: "常用餐",
@@ -858,6 +859,7 @@
       mealSwitcherAria: "Cambiar comida",
       targetDateValue: "{date}",
       averageTargetLabel: "Meta promedio",
+      averageDeltaLabel: "Dif. meta",
       detail: "Detalle",
       recordSummaryTitle: "Registros",
       favoritesSummaryTitle: "Comidas frecuentes",
@@ -5562,8 +5564,8 @@
         <div class="v">${round1(actual)}</div>
         <div class="h">${t("averageTargetLabel")} ${round1(expected)}${unitText}</div>
         ${progressMarkup(actual, expected, kind)}
-        <div class="small" style="margin-top:6px">
-          <span class="badge ${tone}">${t("distanceToGoal")} ${deltaText}</span>
+        <div class="small rolling-delta-wrap" style="margin-top:6px">
+          <span class="badge ${tone} rolling-delta"><span>${t("averageDeltaLabel")}</span><strong>${deltaText}</strong></span>
         </div>
       </div>
     `;

@@ -247,7 +247,8 @@ select:focus-visible {
   font-size: 11px;
   line-height: 1.15;
   color: var(--macro-card-text, var(--muted));
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .chip .label-text {
@@ -1255,6 +1256,8 @@ input.big {
   background: rgba(251, 250, 246, 0.76);
   padding: 12px;
   box-shadow: var(--shadow-soft);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .stat-calories {
@@ -1289,6 +1292,7 @@ input.big {
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   color: var(--muted);
+  overflow-wrap: anywhere;
 }
 
 .stat .v {
@@ -1302,6 +1306,7 @@ input.big {
   font-size: var(--text-xs);
   color: var(--muted);
   margin-top: 4px;
+  overflow-wrap: anywhere;
 }
 
 .badges {
@@ -1311,12 +1316,40 @@ input.big {
 }
 
 .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  white-space: normal;
+  overflow-wrap: anywhere;
   padding: 7px 10px;
   border-radius: 999px;
   font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   border: 1px solid var(--line);
   background: var(--surface);
+  line-height: 1.22;
+}
+
+.rolling-delta-wrap {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.rolling-delta {
+  width: 100%;
+  justify-content: flex-start;
+  border-radius: 15px;
+  padding: 6px 9px;
+}
+
+.rolling-delta strong {
+  flex: 0 0 auto;
+  color: inherit;
+  font: inherit;
+  font-weight: var(--weight-bold);
 }
 
 .badge.ok {
@@ -1784,6 +1817,7 @@ input.big {
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
+  min-width: 0;
 }
 
 .training-calendar-title {
@@ -1801,6 +1835,7 @@ input.big {
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 4px;
   min-width: 0;
 }
@@ -1825,6 +1860,8 @@ input.big {
 .calendar-today-btn {
   padding: 0 8px;
   font-size: var(--text-xs);
+  max-width: 100%;
+  white-space: normal;
 }
 
 .calendar-nav-btn:active,
@@ -1958,6 +1995,10 @@ input.big {
   justify-content: center;
   gap: 4px;
   line-height: 1.05;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 
 .nav-icon {
