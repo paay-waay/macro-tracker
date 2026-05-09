@@ -2186,29 +2186,46 @@ input.big {
 }
 
 .settings-date-field {
+  position: relative;
   overflow: hidden;
   width: min(100%, 190px);
   max-width: 100%;
 }
 
-.settings-date-field input {
+.settings-date-chip {
   display: block;
   width: min(100%, 190px);
   min-width: 0 !important;
   max-width: 100% !important;
   height: 44px;
+  line-height: 42px;
   padding-inline: 10px;
   font-size: 14px;
   font-weight: var(--weight-semibold);
   letter-spacing: 0;
+  color: var(--text);
+  background: rgba(255, 253, 248, 0.82);
+  border: 1px solid var(--line);
   border-radius: 16px;
   text-align: center;
+  pointer-events: none;
 }
 
-.settings-date-field input[type="date"]::-webkit-date-and-time-value {
-  min-width: 0;
-  max-width: 100%;
-  text-align: center;
+.settings-date-native {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 2;
+  width: min(100%, 190px) !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: 44px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  opacity: 0;
+  color: transparent;
+  background: transparent;
+  cursor: pointer;
 }
 
 .settings-metrics-row,

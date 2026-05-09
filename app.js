@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.20.12";
+  const APP_VERSION = "1.20.13";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -254,7 +254,7 @@
       planStartWeight: "起点体重",
       planStartBmr: "起点BMR",
       planStartBodyFat: "起点体脂",
-      targetBodyFat: "目标体脂 %",
+      targetBodyFat: "目标体脂",
       targetEndDate: "目标完成日期",
       weeklyTrainingDays: "每周训练天数",
       goalMode: "目标模式",
@@ -701,7 +701,7 @@
       planStartWeight: "Peso",
       planStartBmr: "BMR",
       planStartBodyFat: "Grasa %",
-      targetBodyFat: "Grasa meta %",
+      targetBodyFat: "Grasa meta",
       targetEndDate: "Fecha meta",
       weeklyTrainingDays: "Días de entreno/semana",
       goalMode: "Modo de meta",
@@ -2473,21 +2473,21 @@
       ${renderSettingsGroup("planStart", t("planStart"), `
         <div class="hint-box">${t("planStartHint")}</div>
         <div class="settings-date-row">
-          ${renderSettingInput(t("planStartDate"), "planStartDate", draft.planStartDate || localDateString(), "date", false, "settings-date-field", "date-compact settings-date-input")}
+          ${renderSettingDateInput(t("planStartDate"), "planStartDate", draft.planStartDate || localDateString())}
         </div>
         <div class="settings-metrics-row">
-          ${renderSettingInput(t("planStartWeight"), "currentWeightKg", draft.currentWeightKg, "decimal", false, "settings-metric-field")}
-          ${renderSettingInput(t("planStartBmr"), "bmr", draft.bmr, "decimal", false, "settings-metric-field")}
-          ${renderSettingInput(t("planStartBodyFat"), "planStartBodyFatPercent", draft.planStartBodyFatPercent || "", "decimal", false, "settings-metric-field")}
+          ${renderSettingInput(t("planStartWeight"), "currentWeightKg", draft.currentWeightKg, "decimal", false, "settings-metric-field", "", "kg")}
+          ${renderSettingInput(t("planStartBmr"), "bmr", draft.bmr, "decimal", false, "settings-metric-field", "", currentLanguage === "es" ? "kcal/día" : "kcal/天")}
+          ${renderSettingInput(t("planStartBodyFat"), "planStartBodyFatPercent", draft.planStartBodyFatPercent || "", "decimal", false, "settings-metric-field", "", "%")}
         </div>
       `)}
       ${renderSettingsGroup("planGoal", t("planGoal"), `
         <div class="settings-duo-row">
-          ${renderSettingInput(`${t("targetWeight")} kg`, "targetWeightKg", draft.targetWeightKg, "decimal", false, "settings-duo-field")}
-          ${renderSettingInput(t("targetBodyFat"), "targetBodyFatPercent", draft.targetBodyFatPercent, "decimal", false, "settings-duo-field")}
+          ${renderSettingInput(t("targetWeight"), "targetWeightKg", draft.targetWeightKg, "decimal", false, "settings-duo-field", "", "kg")}
+          ${renderSettingInput(t("targetBodyFat"), "targetBodyFatPercent", draft.targetBodyFatPercent, "decimal", false, "settings-duo-field", "", "%")}
         </div>
         <div class="settings-date-row">
-          ${renderSettingInput(t("targetEndDate"), "targetDate", draft.targetDate, "date", false, "settings-date-field", "date-compact settings-date-input")}
+          ${renderSettingDateInput(t("targetEndDate"), "targetDate", draft.targetDate)}
         </div>
       `)}
       ${renderSettingsGroup("execution", t("executionParams"), `
@@ -2544,15 +2544,27 @@
     `;
   }
 
-  function renderSettingInput(label, key, value, type, readonly = false, className = "", inputClass = "") {
+  function renderSettingDateInput(label, key, value) {
+    const dateValue = /^\d{4}-\d{2}-\d{2}$/.test(String(value || "")) ? String(value) : localDateString();
+    return `
+      <div class="settings-date-field settings-date-picker">
+        <label class="label" for="setting-${key}">${esc(label)}</label>
+        <div class="settings-date-chip" aria-hidden="true">${esc(dateValue)}</div>
+        <input id="setting-${key}" class="settings-date-native" type="date" data-setting="${key}" autocomplete="off" spellcheck="false" value="${esc(dateValue)}" aria-label="${esc(label)}" />
+      </div>
+    `;
+  }
+
+  function renderSettingInput(label, key, value, type, readonly = false, className = "", inputClass = "", placeholder = "") {
     const inputType = type === "date" ? "date" : "text";
     const inputMode = type === "date" ? "" : ` inputmode="${type === "number" ? "numeric" : "decimal"}"`;
     const wrapperClass = className ? ` class="${esc(className)}"` : "";
     const inputClassAttr = inputClass ? ` class="${esc(inputClass)}"` : "";
+    const placeholderAttr = placeholder ? ` placeholder="${esc(placeholder)}"` : "";
     return `
       <div${wrapperClass}>
         <label class="label" for="setting-${key}">${esc(label)}</label>
-        <input id="setting-${key}"${inputClassAttr} type="${inputType}"${inputMode} ${readonly ? "readonly" : `data-setting="${key}"`} autocomplete="off" spellcheck="false" value="${esc(value ?? "")}" />
+        <input id="setting-${key}"${inputClassAttr} type="${inputType}"${inputMode}${placeholderAttr} ${readonly ? "readonly" : `data-setting="${key}"`} autocomplete="off" spellcheck="false" value="${esc(value ?? "")}" />
       </div>
     `;
   }
@@ -3467,6 +3479,12 @@
       state.settingsDraft[key] = target.checked;
     } else {
       state.settingsDraft[key] = target.value;
+    }
+    if (target instanceof HTMLInputElement && target.type === "date") {
+      const chip = target.closest(".settings-date-picker")?.querySelector(".settings-date-chip");
+      if (chip) {
+        chip.textContent = target.value;
+      }
     }
     if (key === "trainingDaysPerWeek") {
       const count = Math.min(7, Math.max(0, Math.round(Number(target.value) || 0)));
