@@ -2169,6 +2169,8 @@ input.big {
 
 .settings-date-row,
 .settings-date-field,
+.settings-duo-row,
+.settings-duo-field,
 .settings-metrics-row,
 .settings-metric-field {
   min-width: 0;
@@ -2176,44 +2178,60 @@ input.big {
 }
 
 .settings-date-row {
-  display: block;
+  display: flex;
+  justify-content: flex-start;
   width: 100%;
+  margin-top: 12px;
   overflow: hidden;
 }
 
 .settings-date-field {
   overflow: hidden;
+  width: min(100%, 206px);
+  max-width: 100%;
 }
 
-.settings-date-field input[type="date"] {
+.settings-date-field input {
   display: block;
-  width: 100% !important;
+  width: 100%;
   min-width: 0 !important;
   max-width: 100% !important;
-  height: 46px;
+  height: 44px;
   padding-inline: 12px;
+  font-size: clamp(15px, 3.8vw, 17px);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0;
   border-radius: 16px;
-  appearance: none;
-  -webkit-appearance: none;
+  text-align: center;
 }
 
-.settings-metrics-row {
+.settings-metrics-row,
+.settings-duo-row {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin-top: 12px;
   overflow: hidden;
 }
 
-.settings-metric-field .label {
-  min-height: 2.3em;
+.settings-metrics-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.settings-duo-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.settings-metric-field .label,
+.settings-duo-field .label {
+  min-height: 1.2em;
   margin-bottom: 5px;
   font-size: clamp(11px, 2.7vw, 13px);
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
 
-.settings-metric-field input {
+.settings-metric-field input,
+.settings-duo-field input {
   height: 46px;
   padding-inline: 8px;
   border-radius: 14px;
