@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.20.9";
+  const APP_VERSION = "1.20.10";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -251,9 +251,9 @@
       greatTrainingDays: "很好 / 训练日",
       planStartHint: "这些是实时目标计算的计划基准；实际判断会参考后续体重趋势和记录质量。",
       planStartDate: "计划开始日期",
-      planStartWeight: "计划起点体重 kg",
-      planStartBmr: "计划起点 BMR（kcal/天）",
-      planStartBodyFat: "计划起点体脂 %（可选）",
+      planStartWeight: "起点体重",
+      planStartBmr: "起点BMR",
+      planStartBodyFat: "起点体脂",
       targetBodyFat: "目标体脂 %",
       targetEndDate: "目标完成日期",
       weeklyTrainingDays: "每周训练天数",
@@ -698,9 +698,9 @@
       greatTrainingDays: "Muy bien / entreno",
       planStartHint: "Estos datos son la base del cálculo en vivo; usará tendencia de peso y calidad de registro.",
       planStartDate: "Fecha de inicio",
-      planStartWeight: "Peso inicial kg",
-      planStartBmr: "BMR inicial (kcal/día)",
-      planStartBodyFat: "Grasa inicial % (opcional)",
+      planStartWeight: "Peso",
+      planStartBmr: "BMR",
+      planStartBodyFat: "Grasa %",
       targetBodyFat: "Grasa meta %",
       targetEndDate: "Fecha meta",
       weeklyTrainingDays: "Días de entreno/semana",
@@ -2472,11 +2472,13 @@
       ${renderLanguageSettings()}
       ${renderSettingsGroup("planStart", t("planStart"), `
         <div class="hint-box">${t("planStartHint")}</div>
-        <div class="settings-grid">
-          ${renderSettingInput(t("planStartDate"), "planStartDate", draft.planStartDate || localDateString(), "date")}
-          ${renderSettingInput(t("planStartWeight"), "currentWeightKg", draft.currentWeightKg, "decimal")}
-          ${renderSettingInput(t("planStartBmr"), "bmr", draft.bmr, "decimal")}
-          ${renderSettingInput(t("planStartBodyFat"), "planStartBodyFatPercent", draft.planStartBodyFatPercent || "", "decimal")}
+        <div class="settings-date-row">
+          ${renderSettingInput(t("planStartDate"), "planStartDate", draft.planStartDate || localDateString(), "date", false, "settings-date-field")}
+        </div>
+        <div class="settings-metrics-row">
+          ${renderSettingInput(t("planStartWeight"), "currentWeightKg", draft.currentWeightKg, "decimal", false, "settings-metric-field")}
+          ${renderSettingInput(t("planStartBmr"), "bmr", draft.bmr, "decimal", false, "settings-metric-field")}
+          ${renderSettingInput(t("planStartBodyFat"), "planStartBodyFatPercent", draft.planStartBodyFatPercent || "", "decimal", false, "settings-metric-field")}
         </div>
       `)}
       ${renderSettingsGroup("planGoal", t("planGoal"), `
@@ -2540,11 +2542,12 @@
     `;
   }
 
-  function renderSettingInput(label, key, value, type, readonly = false) {
+  function renderSettingInput(label, key, value, type, readonly = false, className = "") {
     const inputType = type === "date" ? "date" : "text";
     const inputMode = type === "date" ? "" : ` inputmode="${type === "number" ? "numeric" : "decimal"}"`;
+    const wrapperClass = className ? ` class="${esc(className)}"` : "";
     return `
-      <div>
+      <div${wrapperClass}>
         <label class="label" for="setting-${key}">${esc(label)}</label>
         <input id="setting-${key}" type="${inputType}"${inputMode} ${readonly ? "readonly" : `data-setting="${key}"`} autocomplete="off" spellcheck="false" value="${esc(value ?? "")}" />
       </div>

@@ -445,6 +445,7 @@ select:focus-visible {
 
 input,
 select {
+  box-sizing: border-box;
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -468,6 +469,17 @@ input.date-compact {
   font-weight: var(--weight-semibold);
   border-radius: 16px;
   text-align: center;
+}
+
+input[type="date"] {
+  min-width: 0;
+  max-width: 100%;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+  min-width: 0;
+  max-width: 100%;
+  text-align: left;
 }
 
 input::placeholder {
@@ -2132,6 +2144,7 @@ input.big {
   background: rgba(245, 242, 236, 0.72);
   padding: 12px;
   margin-top: 10px;
+  overflow-x: hidden;
 }
 
 .settings-section h4 {
@@ -2152,6 +2165,59 @@ input.big {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 12px;
+}
+
+.settings-date-row,
+.settings-date-field,
+.settings-metrics-row,
+.settings-metric-field {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.settings-date-row {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+}
+
+.settings-date-field {
+  overflow: hidden;
+}
+
+.settings-date-field input[type="date"] {
+  display: block;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  height: 46px;
+  padding-inline: 12px;
+  border-radius: 16px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.settings-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.settings-metric-field .label {
+  min-height: 2.3em;
+  margin-bottom: 5px;
+  font-size: clamp(11px, 2.7vw, 13px);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.settings-metric-field input {
+  height: 46px;
+  padding-inline: 8px;
+  border-radius: 14px;
+  font-size: clamp(14px, 3.3vw, 16px);
 }
 
 .weekday-row {
