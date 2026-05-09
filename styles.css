@@ -966,11 +966,6 @@ input.big {
   min-width: 0;
 }
 
-.backup-date-compact {
-  width: min(100%, 200px);
-  max-width: 200px;
-}
-
 @keyframes soft-reveal {
   from {
     opacity: 0;

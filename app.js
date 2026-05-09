@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.20.13";
+  const APP_VERSION = "1.20.14";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -965,7 +965,7 @@
   const FAVORITE_EXPORT_HEADER = ["favoriteId", "favoriteName", "entry", "name", "calories", "protein", "carbs", "fat", "usageCount", "lastUsedAt", "updatedAt", "createdAt"];
   const ENTRY_FIELDS = ["name", "calories", "protein", "carbs", "fat"];
   const NUMERIC_RULES = {
-    bodyWeight: { labelKey: "bodyWeight", min: 0, max: 500, decimals: 1 },
+    bodyWeight: { labelKey: "bodyWeight", min: 0, max: 500, decimals: 2 },
     calories: { label: "kcal", min: 0, max: 5000, decimals: 1 },
     protein: { labelKey: "protein", min: 0, max: 500, decimals: 1 },
     carbs: { labelKey: "carbs", min: 0, max: 800, decimals: 1 },
@@ -1440,7 +1440,7 @@
     }
 
     if (target.id === "bodyWeightInput" && target instanceof HTMLInputElement) {
-      state.bodyWeight = normalizeLooseNumericText(target.value);
+      state.bodyWeight = normalizeWeightDraftText(target.value);
       markDirty();
       renderHeader();
       return;
@@ -2168,7 +2168,7 @@
           <div class="stat"><div class="k">${t("avg7Weight")}</div><div class="v">${trend.currentAvgText}</div><div class="h">${t("currentTrend")}</div></div>
           <div class="stat"><div class="k">${t("weeklyChange")}</div><div class="v">${trend.weeklyChangeText}</div><div class="h">${trend.percentText}</div></div>
           <div class="stat"><div class="k">${t("requiredPace")}</div><div class="v">${trend.requiredPaceText}</div><div class="h">${t("toTargetDate")}</div></div>
-          <div class="stat"><div class="k">${t("distanceToGoal")}</div><div class="v">${trend.distanceText}</div><div class="h">${t("targetKg", { weight: summary.goalWeight })}</div></div>
+          <div class="stat"><div class="k">${t("distanceToGoal")}</div><div class="v">${trend.distanceText}</div><div class="h">${t("targetKg", { weight: formatWeight(summary.goalWeight) })}</div></div>
         </div>
         <div class="hint-box insight-box" style="margin-top:12px">${esc(trend.guidance)}</div>
         ${renderWeightTrendChart(summary)}
@@ -2180,8 +2180,8 @@
         </button>
         ${state.ui.weightDetailsOpen ? `
           <div class="stat-grid" style="margin-top:10px">
-            <div class="stat"><div class="k">${t("latestWeight")}</div><div class="v">${summary.latestWeight || "—"}</div><div class="h">kg</div></div>
-            <div class="stat"><div class="k">${t("previous7Avg")}</div><div class="v">${summary.prev7Avg || "—"}</div><div class="h">kg</div></div>
+            <div class="stat"><div class="k">${t("latestWeight")}</div><div class="v">${summary.latestWeight ? formatWeight(summary.latestWeight) : "—"}</div><div class="h">kg</div></div>
+            <div class="stat"><div class="k">${t("previous7Avg")}</div><div class="v">${summary.prev7Avg ? formatWeight(summary.prev7Avg) : "—"}</div><div class="h">kg</div></div>
             <div class="stat"><div class="k">${t("targetCountdown")}</div><div class="v">${daysLeft()}</div><div class="h">${t("targetDateValue", { date: currentSettings().targetDate })}</div></div>
             <div class="stat"><div class="k">${t("avgSleep")}</div><div class="v">${summary.execution7.avgSleep || "—"}</div><div class="h">${summary.execution7.sleepDays ? t("sleepScoreFromDays", { count: summary.execution7.sleepDays }) : t("sleepRecordLimited")}</div></div>
           </div>
@@ -2293,8 +2293,7 @@
           <div class="hint-box">${t("historyToolsHint")}</div>
           <div class="backup-filter-grid">
             <div>
-              <label class="label" for="historyDateFilter">${t("jumpByDate")}</label>
-              <input id="historyDateFilter" class="date-compact backup-date-compact" type="date" value="${esc(state.historyDateFilter)}" />
+              ${renderDateChipInput("historyDateFilter", state.historyDateFilter, t("jumpByDate"), { allowEmpty: true, className: "history-date-field" })}
             </div>
             <div>
               <label class="label" for="historyDayTypeFilter">${t("filterByType")}</label>
@@ -2366,7 +2365,7 @@
         <div class="item-top">
           <div>
             <div class="item-title">${fmtDate(date)}</div>
-            <div class="item-sub">${dayTypeLabel(record.dayType)} · ${round1(totals.calories || 0)} kcal · ${record.bodyWeight ? `${record.bodyWeight} kg` : t("noWeight")}</div>
+            <div class="item-sub">${dayTypeLabel(record.dayType)} · ${round1(totals.calories || 0)} kcal · ${record.bodyWeight ? `${formatWeight(record.bodyWeight)} kg` : t("noWeight")}</div>
             <div class="small" style="margin-top:6px">${record.savedAt ? t("savedAtLine", { time: fmtDateTime(record.savedAt) }) : t("noSavedTime")} · ${t("recordItemCount", { count: record.meals.reduce((sum, meal) => sum + meal.entries.filter(entryStarted).length, 0) })}</div>
             <div class="small" style="margin-top:6px">${t("hungerLine", { level: hungerLabel(record.hungerLevel) })}${record.dayType === "training" ? ` · ${t("trainingLine", { level: performanceLabel(record.trainingPerformance) })}` : ""}${record.sleepScore ? ` · ${t("sleepLine", { score: record.sleepScore })}` : ""}</div>
           </div>
@@ -2476,14 +2475,14 @@
           ${renderSettingDateInput(t("planStartDate"), "planStartDate", draft.planStartDate || localDateString())}
         </div>
         <div class="settings-metrics-row">
-          ${renderSettingInput(t("planStartWeight"), "currentWeightKg", draft.currentWeightKg, "decimal", false, "settings-metric-field", "", "kg")}
+          ${renderSettingInput(t("planStartWeight"), "currentWeightKg", formatWeight(draft.currentWeightKg), "decimal", false, "settings-metric-field", "", "kg")}
           ${renderSettingInput(t("planStartBmr"), "bmr", draft.bmr, "decimal", false, "settings-metric-field", "", currentLanguage === "es" ? "kcal/día" : "kcal/天")}
           ${renderSettingInput(t("planStartBodyFat"), "planStartBodyFatPercent", draft.planStartBodyFatPercent || "", "decimal", false, "settings-metric-field", "", "%")}
         </div>
       `)}
       ${renderSettingsGroup("planGoal", t("planGoal"), `
         <div class="settings-duo-row">
-          ${renderSettingInput(t("targetWeight"), "targetWeightKg", draft.targetWeightKg, "decimal", false, "settings-duo-field", "", "kg")}
+          ${renderSettingInput(t("targetWeight"), "targetWeightKg", formatWeight(draft.targetWeightKg), "decimal", false, "settings-duo-field", "", "kg")}
           ${renderSettingInput(t("targetBodyFat"), "targetBodyFatPercent", draft.targetBodyFatPercent, "decimal", false, "settings-duo-field", "", "%")}
         </div>
         <div class="settings-date-row">
@@ -2544,15 +2543,24 @@
     `;
   }
 
-  function renderSettingDateInput(label, key, value) {
-    const dateValue = /^\d{4}-\d{2}-\d{2}$/.test(String(value || "")) ? String(value) : localDateString();
+  function renderDateChipInput(id, value, label, options = {}) {
+    const rawValue = String(value || "");
+    const allowEmpty = !!options.allowEmpty;
+    const dateValue = /^\d{4}-\d{2}-\d{2}$/.test(rawValue) ? rawValue : (allowEmpty ? "" : localDateString());
+    const chipText = dateValue || "";
+    const wrapperClass = options.className ? ` ${esc(options.className)}` : "";
+    const dataAttr = options.dataSetting ? ` data-setting="${esc(options.dataSetting)}"` : "";
     return `
-      <div class="settings-date-field settings-date-picker">
-        <label class="label" for="setting-${key}">${esc(label)}</label>
-        <div class="settings-date-chip" aria-hidden="true">${esc(dateValue)}</div>
-        <input id="setting-${key}" class="settings-date-native" type="date" data-setting="${key}" autocomplete="off" spellcheck="false" value="${esc(dateValue)}" aria-label="${esc(label)}" />
+      <div class="settings-date-field settings-date-picker${wrapperClass}">
+        <label class="label" for="${esc(id)}">${esc(label)}</label>
+        <div class="settings-date-chip ${dateValue ? "" : "empty"}" aria-hidden="true">${esc(chipText)}</div>
+        <input id="${esc(id)}" class="settings-date-native" type="date"${dataAttr} autocomplete="off" spellcheck="false" value="${esc(dateValue)}" aria-label="${esc(label)}" />
       </div>
     `;
+  }
+
+  function renderSettingDateInput(label, key, value) {
+    return renderDateChipInput(`setting-${key}`, value, label, { dataSetting: key });
   }
 
   function renderSettingInput(label, key, value, type, readonly = false, className = "", inputClass = "", placeholder = "") {
@@ -2574,9 +2582,9 @@
     const trend = buildWeightTrendAnalysis(summary);
     return `
       <div class="stat-grid">
-        <div class="stat"><div class="k">${t("recentWeight")}</div><div class="v">${summary.latestWeight || "—"}</div><div class="h">kg</div></div>
-        <div class="stat"><div class="k">${t("avg7Weight")}</div><div class="v">${summary.recent7Avg || "—"}</div><div class="h">kg</div></div>
-        <div class="stat"><div class="k">${t("distanceToGoal")}</div><div class="v">${trend.distanceText}</div><div class="h">${t("targetKg", { weight: summary.goalWeight })}</div></div>
+        <div class="stat"><div class="k">${t("recentWeight")}</div><div class="v">${summary.latestWeight ? formatWeight(summary.latestWeight) : "—"}</div><div class="h">kg</div></div>
+        <div class="stat"><div class="k">${t("avg7Weight")}</div><div class="v">${summary.recent7Avg ? formatWeight(summary.recent7Avg) : "—"}</div><div class="h">kg</div></div>
+        <div class="stat"><div class="k">${t("distanceToGoal")}</div><div class="v">${trend.distanceText}</div><div class="h">${t("targetKg", { weight: formatWeight(summary.goalWeight) })}</div></div>
         <div class="stat"><div class="k">${t("requiredWeeklyPace")}</div><div class="v">${trend.requiredPaceText}</div><div class="h">${trend.status}</div></div>
       </div>
       <div class="hint-box" style="margin-top:10px">${t("trendReferenceHint")}</div>
@@ -2594,7 +2602,7 @@
       : `${preview.observedTdee} kcal · ${Math.round(preview.observedTdeeConfidence * 100)}%`;
     return `
       <div class="stat-grid">
-        <div class="stat"><div class="k">${t("effectiveWeight")}</div><div class="v">${preview.effectiveWeightKg}</div><div class="h">kg</div></div>
+        <div class="stat"><div class="k">${t("effectiveWeight")}</div><div class="v">${formatWeight(preview.effectiveWeightKg)}</div><div class="h">kg</div></div>
         <div class="stat"><div class="k">BMR</div><div class="v">${preview.settings.bmr}</div><div class="h">${t("activityFactor", { value: preview.activityFactor })}</div></div>
         <div class="stat"><div class="k">${t("formulaTdee")}</div><div class="v">${preview.formulaTdee || "—"}</div><div class="h">kcal</div></div>
         <div class="stat"><div class="k">${t("observedTdee")}</div><div class="v">${observedText}</div><div class="h">${t("dataSource")} · ${sourceLabel}</div></div>
@@ -2604,14 +2612,14 @@
         <div class="stat"><div class="k">${t("plannedAverageCalories")}</div><div class="v">${preview.finalAverageCalories}</div><div class="h">${t("recoveryFlag")} · ${preview.explanation.recoveryFlag ? t("recoveryFlagYes") : t("recoveryFlagNo")}</div></div>
         <div class="stat"><div class="k">${t("trainingDayTarget")}</div><div class="v">${preview.trainingCalories}</div><div class="h">P ${preview.trainingTarget.protein} · C ${preview.trainingCarbs} · F ${preview.trainingTarget.fat}</div></div>
         <div class="stat"><div class="k">${t("restDayTarget")}</div><div class="v">${preview.restCalories}</div><div class="h">P ${preview.restTarget.protein} · C ${preview.restCarbs} · F ${preview.restTarget.fat}</div></div>
-        <div class="stat"><div class="k">${t("expectedWeeklyChange")}</div><div class="v">${expectedWeekly ? `-${expectedWeekly}` : "0"}</div><div class="h">${t("kgPerWeek")}</div></div>
+        <div class="stat"><div class="k">${t("expectedWeeklyChange")}</div><div class="v">${expectedWeekly ? `-${formatWeight(expectedWeekly)}` : "0.00"}</div><div class="h">${t("kgPerWeek")}</div></div>
         <div class="stat"><div class="k">${t("daysRemaining")}</div><div class="v">${preview.daysRemaining}</div><div class="h">${t("fromTomorrowToTarget")}</div></div>
       </div>
       ${preview.trend?.current7DayAvg ? `
         <div class="hint-box" style="margin-top:10px">
           <div class="small">${t("trend14")}</div>
-          <div style="margin-top:4px;color:var(--text);font-weight:700">${t("trendComparison", { previous: preview.trend.previous7DayAvg, current: preview.trend.current7DayAvg })}</div>
-          <div class="small" style="margin-top:4px">${t("actualVsPlanned", { actual: preview.trend.actualChange, expected: preview.trend.expectedChange })}</div>
+          <div style="margin-top:4px;color:var(--text);font-weight:700">${t("trendComparison", { previous: formatWeight(preview.trend.previous7DayAvg), current: formatWeight(preview.trend.current7DayAvg) })}</div>
+          <div class="small" style="margin-top:4px">${t("actualVsPlanned", { actual: formatWeight(preview.trend.actualChange), expected: formatWeight(preview.trend.expectedChange) })}</div>
         </div>
       ` : ""}
       <div class="hint-box" style="margin-top:10px">${t("targetDetailsHelp")}</div>
@@ -2842,7 +2850,7 @@
 
   function applyDayData(data) {
     state.dayType = normalizeDayType(data.dayType);
-    state.bodyWeight = normalizeLooseNumericText(data.bodyWeight);
+      state.bodyWeight = normalizeWeightText(data.bodyWeight);
     state.trainingPerformance = normalizeTrainingPerformance(data.trainingPerformance);
     state.hungerLevel = normalizeHungerLevel(data.hungerLevel);
     state.sleepScore = normalizeSleepScore(data.sleepScore);
@@ -3235,7 +3243,7 @@
       }
       entries[itemIndex - 1] = entry;
       candidateRecords[date].dayType = normalizeDayType(dayType) || candidateRecords[date].dayType;
-      candidateRecords[date].bodyWeight = bodyWeight ? normalizeLooseNumericText(bodyWeight) : candidateRecords[date].bodyWeight;
+      candidateRecords[date].bodyWeight = bodyWeight ? normalizeWeightText(bodyWeight) : candidateRecords[date].bodyWeight;
       candidateRecords[date].trainingPerformance = trainingPerformance
         ? normalizeTrainingPerformance(trainingPerformance)
         : candidateRecords[date].trainingPerformance;
@@ -3624,7 +3632,7 @@
     const record = normalizeRecord({
       date: state.date,
       dayType: state.dayType,
-      bodyWeight: state.bodyWeight,
+      bodyWeight: normalizeWeightText(state.bodyWeight),
       trainingPerformance: state.trainingPerformance,
       hungerLevel: state.hungerLevel,
       sleepScore: state.sleepScore,
@@ -3648,7 +3656,7 @@
     return normalizeDraft({
       date: state.date,
       dayType: state.dayType,
-      bodyWeight: state.bodyWeight,
+      bodyWeight: normalizeWeightText(state.bodyWeight),
       trainingPerformance: state.trainingPerformance,
       hungerLevel: state.hungerLevel,
       sleepScore: state.sleepScore,
@@ -3685,11 +3693,11 @@
         return 0;
       }
       const total = records.reduce((sum, record) => sum + numberValue(record.bodyWeight), 0);
-      return round1(total / records.length);
+      return round2(total / records.length);
     };
     const recent7Avg = averageWeight(recent7);
     const prev7Avg = averageWeight(prev7);
-    const latestWeight = recent.length ? round1(numberValue(recent[recent.length - 1].bodyWeight)) : 0;
+    const latestWeight = recent.length ? round2(numberValue(recent[recent.length - 1].bodyWeight)) : 0;
     const recent14 = recent.slice(-14);
     const rollingWindowDates = lastNDates(state.date, 7);
     const rollingRecords = rollingWindowDates
@@ -3718,9 +3726,9 @@
     const rollingTarget = averageTargetForDates(rollingWindowDates);
     const currentDisplayWeight = recent7.length
       ? recent7Avg
-      : (Number.isFinite(numberValue(state.bodyWeight)) ? round1(numberValue(state.bodyWeight)) : 0);
+      : (Number.isFinite(numberValue(state.bodyWeight)) ? round2(numberValue(state.bodyWeight)) : 0);
     const firstLoggedWeight = recent.length
-      ? round1(numberValue(recent[0].bodyWeight))
+      ? round2(numberValue(recent[0].bodyWeight))
       : currentDisplayWeight;
     const goalWeight = currentSettings().targetWeightKg;
     const distanceToGoal = currentDisplayWeight ? round1(currentDisplayWeight - goalWeight) : 0;
@@ -3966,15 +3974,16 @@
         guidance = t("trendWaterGuidance");
       }
     }
+    const weeklySign = weeklyChange > 0 ? "+" : (weeklyChange < 0 ? "-" : "");
     return {
       status,
       tone,
       guidance,
-      currentAvgText: currentAvg ? `${round1(currentAvg)} kg` : "—",
-      weeklyChangeText: count >= 14 ? `${weeklyChange > 0 ? "+" : ""}${weeklyChange} kg` : "—",
+      currentAvgText: currentAvg ? `${formatWeight(currentAvg)} kg` : "—",
+      weeklyChangeText: count >= 14 ? `${weeklySign}${formatWeight(Math.abs(weeklyChange))} kg` : "—",
       percentText: count >= 14 ? t("weeklyPercent", { percent }) : t("need14Records"),
-      requiredPaceText: requiredWeekly ? `${round1(requiredWeekly)} ${t("kgPerWeek")}` : "—",
-      distanceText: currentAvg ? `${Math.max(0, distance)} kg` : "—",
+      requiredPaceText: requiredWeekly ? `${formatWeight(requiredWeekly)} ${t("kgPerWeek")}` : "—",
+      distanceText: currentAvg ? `${formatWeight(Math.max(0, distance))} kg` : "—",
       settings
     };
   }
@@ -4249,7 +4258,7 @@
       targetBodyFatPercent: { label: t("targetBodyFat"), min: 5, max: 45 }
     };
     for (const [key, rule] of Object.entries(numericRules)) {
-      const validation = validateNumericText(settings[key], { ...rule, decimals: 1 }, ruleLabel(rule));
+      const validation = validateNumericText(settings[key], { ...rule, decimals: key.includes("WeightKg") ? 2 : 1 }, ruleLabel(rule));
       if (!validation.valid) {
         return { valid: false, message: validation.message, selector: `#setting-${key}` };
       }
@@ -4685,11 +4694,11 @@
     return {
       bmr: normalizeSettingNumber(merged.bmr, DEFAULT_SETTINGS.bmr, 900, 3500),
       planStartDate: /^\d{4}-\d{2}-\d{2}$/.test(String(merged.planStartDate || "")) ? String(merged.planStartDate) : localDateString(),
-      currentWeightKg: normalizeSettingNumber(merged.currentWeightKg, DEFAULT_SETTINGS.currentWeightKg, 30, 250),
+      currentWeightKg: normalizeSettingNumber(merged.currentWeightKg, DEFAULT_SETTINGS.currentWeightKg, 30, 250, 2),
       planStartBodyFatPercent: merged.planStartBodyFatPercent === "" || merged.planStartBodyFatPercent == null
         ? ""
         : normalizeSettingNumber(merged.planStartBodyFatPercent, "", 5, 60),
-      targetWeightKg: normalizeSettingNumber(merged.targetWeightKg, DEFAULT_SETTINGS.targetWeightKg, 30, 250),
+      targetWeightKg: normalizeSettingNumber(merged.targetWeightKg, DEFAULT_SETTINGS.targetWeightKg, 30, 250, 2),
       targetBodyFatPercent: normalizeSettingNumber(merged.targetBodyFatPercent, DEFAULT_SETTINGS.targetBodyFatPercent, 5, 45),
       targetDate: /^\d{4}-\d{2}-\d{2}$/.test(String(merged.targetDate || "")) ? String(merged.targetDate) : DEFAULT_SETTINGS.targetDate,
       goalMode,
@@ -4704,12 +4713,13 @@
     };
   }
 
-  function normalizeSettingNumber(value, fallback, min, max) {
+  function normalizeSettingNumber(value, fallback, min, max, decimals = 1) {
     const number = Number(normalizeLooseNumericText(value));
     if (!Number.isFinite(number)) {
       return fallback;
     }
-    return round1(Math.min(max, Math.max(min, number)));
+    const clamped = Math.min(max, Math.max(min, number));
+    return decimals === 2 ? round2(clamped) : round1(clamped);
   }
 
   function estimateActivityFactor(activityLevel, trainingDaysPerWeek) {
@@ -4723,7 +4733,7 @@
       .map(normalizeRecord)
       .filter((record) => record.bodyWeight !== "" && Number.isFinite(numberValue(record.bodyWeight)))
       .sort((left, right) => right.date.localeCompare(left.date))[0];
-    return latest ? round1(numberValue(latest.bodyWeight)) : 0;
+    return latest ? round2(numberValue(latest.bodyWeight)) : 0;
   }
 
   function effectiveTrainingDays(settings = currentSettings()) {
@@ -5441,7 +5451,7 @@
     return {
       date: record.date || localDateString(),
       dayType: normalizeDayType(record.dayType),
-      bodyWeight: normalizeLooseNumericText(record.bodyWeight),
+      bodyWeight: normalizeWeightText(record.bodyWeight),
       trainingPerformance: normalizeTrainingPerformance(record.trainingPerformance),
       hungerLevel: normalizeHungerLevel(record.hungerLevel),
       sleepScore: normalizeSleepScore(record.sleepScore),
@@ -5498,7 +5508,7 @@
     return {
       date: draft.date || localDateString(),
       dayType: normalizeDayType(draft.dayType),
-      bodyWeight: normalizeLooseNumericText(draft.bodyWeight),
+      bodyWeight: normalizeWeightText(draft.bodyWeight),
       trainingPerformance: normalizeTrainingPerformance(draft.trainingPerformance),
       hungerLevel: normalizeHungerLevel(draft.hungerLevel),
       sleepScore: normalizeSleepScore(draft.sleepScore),
@@ -5621,7 +5631,7 @@
             return `<circle cx="${cx}" cy="${cy}" r="${isLast ? 4.5 : 3.2}" class="${isLast ? "weight-point current" : "weight-point"}"></circle>`;
           }).join("")}
           ${trendPolyline ? `<polyline points="${trendPolyline}" class="weight-trend-line ${trendClass}"></polyline>` : ""}
-          <text x="${chartWidth - padX}" y="${goalY - 6}" text-anchor="end" class="goal-label">${t("targetKg", { weight: goalWeight })}</text>
+          <text x="${chartWidth - padX}" y="${goalY - 6}" text-anchor="end" class="goal-label">${t("targetKg", { weight: formatWeight(goalWeight) })}</text>
           <text x="${padX}" y="${chartHeight - 4}" text-anchor="start" class="axis-label">${fmtDate(points[0].date)}</text>
           <text x="${chartWidth - padX}" y="${chartHeight - 4}" text-anchor="end" class="axis-label">${fmtDate(lastPoint.date)}</text>
         </svg>
@@ -5641,10 +5651,10 @@
     }
     const weeklyChange = round1(regression.weeklyChange);
     if (weeklyChange <= -0.1) {
-      return t("weightTrendSummaryDown", { value: Math.abs(weeklyChange) });
+      return t("weightTrendSummaryDown", { value: formatWeight(Math.abs(weeklyChange)) });
     }
     if (weeklyChange >= 0.1) {
-      return t("weightTrendSummaryUp", { value: Math.abs(weeklyChange) });
+      return t("weightTrendSummaryUp", { value: formatWeight(Math.abs(weeklyChange)) });
     }
     return t("weightTrendSummaryFlat");
   }
@@ -5809,7 +5819,7 @@
   function comparableDayData(data) {
     return {
       dayType: normalizeDayType(data.dayType),
-      bodyWeight: normalizeLooseNumericText(data.bodyWeight),
+      bodyWeight: normalizeWeightText(data.bodyWeight),
       trainingPerformance: normalizeTrainingPerformance(data.trainingPerformance),
       hungerLevel: normalizeHungerLevel(data.hungerLevel),
       sleepScore: normalizeSleepScore(data.sleepScore),
@@ -6024,6 +6034,31 @@
     return trimTrailingZeros(number.toFixed(1));
   }
 
+  function normalizeWeightText(value) {
+    const text = String(value ?? "").trim().replace(/，/g, ".").replace(/,/g, ".");
+    if (!text) {
+      return "";
+    }
+    const number = Number(text);
+    if (!Number.isFinite(number)) {
+      return text;
+    }
+    return number.toFixed(2);
+  }
+
+  function normalizeWeightDraftText(value) {
+    const text = String(value ?? "").trim().replace(/，/g, ".").replace(/,/g, ".");
+    if (!text) {
+      return "";
+    }
+    return /^-?\d*\.?\d*$/.test(text) ? text : normalizeWeightText(text);
+  }
+
+  function formatWeight(value) {
+    const number = Number(String(value ?? "").trim().replace(/，/g, ".").replace(/,/g, "."));
+    return Number.isFinite(number) ? number.toFixed(2) : "—";
+  }
+
   function trimTrailingZeros(text) {
     return String(text).replace(/\.0+$/, "").replace(/(\.\d*[1-9])0+$/, "$1");
   }
@@ -6035,6 +6070,10 @@
 
   function round1(value) {
     return Math.round(value * 10) / 10;
+  }
+
+  function round2(value) {
+    return Math.round(value * 100) / 100;
   }
 
   function esc(value) {

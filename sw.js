@@ -1,11 +1,11 @@
-const CACHE_NAME = "macro-tracker-v1.20.13-shell-1";
+const CACHE_NAME = "macro-tracker-v1.20.14-shell-1";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./styles.css",
-  "./styles.css?v=1.20.13",
+  "./styles.css?v=1.20.14",
   "./app.js",
-  "./app.js?v=1.20.13",
+  "./app.js?v=1.20.14",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
