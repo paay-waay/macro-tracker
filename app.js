@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.20.11";
+  const APP_VERSION = "1.20.12";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -2473,7 +2473,7 @@
       ${renderSettingsGroup("planStart", t("planStart"), `
         <div class="hint-box">${t("planStartHint")}</div>
         <div class="settings-date-row">
-          ${renderSettingInput(t("planStartDate"), "planStartDate", draft.planStartDate || localDateString(), "dateText", false, "settings-date-field")}
+          ${renderSettingInput(t("planStartDate"), "planStartDate", draft.planStartDate || localDateString(), "date", false, "settings-date-field", "date-compact settings-date-input")}
         </div>
         <div class="settings-metrics-row">
           ${renderSettingInput(t("planStartWeight"), "currentWeightKg", draft.currentWeightKg, "decimal", false, "settings-metric-field")}
@@ -2487,7 +2487,7 @@
           ${renderSettingInput(t("targetBodyFat"), "targetBodyFatPercent", draft.targetBodyFatPercent, "decimal", false, "settings-duo-field")}
         </div>
         <div class="settings-date-row">
-          ${renderSettingInput(t("targetEndDate"), "targetDate", draft.targetDate, "dateText", false, "settings-date-field")}
+          ${renderSettingInput(t("targetEndDate"), "targetDate", draft.targetDate, "date", false, "settings-date-field", "date-compact settings-date-input")}
         </div>
       `)}
       ${renderSettingsGroup("execution", t("executionParams"), `
@@ -2544,15 +2544,15 @@
     `;
   }
 
-  function renderSettingInput(label, key, value, type, readonly = false, className = "") {
+  function renderSettingInput(label, key, value, type, readonly = false, className = "", inputClass = "") {
     const inputType = type === "date" ? "date" : "text";
-    const inputMode = type === "date" ? "" : ` inputmode="${type === "number" || type === "dateText" ? "numeric" : "decimal"}"`;
-    const pattern = type === "dateText" ? ` pattern="\\d{4}-\\d{2}-\\d{2}"` : "";
+    const inputMode = type === "date" ? "" : ` inputmode="${type === "number" ? "numeric" : "decimal"}"`;
     const wrapperClass = className ? ` class="${esc(className)}"` : "";
+    const inputClassAttr = inputClass ? ` class="${esc(inputClass)}"` : "";
     return `
       <div${wrapperClass}>
         <label class="label" for="setting-${key}">${esc(label)}</label>
-        <input id="setting-${key}" type="${inputType}"${inputMode}${pattern} ${readonly ? "readonly" : `data-setting="${key}"`} autocomplete="off" spellcheck="false" value="${esc(value ?? "")}" />
+        <input id="setting-${key}"${inputClassAttr} type="${inputType}"${inputMode} ${readonly ? "readonly" : `data-setting="${key}"`} autocomplete="off" spellcheck="false" value="${esc(value ?? "")}" />
       </div>
     `;
   }

@@ -2187,21 +2187,27 @@ input.big {
 
 .settings-date-field {
   overflow: hidden;
-  width: min(100%, 206px);
+  width: min(100%, 190px);
   max-width: 100%;
 }
 
 .settings-date-field input {
   display: block;
-  width: 100%;
+  width: min(100%, 190px);
   min-width: 0 !important;
   max-width: 100% !important;
   height: 44px;
-  padding-inline: 12px;
-  font-size: clamp(15px, 3.8vw, 17px);
+  padding-inline: 10px;
+  font-size: 14px;
   font-weight: var(--weight-semibold);
   letter-spacing: 0;
   border-radius: 16px;
+  text-align: center;
+}
+
+.settings-date-field input[type="date"]::-webkit-date-and-time-value {
+  min-width: 0;
+  max-width: 100%;
   text-align: center;
 }
 
