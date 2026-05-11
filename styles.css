@@ -1575,15 +1575,19 @@ input.big {
 .entry-head {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .entry-actions {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 6px;
+  max-width: 100%;
 }
 
 .entry-favorite-btn {

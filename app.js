@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.20.15";
+  const APP_VERSION = "1.20.16";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -1294,6 +1294,11 @@
       await saveFavoriteFromActive();
       return;
     }
+    if (button.dataset.saveEntryFavorite) {
+      const [mealId, entryIndex] = button.dataset.saveEntryFavorite.split("-").map(Number);
+      await saveFavoriteFromEntry(mealId, entryIndex);
+      return;
+    }
     if (button.dataset.applyFavorite) {
       await applyFavorite(button.dataset.applyFavorite, button.dataset.applyFavoriteMeal);
       return;
@@ -2058,6 +2063,7 @@
         <div class="entry-head">
           <div><div class="item-title">${t("foodItem", { index: entryIndex + 1 })}</div></div>
           <div class="entry-actions">
+            <button class="mini-btn ghost entry-favorite-btn" type="button" data-save-entry-favorite="${entryTarget}">${t("saveFavorite")}</button>
             <button class="mini-btn ghost entry-favorite-btn" type="button" data-entry-favorite-target="${entryTarget}" aria-expanded="${favoriteOpen ? "true" : "false"}">${t("entryFavoriteApply")}</button>
             <button
               class="entry-icon-btn ${canDelete ? "danger" : ""}"
@@ -2969,6 +2975,40 @@
     setNotice(t("saved"), { tone: "ok" });
   }
 
+  async function saveFavoriteFromEntry(mealId, entryIndex) {
+    const meal = state.meals[clampMealId(mealId) - 1];
+    const entry = meal?.entries?.[entryIndex];
+    if (!meal || !entry || !entryStarted(entry)) {
+      setNotice(t("noSavedCurrentMeal"), { tone: "warn" });
+      return;
+    }
+    const validation = validateEntries([{ meal, entry, entryIndex }], { structured: true });
+    if (!validation.valid) {
+      setNotice(validation.message, { tone: "warn" });
+      focusField(validation.selector);
+      return;
+    }
+    const normalizedEntry = normalizeEntry(entry);
+    const nameCandidate = normalizedEntry.name.trim();
+    const existing = state.favorites.find((favorite) => favorite.name === nameCandidate && favorite.entries.length === 1);
+    const favorite = normalizeFavorite({
+      id: existing?.id,
+      name: nameCandidate,
+      entries: [normalizedEntry],
+      createdAt: existing?.createdAt,
+      usageCount: existing?.usageCount,
+      lastUsedAt: existing?.lastUsedAt,
+      updatedAt: nowIso()
+    });
+    await storage.putFavorite(favorite);
+    state.favorites = [favorite, ...state.favorites.filter((item) => item.id !== favorite.id)]
+      .slice(0, MAX_FAVORITES)
+      .sort(sortFavorites);
+    render();
+    scrollEntryIntoView(meal.id, entryIndex);
+    setNotice(t("saved"), { tone: "ok" });
+  }
+
   async function applyFavorite(id, targetMealId = state.activeMeal, targetEntryIndex = null) {
     const mealId = clampMealId(targetMealId);
     const entryIndex = targetEntryIndex === null || targetEntryIndex === undefined || targetEntryIndex === ""
@@ -3014,7 +3054,7 @@
     const meal = state.meals[state.activeMeal - 1];
     meal.entries.push(makeEntry());
     const entryIndex = meal.entries.length - 1;
-    state.entryFavoriteTarget = `${state.activeMeal}-${entryIndex}`;
+    state.entryFavoriteTarget = "";
     markDirty();
     render();
     scrollEntryIntoView(state.activeMeal, entryIndex, { focusName: true });
