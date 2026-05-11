@@ -1092,6 +1092,11 @@ input.big {
   font-weight: var(--weight-bold);
 }
 
+.meal-block {
+  display: grid;
+  gap: 0;
+}
+
 .meal-row {
   appearance: none;
   width: 100%;
@@ -1195,11 +1200,28 @@ input.big {
   font-weight: var(--weight-bold);
 }
 
+.meal-inline-editor {
+  border: 1px solid rgba(79, 96, 76, 0.22);
+  border-top: 0;
+  border-radius: 0 0 18px 18px;
+  background: rgba(255, 253, 248, 0.56);
+  padding: 12px;
+  margin-top: -1px;
+}
+
+.meal-block.active .meal-row {
+  border-radius: 18px 18px 0 0;
+}
+
+.inline-meal-meta {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
 .current-meal-card {
-  margin-top: 10px;
   scroll-margin-top: 156px;
   border-color: rgba(83, 104, 95, 0.32);
-  box-shadow: 0 1px 2px rgba(70, 76, 72, 0.05), 0 16px 34px rgba(70, 76, 72, 0.1);
 }
 
 .meal-total-panel {

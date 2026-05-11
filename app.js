@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.20.16";
+  const APP_VERSION = "2.0.0";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -1290,10 +1290,6 @@
       scrollCurrentMealIntoView();
       return;
     }
-    if (button.id === "saveFavBtn") {
-      await saveFavoriteFromActive();
-      return;
-    }
     if (button.dataset.saveEntryFavorite) {
       const [mealId, entryIndex] = button.dataset.saveEntryFavorite.split("-").map(Number);
       await saveFavoriteFromEntry(mealId, entryIndex);
@@ -1736,42 +1732,11 @@
   }
 
   function renderToday() {
-    const meal = state.meals[state.activeMeal - 1];
-    const mealTotalsValue = mealTotals(meal);
-    const mealGuidance = currentMealGuidance(mealTotalsValue);
-    const showMealTotal = meal.entries.length >= 2;
     return `
       ${renderDailyContext()}
       <div class="section-label">${t("mealRecords")}</div>
       <div class="meal-accordion" aria-label="${t("mealSwitcherAria")}">
         ${state.meals.map((mealItem) => renderMealRow(mealItem)).join("")}
-      </div>
-      <div class="card current-meal-card" id="currentMealCard" data-current-meal="${meal.id}">
-        <div class="item-top" style="margin-bottom:8px">
-          <div>
-            <h3>${esc(mealLabel(meal.id))}</h3>
-            <div class="small">${t("draftAutoSave")}</div>
-          </div>
-          <button class="btn" id="saveFavBtn" type="button">${t("saveFavorite")}</button>
-        </div>
-        ${showMealTotal ? `
-        <div class="meal-total-panel ${mealCalorieState(mealTotalsValue).tone}">
-          <div class="mini-section-title">${t("mealTotal")}</div>
-          <div class="macro-grid compact-total-grid">
-            <div class="stat"><div class="k">${t("calories")}</div><div class="v" id="mealTotalCalories">${round1(mealTotalsValue.calories)}</div><div class="h">kcal</div></div>
-            <div class="stat"><div class="k">P</div><div class="v" id="mealTotalProtein">${round1(mealTotalsValue.protein)}</div><div class="h">${t("protein")}</div></div>
-            <div class="stat"><div class="k">C</div><div class="v" id="mealTotalCarbs">${round1(mealTotalsValue.carbs)}</div><div class="h">${t("carbs")}</div></div>
-            <div class="stat"><div class="k">F</div><div class="v" id="mealTotalFat">${round1(mealTotalsValue.fat)}</div><div class="h">${t("fat")}</div></div>
-          </div>
-          <div class="meal-guidance ${mealGuidance ? "" : "hidden"}" id="mealGuidance">${esc(mealGuidance)}</div>
-        </div>
-        ` : ""}
-        ${renderFavoriteQuickApply(meal.id)}
-        <div>${meal.entries.map((entry, entryIndex) => renderEntry(meal, entry, entryIndex)).join("")}</div>
-        <div class="grid-2" style="margin-top:12px">
-          <button class="btn" id="addEntryBtn" type="button">${t("addItem")}</button>
-          <button class="btn dark" id="nextMealBtn" type="button">${t("nextMeal")}</button>
-        </div>
       </div>
     `;
   }
@@ -1921,21 +1886,54 @@
       ? `${round1(totals.calories)} kcal · P ${round1(totals.protein)} · C ${round1(totals.carbs)} · F ${round1(totals.fat)}`
       : (startedCount ? t("incompleteItems", { count: startedCount }) : t("notRecorded"));
     return `
-      <button
-        class="meal-row ${active ? "active" : ""} ${filled ? "done" : ""}"
-        type="button"
-        data-meal="${mealItem.id}"
-        aria-pressed="${active ? "true" : "false"}"
-      >
-        <span class="meal-row-text">
-          <span class="meal-row-title">
-            <strong>${esc(mealLabel(mealItem.id))}</strong>
-            ${foodSummary ? `<span class="meal-food-names">${esc(foodSummary)}</span>` : ""}
+      <div class="meal-block ${active ? "active" : ""}" id="meal-block-${mealItem.id}">
+        <button
+          class="meal-row ${active ? "active" : ""} ${filled ? "done" : ""}"
+          type="button"
+          data-meal="${mealItem.id}"
+          aria-pressed="${active ? "true" : "false"}"
+        >
+          <span class="meal-row-text">
+            <span class="meal-row-title">
+              <strong>${esc(mealLabel(mealItem.id))}</strong>
+              ${foodSummary ? `<span class="meal-food-names">${esc(foodSummary)}</span>` : ""}
+            </span>
+            <span class="meal-macro-summary">${macroSummary}${stateBadges ? `<span class="meal-state-row">${stateBadges}</span>` : ""}</span>
           </span>
-          <span class="meal-macro-summary">${macroSummary}${stateBadges ? `<span class="meal-state-row">${stateBadges}</span>` : ""}</span>
-        </span>
-        <span class="meal-indicator" aria-hidden="true">${filled ? "✓" : (active ? "•" : "")}</span>
-      </button>
+          <span class="meal-indicator" aria-hidden="true">${filled ? "✓" : (active ? "•" : "")}</span>
+        </button>
+        ${active ? renderMealEditor(mealItem) : ""}
+      </div>
+    `;
+  }
+
+  function renderMealEditor(meal) {
+    const mealTotalsValue = mealTotals(meal);
+    const mealGuidance = currentMealGuidance(mealTotalsValue);
+    const showMealTotal = meal.entries.length >= 2;
+    return `
+      <div class="meal-inline-editor current-meal-card" id="currentMealCard" data-current-meal="${meal.id}">
+        <div class="inline-meal-meta">
+          <span>${t("draftAutoSave")}</span>
+        </div>
+        ${showMealTotal ? `
+        <div class="meal-total-panel ${mealCalorieState(mealTotalsValue).tone}">
+          <div class="mini-section-title">${t("mealTotal")}</div>
+          <div class="macro-grid compact-total-grid">
+            <div class="stat"><div class="k">${t("calories")}</div><div class="v" id="mealTotalCalories">${round1(mealTotalsValue.calories)}</div><div class="h">kcal</div></div>
+            <div class="stat"><div class="k">P</div><div class="v" id="mealTotalProtein">${round1(mealTotalsValue.protein)}</div><div class="h">${t("protein")}</div></div>
+            <div class="stat"><div class="k">C</div><div class="v" id="mealTotalCarbs">${round1(mealTotalsValue.carbs)}</div><div class="h">${t("carbs")}</div></div>
+            <div class="stat"><div class="k">F</div><div class="v" id="mealTotalFat">${round1(mealTotalsValue.fat)}</div><div class="h">${t("fat")}</div></div>
+          </div>
+          <div class="meal-guidance ${mealGuidance ? "" : "hidden"}" id="mealGuidance">${esc(mealGuidance)}</div>
+        </div>
+        ` : ""}
+        <div>${meal.entries.map((entry, entryIndex) => renderEntry(meal, entry, entryIndex)).join("")}</div>
+        <div class="grid-2" style="margin-top:12px">
+          <button class="btn" id="addEntryBtn" type="button">${t("addItem")}</button>
+          <button class="btn dark" id="nextMealBtn" type="button">${t("nextMeal")}</button>
+        </div>
+      </div>
     `;
   }
 
@@ -2019,35 +2017,6 @@
       return { labelKey: "trendNormal", tone: "ok" };
     }
     return { labelKey: "great", tone: "info" };
-  }
-
-  function renderFavoriteQuickApply(mealId = state.activeMeal) {
-    const open = !!state.ui.favoriteQuickOpen;
-    return `
-      <div class="favorite-quick">
-        <button class="context-summary secondary-summary" type="button" data-toggle-ui="favoriteQuickOpen" aria-expanded="${open ? "true" : "false"}">
-          <span>${t("favorites")} · ${t("savedCount", { count: state.favorites.length })}</span>
-          <span class="chevron" aria-hidden="true">${open ? "⌃" : "⌄"}</span>
-        </button>
-        ${open ? `
-          <div class="favorite-quick-body">
-            ${state.favorites.length
-              ? `<div class="favorite-quick-list" role="list" aria-label="${t("favoriteQuickListAria")}">
-                  ${state.favorites.map((favorite) => {
-                    const totals = favoriteTotals(favorite);
-                    return `
-                      <button class="favorite-quick-item" type="button" data-apply-favorite="${favorite.id}" data-apply-favorite-meal="${mealId}" role="listitem" aria-label="${t("apply")} ${esc(favorite.name)}">
-                        <span class="favorite-quick-name">${esc(favorite.name)}</span>
-                        <span class="favorite-quick-macros">${round1(totals.calories)} kcal · P ${round1(totals.protein)} · C ${round1(totals.carbs)} · F ${round1(totals.fat)}</span>
-                      </button>
-                    `;
-                  }).join("")}
-                </div>`
-              : `<div class="hint-box empty-state"><div class="empty-icon">☆</div><strong>${t("noFavorites")}</strong><span>${t("noFavoritesHelp")}</span></div>`}
-          </div>
-        ` : ""}
-      </div>
-    `;
   }
 
   function renderEntry(meal, entry, entryIndex) {
