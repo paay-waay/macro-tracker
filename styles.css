@@ -1007,6 +1007,19 @@ input.big {
   box-shadow: 0 8px 18px rgba(70, 76, 72, 0.16);
 }
 
+.field-shell.disabled-field {
+  opacity: 0.58;
+}
+
+.segmented.disabled {
+  background: rgba(239, 237, 231, 0.72);
+}
+
+.segmented.disabled .segment {
+  color: rgba(123, 128, 122, 0.72);
+  cursor: not-allowed;
+}
+
 .segment-poor.active {
   background: var(--bad-bg);
   color: var(--bad);

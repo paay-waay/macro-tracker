@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "1.20.14";
+  const APP_VERSION = "1.20.15";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -256,7 +256,7 @@
       planStartBodyFat: "起点体脂",
       targetBodyFat: "目标体脂",
       targetEndDate: "目标完成日期",
-      weeklyTrainingDays: "每周训练天数",
+      weeklyTrainingDays: "每周默认训练天数",
       goalMode: "目标模式",
       dailyActivity: "日常活动水平",
       trackingBuffer: "记录误差缓冲",
@@ -447,7 +447,7 @@
       planStartDateInvalid: "计划开始日期格式不正确",
       targetDateInvalid: "目标日期格式不正确",
       targetDateAfterToday: "目标日期需要晚于今天",
-      weeklyTrainingDaysRange: "每周训练天数需在 0 到 7 之间",
+      weeklyTrainingDaysRange: "每周默认训练天数需在 0 到 7 之间",
       language: "语言",
       languageChinese: "中文",
       languageSpanish: "Español",
@@ -703,7 +703,7 @@
       planStartBodyFat: "Grasa %",
       targetBodyFat: "Grasa meta",
       targetEndDate: "Fecha meta",
-      weeklyTrainingDays: "Días de entreno/semana",
+      weeklyTrainingDays: "Días de entreno por defecto",
       goalMode: "Modo de meta",
       dailyActivity: "Actividad diaria",
       trackingBuffer: "Margen de registro",
@@ -894,7 +894,7 @@
       planStartDateInvalid: "Fecha de inicio inválida",
       targetDateInvalid: "Fecha meta inválida",
       targetDateAfterToday: "La fecha meta debe ser posterior a hoy",
-      weeklyTrainingDaysRange: "Días de entreno por semana debe estar entre 0 y 7",
+      weeklyTrainingDaysRange: "Días de entreno por defecto debe estar entre 0 y 7",
       language: "Idioma",
       languageChinese: "中文",
       languageSpanish: "Español",
@@ -1242,6 +1242,9 @@
       return;
     }
     if (button.dataset.segmentPerformance) {
+      if (state.dayType === "rest") {
+        return;
+      }
       state.trainingPerformance = normalizeTrainingPerformance(button.dataset.segmentPerformance);
       markDirty();
       render();
@@ -1836,13 +1839,13 @@
               </div>
             </div>
             <div class="compact-field-grid dual-context-grid">
-              <div class="field-shell">
+              <div class="field-shell ${state.dayType === "rest" ? "disabled-field" : ""}">
                 <span class="label">${t("trainingPerformance")}</span>
                 ${renderSegmentedControl(t("trainingPerformance"), [
                   ["poor", t("poor")],
                   ["normal", t("normal")],
                   ["great", t("great")]
-                ], state.trainingPerformance, "segmentPerformance")}
+                ], state.dayType === "rest" ? "" : state.trainingPerformance, "segmentPerformance", { disabled: state.dayType === "rest" })}
               </div>
               <div class="field-shell">
                 <span class="label">${t("hunger")}</span>
@@ -1876,9 +1879,10 @@
     `;
   }
 
-  function renderSegmentedControl(name, options, selectedValue, datasetName) {
+  function renderSegmentedControl(name, options, selectedValue, datasetName, config = {}) {
+    const disabled = !!config.disabled;
     return `
-      <div class="segmented" role="radiogroup" aria-label="${esc(name)}">
+      <div class="segmented ${disabled ? "disabled" : ""}" role="radiogroup" aria-label="${esc(name)}" ${disabled ? 'aria-disabled="true"' : ""}>
         ${options.map(([value, label]) => `
           <button
             type="button"
@@ -1887,6 +1891,7 @@
             role="radio"
             aria-checked="${selectedValue === value ? "true" : "false"}"
             aria-pressed="${selectedValue === value ? "true" : "false"}"
+            ${disabled ? "disabled" : ""}
           >${esc(label)}</button>
         `).join("")}
       </div>
@@ -4738,8 +4743,26 @@
 
   function effectiveTrainingDays(settings = currentSettings()) {
     const numericDays = Number(settings.trainingDaysPerWeek);
-    const fallbackDays = Number.isFinite(numericDays) ? Math.round(numericDays) : DEFAULT_WEEKLY_TRAINING_DAYS;
-    return Math.min(7, Math.max(0, fallbackDays));
+    const fallbackDays = Number.isFinite(numericDays) ? numericDays : DEFAULT_WEEKLY_TRAINING_DAYS;
+    return round1(Math.min(7, Math.max(0, fallbackDays)));
+  }
+
+  function effectiveTrainingDaysForTarget(date, settings = currentSettings(), recordsInput = state.records) {
+    const fallbackDays = effectiveTrainingDays(settings);
+    const records = recordsArray(recordsInput)
+      .map(normalizeRecord)
+      .filter((record) => record.date <= date && record.date >= addDays(date, -27) && (record.dayType === "training" || record.dayType === "rest"))
+      .sort((left, right) => left.date.localeCompare(right.date));
+    if (records.length < 14) {
+      return { days: fallbackDays, source: "settings", sampleDays: records.length };
+    }
+    const spanDays = Math.max(1, daysBetween(records[0].date, records[records.length - 1].date) + 1);
+    if (spanDays < 14) {
+      return { days: fallbackDays, source: "settings", sampleDays: records.length };
+    }
+    const trainingCount = records.filter((record) => record.dayType === "training").length;
+    const weeklyTrainingDays = round1(Math.min(7, Math.max(0, (trainingCount / records.length) * 7)));
+    return { days: weeklyTrainingDays, source: "history", sampleDays: records.length };
   }
 
   function currentSettings() {
@@ -4921,16 +4944,22 @@
       };
     }
 
-    const effectiveWeightKg = getEffectiveWeightForTarget(date, { ...options, settings });
+    const trainingFrequency = effectiveTrainingDaysForTarget(date, settings, records);
+    const targetSettings = {
+      ...settings,
+      trainingDaysPerWeek: trainingFrequency.days,
+      activityFactor: estimateActivityFactor(settings.activityLevel, trainingFrequency.days)
+    };
+    const effectiveWeightKg = getEffectiveWeightForTarget(date, { ...options, settings: targetSettings });
     const recordsWindow = targetRecordsWindow(date, options);
-    const formulaTdee = round1(settings.bmr * estimateActivityFactor(settings.activityLevel, settings.trainingDaysPerWeek));
-    const observed = estimateObservedTdee(recordsWindow, settings);
+    const formulaTdee = round1(targetSettings.bmr * estimateActivityFactor(targetSettings.activityLevel, targetSettings.trainingDaysPerWeek));
+    const observed = estimateObservedTdee(recordsWindow, targetSettings);
     const observedDelta = observed.observedTdee == null ? 0 : clamp((observed.observedTdee - formulaTdee) * observed.confidence, -175, 175);
     const finalTdee = round1(formulaTdee + observedDelta);
     const recovery = summarizeTargetRecovery(recordsWindow);
-    const mode = GOAL_MODE_CONFIG[settings.goalMode] || GOAL_MODE_CONFIG.recomp;
-    const daysRemaining = Math.max(0, daysBetween(date, settings.targetDate));
-    const weightGapKg = round1(effectiveWeightKg - settings.targetWeightKg);
+    const mode = GOAL_MODE_CONFIG[targetSettings.goalMode] || GOAL_MODE_CONFIG.recomp;
+    const daysRemaining = Math.max(0, daysBetween(date, targetSettings.targetDate));
+    const weightGapKg = round1(effectiveWeightKg - targetSettings.targetWeightKg);
     const totalDeficit = weightGapKg > 0 ? weightGapKg * 7700 : 0;
     const dailyDeficitByDate = daysRemaining > 0 && totalDeficit > 0 ? totalDeficit / daysRemaining : 0;
     const modeDailyDeficit = Math.min(mode.maxDeficit, Math.max(mode.minDeficit, finalTdee * mode.deficitRatio));
@@ -4942,9 +4971,9 @@
       warnings.push(t("previewTargetDateWarning"));
     }
     if (weightGapKg > 0) {
-      goalPhase = settings.goalMode === "recomp" ? "recomp" : "cut";
+      goalPhase = targetSettings.goalMode === "recomp" ? "recomp" : "cut";
       plannedDailyDeficit = Math.min(dailyDeficitByDate || modeDailyDeficit, modeDailyDeficit, MAX_DAILY_DEFICIT);
-      if (settings.goalMode === "cut") {
+      if (targetSettings.goalMode === "cut") {
         plannedDailyDeficit = Math.max(MIN_DAILY_DEFICIT, plannedDailyDeficit);
       }
       if (dailyDeficitByDate > modeDailyDeficit) {
@@ -4952,32 +4981,32 @@
       }
     } else if (weightGapKg < 0) {
       goalPhase = "maintenance";
-      plannedDailyDeficit = settings.goalMode === "performance" ? 0 : Math.min(100, modeDailyDeficit);
+      plannedDailyDeficit = targetSettings.goalMode === "performance" ? 0 : Math.min(100, modeDailyDeficit);
       warnings.push(t("previewGoalModeWarning"));
     } else {
-      plannedDailyDeficit = settings.goalMode === "performance" ? 0 : Math.min(100, modeDailyDeficit);
+      plannedDailyDeficit = targetSettings.goalMode === "performance" ? 0 : Math.min(100, modeDailyDeficit);
     }
 
     if (recovery.recoveryFlag && plannedDailyDeficit > 0) {
       plannedDailyDeficit = Math.round(plannedDailyDeficit * 0.7);
     }
-    const buffer = TRACKING_BUFFER_CONFIG[settings.trackingAccuracyBuffer] || TRACKING_BUFFER_CONFIG.medium;
+    const buffer = TRACKING_BUFFER_CONFIG[targetSettings.trackingAccuracyBuffer] || TRACKING_BUFFER_CONFIG.medium;
     const trackingBufferCalories = -Math.round(buffer.calories || 0);
-    const minCalories = Math.max(1600, round1(settings.bmr * 1.15));
+    const minCalories = Math.max(1600, round1(targetSettings.bmr * 1.15));
     let plannedAverageCalories = finalTdee - plannedDailyDeficit + trackingBufferCalories;
     if (plannedAverageCalories < minCalories) {
       plannedAverageCalories = minCalories;
       warnings.push(t("previewMinCalorieWarning"));
     }
 
-    const split = splitCaloriesByDayType(settings, plannedAverageCalories, minCalories, warnings);
+    const split = splitCaloriesByDayType(targetSettings, plannedAverageCalories, minCalories, warnings);
     const trainingTarget = {
       label: t("trainingDay"),
-      ...macroTargetForCalories(split.trainingCalories, settings, effectiveWeightKg, plannedDailyDeficit, warnings)
+      ...macroTargetForCalories(split.trainingCalories, targetSettings, effectiveWeightKg, plannedDailyDeficit, warnings)
     };
     const restTarget = {
       label: t("restDay"),
-      ...macroTargetForCalories(split.restCalories, settings, effectiveWeightKg, plannedDailyDeficit, warnings)
+      ...macroTargetForCalories(split.restCalories, targetSettings, effectiveWeightKg, plannedDailyDeficit, warnings)
     };
     const source = observed.confidence ? "blended" : "formula";
 
@@ -4997,7 +5026,10 @@
       selectedTarget: selectedDayType === "rest" ? restTarget : trainingTarget,
       warnings: Array.from(new Set(warnings)),
       explanation: {
-        activityFactor: estimateActivityFactor(settings.activityLevel, settings.trainingDaysPerWeek),
+        activityFactor: estimateActivityFactor(targetSettings.activityLevel, targetSettings.trainingDaysPerWeek),
+        effectiveTrainingDaysPerWeek: trainingFrequency.days,
+        trainingDaysSource: trainingFrequency.source,
+        trainingDaysSampleDays: trainingFrequency.sampleDays,
         goalPhase,
         recoveryFlag: recovery.recoveryFlag,
         quality: recovery.quality,
