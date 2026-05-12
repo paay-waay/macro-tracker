@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "2.0.0";
+  const APP_VERSION = "2.0.1";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -973,6 +973,7 @@
   };
   const DEFAULT_UI_STATE = {
     uiVersion: APP_VERSION,
+    mealEditorOpen: true,
     dailyContextOpen: false,
     favoriteQuickOpen: false,
     historyToolsOpen: true,
@@ -1285,9 +1286,18 @@
       return;
     }
     if (button.dataset.meal) {
-      state.activeMeal = clampMealId(Number(button.dataset.meal));
+      const mealId = clampMealId(Number(button.dataset.meal));
+      if (state.activeMeal === mealId) {
+        state.ui.mealEditorOpen = state.ui.mealEditorOpen === false;
+      } else {
+        state.activeMeal = mealId;
+        state.ui.mealEditorOpen = true;
+      }
+      saveUiState();
       render();
-      scrollCurrentMealIntoView();
+      if (state.ui.mealEditorOpen !== false) {
+        scrollCurrentMealIntoView();
+      }
       return;
     }
     if (button.dataset.saveEntryFavorite) {
@@ -1314,6 +1324,8 @@
     }
     if (button.id === "nextMealBtn") {
       state.activeMeal = clampMealId(state.activeMeal + 1);
+      state.ui.mealEditorOpen = true;
+      saveUiState();
       render();
       scrollCurrentMealIntoView();
       return;
@@ -1870,6 +1882,7 @@
 
   function renderMealRow(mealItem) {
     const active = state.activeMeal === mealItem.id;
+    const expanded = active && state.ui.mealEditorOpen !== false;
     const totals = mealTotals(mealItem);
     const filled = filledMeal(mealItem);
     const startedCount = mealItem.entries.filter(entryStarted).length;
@@ -1886,12 +1899,13 @@
       ? `${round1(totals.calories)} kcal · P ${round1(totals.protein)} · C ${round1(totals.carbs)} · F ${round1(totals.fat)}`
       : (startedCount ? t("incompleteItems", { count: startedCount }) : t("notRecorded"));
     return `
-      <div class="meal-block ${active ? "active" : ""}" id="meal-block-${mealItem.id}">
+      <div class="meal-block ${expanded ? "active" : ""}" id="meal-block-${mealItem.id}">
         <button
-          class="meal-row ${active ? "active" : ""} ${filled ? "done" : ""}"
+          class="meal-row ${expanded ? "active" : ""} ${filled ? "done" : ""}"
           type="button"
           data-meal="${mealItem.id}"
-          aria-pressed="${active ? "true" : "false"}"
+          aria-pressed="${expanded ? "true" : "false"}"
+          aria-expanded="${expanded ? "true" : "false"}"
         >
           <span class="meal-row-text">
             <span class="meal-row-title">
@@ -1900,9 +1914,9 @@
             </span>
             <span class="meal-macro-summary">${macroSummary}${stateBadges ? `<span class="meal-state-row">${stateBadges}</span>` : ""}</span>
           </span>
-          <span class="meal-indicator" aria-hidden="true">${filled ? "✓" : (active ? "•" : "")}</span>
+          <span class="meal-indicator" aria-hidden="true">${filled ? "✓" : (expanded ? "•" : "")}</span>
         </button>
-        ${active ? renderMealEditor(mealItem) : ""}
+        ${expanded ? renderMealEditor(mealItem) : ""}
       </div>
     `;
   }
@@ -2784,6 +2798,7 @@
     await flushDraftSave();
     state.date = date;
     state.activeMeal = 1;
+    state.ui.mealEditorOpen = true;
     await hydrateCurrentDate({ announce: true });
   }
 
@@ -2995,6 +3010,7 @@
     await storage.putFavorite(favorite);
     state.favorites = [favorite, ...state.favorites.filter((item) => item.id !== favorite.id)].sort(sortFavorites);
     state.activeMeal = mealId;
+    state.ui.mealEditorOpen = true;
     const favoriteEntries = favorite.entries.map((entry) => normalizeEntry(entry));
     if (entryIndex === null) {
       state.meals[mealId - 1].entries = favoriteEntries;
@@ -3024,6 +3040,8 @@
     meal.entries.push(makeEntry());
     const entryIndex = meal.entries.length - 1;
     state.entryFavoriteTarget = "";
+    state.ui.mealEditorOpen = true;
+    saveUiState();
     markDirty();
     render();
     scrollEntryIntoView(state.activeMeal, entryIndex, { focusName: true });
@@ -3089,6 +3107,7 @@
       state.sleepScore = "";
       state.meals = mealTemplate();
       state.activeMeal = 1;
+      state.ui.mealEditorOpen = true;
       state.dirty = false;
       state.lastSavedAt = "";
       state.lastDraftSavedAt = "";
