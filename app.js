@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "2.0.1";
+  const APP_VERSION = "2.0.2";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -117,6 +117,14 @@
       apply: "套用",
       clear: "清空",
       systemInsight: "系统判断",
+      weeklyExecutionSummary: "本周执行摘要",
+      recoveryExecutionQuality: "恢复与执行质量",
+      averageCaloriesVsTarget: "平均热量 / 目标",
+      macroTargetSummary: "宏量达成",
+      recordedDaysShort: "记录 {count}/7 天",
+      highHungerDays: "高饥饿 {count} 天",
+      poorTrainingDays: "训练偏差 {count} 天",
+      trainingDaysShort: "训练 {count} 天",
       weightTrend: "体重趋势",
       rollingMacroAverage: "近 7 天宏量平均",
       rollingMacroAverageCompact: "近 7 天宏量平均",
@@ -564,6 +572,14 @@
       apply: "Aplicar",
       clear: "Limpiar",
       systemInsight: "Evaluación del sistema",
+      weeklyExecutionSummary: "Resumen semanal",
+      recoveryExecutionQuality: "Recuperación y calidad",
+      averageCaloriesVsTarget: "Calorías / meta",
+      macroTargetSummary: "Macros",
+      recordedDaysShort: "{count}/7 días",
+      highHungerDays: "Hambre alta {count} días",
+      poorTrainingDays: "Entreno bajo {count} días",
+      trainingDaysShort: "Entreno {count} días",
       weightTrend: "Tendencia de peso",
       rollingMacroAverage: "Promedio de macros 7 días",
       rollingMacroAverageCompact: "Promedio 7 días",
@@ -2046,8 +2062,8 @@
         <div class="entry-head">
           <div><div class="item-title">${t("foodItem", { index: entryIndex + 1 })}</div></div>
           <div class="entry-actions">
-            <button class="mini-btn ghost entry-favorite-btn" type="button" data-save-entry-favorite="${entryTarget}">${t("saveFavorite")}</button>
-            <button class="mini-btn ghost entry-favorite-btn" type="button" data-entry-favorite-target="${entryTarget}" aria-expanded="${favoriteOpen ? "true" : "false"}">${t("entryFavoriteApply")}</button>
+            <button class="mini-btn ghost entry-favorite-btn save-favorite-action" type="button" data-save-entry-favorite="${entryTarget}">${t("saveFavorite")}</button>
+            <button class="mini-btn ghost entry-favorite-btn apply-favorite-action" type="button" data-entry-favorite-target="${entryTarget}" aria-expanded="${favoriteOpen ? "true" : "false"}">${t("entryFavoriteApply")}</button>
             <button
               class="entry-icon-btn ${canDelete ? "danger" : ""}"
               type="button"
@@ -2116,27 +2132,9 @@
   function renderOverview() {
     const summary = stats();
     return `
-      <div class="card">
-        <h3>${t("systemInsight")}</h3>
-        <div class="hint-box insight-box">
-          <div class="insight-title">${summary.systemInsight.title}</div>
-          <div class="small" style="margin-top:8px;line-height:1.5">${summary.systemInsight.body}</div>
-        </div>
-        <div class="badges" style="margin-top:10px">
-          ${summary.systemInsight.badges.map((badge) => `<span class="badge ${badge.tone}">${esc(badge.text)}</span>`).join("")}
-        </div>
-      </div>
+      ${renderWeeklyExecutionModule(summary)}
       ${renderWeightTrendModule(summary)}
-      <div class="card compact-overview-card">
-        <h3>${t("rollingMacroAverage")}</h3>
-        <div class="small" style="margin-top:6px">${t("rollingCoverage", { count: summary.rolling7.coveredDays, datePart: summary.rolling7.latestDate ? t("rollingCoverageDatePart", { date: fmtDate(summary.rolling7.latestDate) }) : "" })}</div>
-        <div class="stat-grid" style="margin-top:12px">
-          ${renderRollingAverageStat(t("calories"), summary.rolling7.average.calories, summary.rolling7.target.calories, "kcal")}
-          ${renderRollingAverageStat(t("protein"), summary.rolling7.average.protein, summary.rolling7.target.protein, "")}
-          ${renderRollingAverageStat(t("carbs"), summary.rolling7.average.carbs, summary.rolling7.target.carbs, "")}
-          ${renderRollingAverageStat(t("fat"), summary.rolling7.average.fat, summary.rolling7.target.fat, "")}
-        </div>
-      </div>
+      ${renderRecoveryQualityModule(summary)}
       ${renderOverviewDetails(summary)}
       ${summary.anomalies.length ? `
         <div class="card danger-card">
@@ -2144,6 +2142,65 @@
           <div class="list">${summary.anomalies.map((item) => `<div class="warn-box">${esc(item)}</div>`).join("")}</div>
         </div>
       ` : ""}
+    `;
+  }
+
+  function renderWeeklyExecutionModule(summary) {
+    const caloriesAverage = round1(summary.rolling7.average.calories);
+    const caloriesTarget = round1(summary.rolling7.target.calories);
+    const calorieDelta = round1(caloriesAverage - caloriesTarget);
+    return `
+      <div class="card compact-overview-card">
+        <div class="item-top">
+          <div>
+            <h3>${t("weeklyExecutionSummary")}</h3>
+            <div class="small" style="margin-top:6px">${t("rollingCoverage", { count: summary.rolling7.coveredDays, datePart: summary.rolling7.latestDate ? t("rollingCoverageDatePart", { date: fmtDate(summary.rolling7.latestDate) }) : "" })}</div>
+          </div>
+          <span class="badge ${summary.rolling7.coveredDays >= 6 ? "ok" : "warn"}">${t("recordedDaysShort", { count: summary.rolling7.coveredDays })}</span>
+        </div>
+        <div class="hint-box insight-box" style="margin-top:12px">
+          <div class="insight-title">${summary.systemInsight.title}</div>
+          <div class="small" style="margin-top:8px;line-height:1.5">${summary.systemInsight.body}</div>
+        </div>
+        <div class="stat-grid" style="margin-top:12px">
+          <div class="stat stat-calories">
+            <div class="k">${t("averageCaloriesVsTarget")}</div>
+            <div class="v">${caloriesAverage}/${caloriesTarget}</div>
+            <div class="h">${formatDelta(calorieDelta)} kcal</div>
+          </div>
+          <div class="stat">
+            <div class="k">${t("macroTargetSummary")}</div>
+            <div class="v">P ${round1(summary.rolling7.average.protein)}</div>
+            <div class="h">C ${round1(summary.rolling7.average.carbs)} · F ${round1(summary.rolling7.average.fat)}</div>
+          </div>
+        </div>
+        <div class="overview-mini-grid" style="margin-top:10px">
+          ${renderRollingAverageStat(t("protein"), summary.rolling7.average.protein, summary.rolling7.target.protein, "")}
+          ${renderRollingAverageStat(t("carbs"), summary.rolling7.average.carbs, summary.rolling7.target.carbs, "")}
+          ${renderRollingAverageStat(t("fat"), summary.rolling7.average.fat, summary.rolling7.target.fat, "")}
+        </div>
+        <div class="badges" style="margin-top:10px">
+          ${summary.systemInsight.badges.map((badge) => `<span class="badge ${badge.tone}">${esc(badge.text)}</span>`).join("")}
+        </div>
+        ${renderRecordQualityReminder(summary)}
+      </div>
+    `;
+  }
+
+  function renderRecoveryQualityModule(summary) {
+    const sleepTone = !summary.execution7.sleepDays ? "warn" : (summary.execution7.avgSleep >= 75 ? "ok" : (summary.execution7.avgSleep < 65 ? "bad" : "warn"));
+    const hungerTone = summary.execution7.highHungerDays >= 3 ? "warn" : "ok";
+    const trainingTone = summary.execution7.poorTrainingDays ? "warn" : "ok";
+    return `
+      <div class="card">
+        <h3>${t("recoveryExecutionQuality")}</h3>
+        <div class="badges" style="margin-top:10px">
+          <span class="badge ${sleepTone}">${summary.execution7.sleepDays ? t("avgSleep7", { score: summary.execution7.avgSleep }) : t("sleepRecordLimited")}</span>
+          <span class="badge ${hungerTone}">${t("highHungerDays", { count: summary.execution7.highHungerDays })}</span>
+          <span class="badge ${trainingTone}">${t("poorTrainingDays", { count: summary.execution7.poorTrainingDays })}</span>
+          <span class="badge info">${t("trainingDaysShort", { count: summary.execution7.trainingDays })}</span>
+        </div>
+      </div>
     `;
   }
 
@@ -6117,6 +6174,11 @@
   function formatWeight(value) {
     const number = Number(String(value ?? "").trim().replace(/，/g, ".").replace(/,/g, "."));
     return Number.isFinite(number) ? number.toFixed(2) : "—";
+  }
+
+  function formatDelta(value) {
+    const number = round1(numberValue(value));
+    return `${number > 0 ? "+" : ""}${number}`;
   }
 
   function trimTrailingZeros(text) {

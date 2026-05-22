@@ -1331,6 +1331,20 @@ input.big {
   font-size: 22px;
 }
 
+.overview-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.overview-mini-grid .stat {
+  padding: 10px;
+}
+
+.overview-mini-grid .stat .v {
+  font-size: 18px;
+}
+
 .weight-trend-card .weight-chart {
   margin-top: 12px;
 }
@@ -1618,6 +1632,18 @@ input.big {
   padding: 0 10px;
   border-radius: 12px;
   font-size: 12px;
+}
+
+.entry-favorite-btn.save-favorite-action {
+  background: rgba(246, 236, 214, 0.78);
+  border-color: rgba(179, 151, 91, 0.36);
+  color: #7b6330;
+}
+
+.entry-favorite-btn.apply-favorite-action {
+  background: rgba(225, 238, 232, 0.86);
+  border-color: rgba(95, 130, 112, 0.34);
+  color: var(--accent-dark);
 }
 
 .entry-icon-btn {
