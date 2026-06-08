@@ -1345,6 +1345,46 @@ input.big {
   font-size: 18px;
 }
 
+.overview-delta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.overview-delta-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(251, 250, 246, 0.78);
+  padding: 10px 12px;
+  color: var(--muted);
+}
+
+.overview-delta-pill strong {
+  color: var(--text);
+  font-size: clamp(13px, 2.9vw, 15px);
+  white-space: nowrap;
+}
+
+.overview-delta-pill.ok {
+  border-color: rgba(95, 130, 112, 0.28);
+  background: rgba(225, 238, 232, 0.72);
+}
+
+.overview-delta-pill.warn {
+  border-color: rgba(179, 151, 91, 0.32);
+  background: rgba(246, 236, 214, 0.72);
+}
+
+.overview-delta-pill.bad {
+  border-color: rgba(163, 102, 117, 0.32);
+  background: rgba(242, 224, 230, 0.72);
+}
+
 .weight-trend-card .weight-chart {
   margin-top: 12px;
 }

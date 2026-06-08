@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "2.1.1";
+  const APP_VERSION = "2.1.2";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -166,9 +166,13 @@
       clear: "清空",
       systemInsight: "系统判断",
       weeklyExecutionSummary: "本周执行摘要",
+      weeklyConclusion: "本周结论",
+      weeklyAction: "本周动作",
       recoveryExecutionQuality: "恢复与执行质量",
       averageCaloriesVsTarget: "平均热量 / 目标",
       macroTargetSummary: "宏量达成",
+      macroDeviation: "宏量偏差",
+      overviewDetailData: "月历与详细数据",
       recordedDaysShort: "记录 {count}/7 天",
       highHungerDays: "高饥饿 {count} 天",
       poorTrainingDays: "训练偏差 {count} 天",
@@ -442,6 +446,8 @@
       importFavoriteUsageCountInvalid: "常用餐区块的使用次数必须是大于等于 0 的整数",
       importFavoriteNameMismatch: "同一个常用餐编号对应了不同的常用餐名称",
       settingsSaved: "设置已保存",
+      targetUpdated: "目标已更新",
+      tdeeCalibrationUpdated: "校准 TDEE 已更新",
       updateDetected: "已检测到更新，重新打开应用后将自动生效",
       failedToLoad: "初始化本地数据库失败，请在 Safari 或 Chrome 中重试。",
       failedToContinue: "无法继续加载",
@@ -632,9 +638,13 @@
       clear: "Limpiar",
       systemInsight: "Evaluación del sistema",
       weeklyExecutionSummary: "Resumen semanal",
+      weeklyConclusion: "Conclusión semanal",
+      weeklyAction: "Acción semanal",
       recoveryExecutionQuality: "Recuperación y calidad",
       averageCaloriesVsTarget: "Calorías / meta",
       macroTargetSummary: "Macros",
+      macroDeviation: "Desvío de macros",
+      overviewDetailData: "Calendario y detalles",
       recordedDaysShort: "{count}/7 días",
       highHungerDays: "Hambre alta {count} días",
       poorTrainingDays: "Entreno bajo {count} días",
@@ -908,6 +918,8 @@
       importFavoriteUsageCountInvalid: "El uso de frecuente debe ser un entero mayor o igual a 0",
       importFavoriteNameMismatch: "El mismo ID de frecuente tiene nombres distintos",
       settingsSaved: "Ajustes guardados",
+      targetUpdated: "Metas actualizadas",
+      tdeeCalibrationUpdated: "TDEE calibrado actualizado",
       updateDetected: "Actualización detectada; al reabrir se aplicará",
       failedToLoad: "No se pudo iniciar la base local. Intenta en Safari o Chrome.",
       failedToContinue: "No se puede continuar",
@@ -2210,6 +2222,7 @@
     const summary = stats();
     return `
       ${renderWeeklyExecutionModule(summary)}
+      ${renderMacroDeviationModule(summary)}
       ${renderWeightTrendModule(summary)}
       ${renderRecoveryQualityModule(summary)}
       ${renderOverviewDetails(summary)}
@@ -2223,14 +2236,11 @@
   }
 
   function renderWeeklyExecutionModule(summary) {
-    const caloriesAverage = round1(summary.rolling7.average.calories);
-    const caloriesTarget = round1(summary.rolling7.target.calories);
-    const calorieDelta = round1(caloriesAverage - caloriesTarget);
     return `
-      <div class="card compact-overview-card">
+      <div class="card compact-overview-card overview-conclusion-card">
         <div class="item-top">
           <div>
-            <h3>${t("weeklyExecutionSummary")}</h3>
+            <h3>${t("weeklyConclusion")}</h3>
             <div class="small" style="margin-top:6px">${t("rollingCoverage", { count: summary.rolling7.coveredDays, datePart: summary.rolling7.latestDate ? t("rollingCoverageDatePart", { date: fmtDate(summary.rolling7.latestDate) }) : "" })}</div>
           </div>
           <span class="badge ${summary.rolling7.coveredDays >= 6 ? "ok" : "warn"}">${t("recordedDaysShort", { count: summary.rolling7.coveredDays })}</span>
@@ -2239,27 +2249,46 @@
           <div class="insight-title">${summary.systemInsight.title}</div>
           <div class="small" style="margin-top:8px;line-height:1.5">${summary.systemInsight.body}</div>
         </div>
-        <div class="stat-grid" style="margin-top:12px">
-          <div class="stat stat-calories">
-            <div class="k">${t("averageCaloriesVsTarget")}</div>
-            <div class="v">${caloriesAverage}/${caloriesTarget}</div>
-            <div class="h">${formatDelta(calorieDelta)} kcal</div>
-          </div>
-          <div class="stat">
-            <div class="k">${t("macroTargetSummary")}</div>
-            <div class="v">P ${round1(summary.rolling7.average.protein)}</div>
-            <div class="h">C ${round1(summary.rolling7.average.carbs)} · F ${round1(summary.rolling7.average.fat)}</div>
-          </div>
-        </div>
-        <div class="overview-mini-grid" style="margin-top:10px">
-          ${renderRollingAverageStat(t("protein"), summary.rolling7.average.protein, summary.rolling7.target.protein, "")}
-          ${renderRollingAverageStat(t("carbs"), summary.rolling7.average.carbs, summary.rolling7.target.carbs, "")}
-          ${renderRollingAverageStat(t("fat"), summary.rolling7.average.fat, summary.rolling7.target.fat, "")}
-        </div>
         <div class="badges" style="margin-top:10px">
+          <span class="badge info">${t((GOAL_MODE_CONFIG[currentSettings().goalMode] || GOAL_MODE_CONFIG.maintain).labelKey)}</span>
           ${summary.systemInsight.badges.map((badge) => `<span class="badge ${badge.tone}">${esc(badge.text)}</span>`).join("")}
         </div>
         ${renderRecordQualityReminder(summary)}
+      </div>
+    `;
+  }
+
+  function renderMacroDeviationModule(summary) {
+    const items = [
+      { key: "calories", label: t("calories"), unit: "kcal", toneKind: "kcal" },
+      { key: "protein", label: t("protein"), unit: "g", toneKind: "g" },
+      { key: "carbs", label: t("carbs"), unit: "g", toneKind: "g" },
+      { key: "fat", label: t("fat"), unit: "g", toneKind: "g" }
+    ];
+    return `
+      <div class="card compact-overview-card">
+        <div class="item-top">
+          <div>
+            <h3>${t("macroDeviation")}</h3>
+            <div class="small" style="margin-top:6px">${t("averageCaloriesVsTarget")}</div>
+          </div>
+          <span class="badge ${summary.rolling7.coveredDays >= 6 ? "ok" : "warn"}">${t("recordedDaysShort", { count: summary.rolling7.coveredDays })}</span>
+        </div>
+        <div class="overview-delta-grid" style="margin-top:12px">
+          ${items.map((item) => renderMacroDeltaPill(item.label, summary.rolling7.average[item.key], summary.rolling7.target[item.key], item.unit, item.toneKind)).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderMacroDeltaPill(label, actual, expected, unit, toneKind) {
+    const diff = round1(actual - expected);
+    const tolerance = toneKind === "kcal" ? 120 : 15;
+    const tone = diff > tolerance ? "bad" : (diff < -tolerance ? "warn" : "ok");
+    return `
+      <div class="overview-delta-pill ${tone}">
+        <span>${esc(label)}</span>
+        <strong>${formatDelta(diff)} ${unit}</strong>
       </div>
     `;
   }
@@ -2292,16 +2321,12 @@
           </div>
           <span class="badge ${trend.tone}">${t("weightEntryCount", { count: summary.weightEntryCount })}</span>
         </div>
-        <div class="metric-grid">
-          <div class="stat"><div class="k">${t("avg7Weight")}</div><div class="v">${trend.currentAvgText}</div><div class="h">${t("currentTrend")}</div></div>
-          <div class="stat"><div class="k">${t("weeklyChange")}</div><div class="v">${trend.weeklyChangeText}</div><div class="h">${trend.percentText}</div></div>
-          <div class="stat"><div class="k">${t("requiredPace")}</div><div class="v">${trend.requiredPaceText}</div><div class="h">${t("toTargetDate")}</div></div>
-          <div class="stat"><div class="k">${t("distanceToGoal")}</div><div class="v">${trend.distanceText}</div><div class="h">${t("targetKg", { weight: formatWeight(summary.goalWeight) })}</div></div>
+        <div class="badges" style="margin-top:10px">
+          <span class="badge ${trend.tone}">${t("weeklyChange")} ${trend.weeklyChangeText}</span>
+          <span class="badge info">${t("avg7Weight")} ${trend.currentAvgText}</span>
         </div>
         <div class="hint-box insight-box" style="margin-top:12px">${esc(trend.guidance)}</div>
         ${renderWeightTrendChart(summary)}
-        ${renderAverageSleepMeta(summary)}
-        ${renderRecordQualityReminder(summary)}
         <button class="context-summary secondary-summary" type="button" data-toggle-ui="weightDetailsOpen" aria-expanded="${state.ui.weightDetailsOpen ? "true" : "false"}">
           <span>${t("weightTrendDetails")}</span>
           <span class="chevron" aria-hidden="true">${state.ui.weightDetailsOpen ? "⌃" : "⌄"}</span>
@@ -2321,8 +2346,11 @@
   function renderOverviewDetails(summary) {
     return `
       <div class="card">
-        <h3>${t("trainingCalendar")}</h3>
-        ${renderTrainingCalendarMonth()}
+        <button class="context-summary secondary-summary" type="button" data-toggle-ui="overviewMoreOpen" aria-expanded="${state.ui.overviewMoreOpen ? "true" : "false"}">
+          <span>${t("overviewDetailData")}</span>
+          <span class="chevron" aria-hidden="true">${state.ui.overviewMoreOpen ? "⌃" : "⌄"}</span>
+        </button>
+        ${state.ui.overviewMoreOpen ? renderTrainingCalendarMonth() : ""}
       </div>
     `;
   }
@@ -3716,6 +3744,7 @@
       focusField(validation.selector);
       return;
     }
+    const beforeTargetSignature = targetChangeSignature(state.settings || currentSettings());
     const settings = normalizeSettings({
       ...state.settingsDraft,
       trainingDaysPerWeek: state.settingsDraft.trainingDaysPerWeek,
@@ -3731,7 +3760,30 @@
 
     closeSettingsModal();
     render();
-    setNotice(t("settingsSaved"), { tone: "ok", duration: 3000 });
+    if (beforeTargetSignature !== targetChangeSignature(settings)) {
+      setNotice(t("targetUpdated"), { tone: "ok", duration: 3000 });
+    }
+  }
+
+  function targetChangeSignature(settingsInput) {
+    const live = computeLiveTargets(state.date || localDateString(), state.dayType || DEFAULT_DAY_TYPE, {
+      settings: normalizeSettings(settingsInput),
+      records: state.records,
+      bodyWeight: state.bodyWeight,
+      allowInitialFallback: false,
+      ignoreManualOverride: true
+    });
+    const compactTarget = (target) => [
+      Math.round(numberValue(target.calories)),
+      Math.round(numberValue(target.protein)),
+      Math.round(numberValue(target.carbs)),
+      Math.round(numberValue(target.fat))
+    ].join("/");
+    return [
+      Math.round(numberValue(live.finalTdee)),
+      compactTarget(live.trainingTarget),
+      compactTarget(live.restTarget)
+    ].join("|");
   }
 
   function openHelpModal(trigger) {
@@ -4868,6 +4920,9 @@
     const oldCalibrated = Number(settings.calibratedTdee) || preview.formulaTdee;
     const rawCalibrated = oldCalibrated * 0.75 + observed.observedTdee * 0.25;
     const clampedCalibrated = round1(oldCalibrated + clamp(rawCalibrated - oldCalibrated, -mode.maxTdeeAdjustment, mode.maxTdeeAdjustment));
+    if (Math.round(clampedCalibrated) === Math.round(oldCalibrated)) {
+      return;
+    }
     const nextSettings = normalizeSettings({
       ...settings,
       calibratedTdee: clampedCalibrated,
@@ -4878,6 +4933,7 @@
     });
     await storage.putSettings(nextSettings);
     state.settings = nextSettings;
+    setNotice(t("tdeeCalibrationUpdated"), { tone: "ok", duration: 3600 });
   }
 
   function sortFavorites(left, right) {
