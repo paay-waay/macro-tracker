@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "2.1.2";
+  const APP_VERSION = "2.2.0";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -44,12 +44,12 @@
       labelKey: "goalModeMaintain",
       descKey: "goalModeMaintainDesc",
       type: "offset",
-      calorieOffset: -75,
-      trainingBoost: 150,
-      proteinGPerKg: 1.9,
-      fatGPerKg: 0.75,
-      minProtein: 150,
-      minFat: 50,
+      calorieOffset: 0,
+      minOffset: -150,
+      maxOffset: 0,
+      trainingBoost: 100,
+      proteinGPerKg: 1.8,
+      minProtein: 0,
       trendWindowDays: 21,
       maxTdeeAdjustment: 75
     },
@@ -57,12 +57,12 @@
       labelKey: "goalModeLeanGain",
       descKey: "goalModeLeanGainDesc",
       type: "offset",
-      calorieOffset: 150,
-      trainingBoost: 200,
+      calorieOffset: 200,
+      minSurplus: 150,
+      maxSurplus: 250,
+      trainingBoost: 100,
       proteinGPerKg: 1.8,
-      fatGPerKg: 0.8,
-      minProtein: 150,
-      minFat: 55,
+      minProtein: 0,
       targetWeeklyGainRateMin: 0.001,
       targetWeeklyGainRateMax: 0.0025,
       trendWindowDays: 21,
@@ -72,20 +72,13 @@
       labelKey: "goalModeSummerCut",
       descKey: "goalModeSummerCutDesc",
       type: "targetDate",
-      defaultWeeklyLossRate: 0.0065,
-      minWeeklyLossRate: 0.004,
-      maxWeeklyLossRate: 0.008,
+      defaultDailyDeficit: 500,
       minDailyDeficit: 400,
-      maxDailyDeficit: 650,
-      hardMaxDailyDeficit: 700,
-      trainingBoost: 225,
+      maxDailyDeficit: 600,
+      trainingBoost: 100,
       proteinGPerKg: 2,
-      fatGPerKg: 0.55,
-      minProtein: 160,
-      minFat: 45,
-      minAverageCalories: 1800,
-      minRestCalories: 1700,
-      trendWindowDays: 14,
+      minProtein: 0,
+      trendWindowDays: 21,
       maxTdeeAdjustment: 100
     }
   };
@@ -554,6 +547,8 @@
       previewTargetDateWarning: "目标日期无效或已过去，系统暂按默认刷脂速度计算。",
       summerCutTargetTooTight: "目标日期偏紧，系统已按健康上限计算。",
       summerCutTargetLoose: "目标日期较宽松，系统仍保留轻度有效缺口。",
+      summerCutTargetReached: "当前体重已达到或低于目标体重，系统不再生成减脂缺口。",
+      summerCutTargetInfeasible: "目标日期不可行，按安全上限预计可在 {date} 达成。",
       recoveryProtectionActive: "检测到恢复压力，系统不会继续压低热量。",
       leanGainTrendBoost: "21 天趋势未明显上升且训练正常，系统小幅提高目标。",
       leanGainTrendTrim: "21 天趋势上升偏快，系统小幅降低目标。",
@@ -1026,6 +1021,8 @@
       previewTargetDateWarning: "La fecha meta no es válida o ya pasó; se usa el ritmo por defecto.",
       summerCutTargetTooTight: "La fecha meta está apretada; se usó el límite saludable.",
       summerCutTargetLoose: "La fecha meta está amplia; se conserva un déficit leve.",
+      summerCutTargetReached: "El peso actual ya está en la meta o por debajo; no se genera más déficit.",
+      summerCutTargetInfeasible: "La fecha meta no es viable; con el límite seguro sería aprox. {date}.",
       recoveryProtectionActive: "Hay presión de recuperación; no se bajan más calorías.",
       leanGainTrendBoost: "La tendencia de 21 días no sube y el entreno va bien; se sube un poco la meta.",
       leanGainTrendTrim: "La tendencia de 21 días sube muy rápido; se baja un poco la meta.",
@@ -1161,6 +1158,24 @@
   let draftTimer = 0;
   let favoriteSearchTimer = 0;
   let lastModalTrigger = null;
+
+  if (globalThis.__MACRO_TRACKER_TEST__) {
+    globalThis.__MACRO_TRACKER_TEST_HOOKS__ = {
+      state,
+      DEFAULT_SETTINGS,
+      GOAL_MODE_CONFIG,
+      normalizeSettings,
+      computeLiveTargets,
+      computeSettingsPreview,
+      estimateObservedTdee,
+      splitCaloriesByDayType,
+      macroTargetForCalories,
+      dateRange,
+      addDays,
+      numberValue
+    };
+    return;
+  }
 
   bootstrap().catch((error) => {
     console.error(error);
@@ -2751,8 +2766,8 @@
     const modeConfig = GOAL_MODE_CONFIG[preview.settings.goalMode] || GOAL_MODE_CONFIG.maintain;
     const expectedWeekly = preview.settings.goalMode === "leanGain"
       ? `+${round2(preview.effectiveWeightKg * ((modeConfig.targetWeeklyGainRateMin + modeConfig.targetWeeklyGainRateMax) / 2))}`
-      : (preview.settings.goalMode === "summerCut" && preview.explanation.modeDetails?.chosenWeeklyLossKg
-        ? `-${formatWeight(preview.explanation.modeDetails.chosenWeeklyLossKg)}`
+      : (preview.settings.goalMode === "summerCut" && preview.explanation.modeDetails?.dailyDeficit
+        ? `-${formatWeight((preview.explanation.modeDetails.dailyDeficit * 7) / 7700)}`
         : `${preview.plannedDailyDeficit > 0 ? "-" : ""}${formatWeight(Math.abs((preview.plannedDailyDeficit * 7) / 7700))}`);
     const sourceLabel = preview.explanation.source === "fallback"
       ? t("sourceFallback")
@@ -5103,7 +5118,7 @@
 
   function estimateObservedTdee(recordsWindow, settings, options = {}) {
     const mode = GOAL_MODE_CONFIG[settings.goalMode] || GOAL_MODE_CONFIG.maintain;
-    const windowDays = mode.trendWindowDays || 21;
+    const windowDays = Math.max(21, mode.trendWindowDays || 21);
     const foodRecords = recordsWindow.filter((record) => (record.totals?.calories || 0) > 0);
     const weightRecords = recordsWindow
       .filter((record) => record.bodyWeight !== "" && Number.isFinite(numberValue(record.bodyWeight)))
@@ -5136,8 +5151,10 @@
         endingAvgWeight
       };
     }
-    const weightChangeKg = endingAvgWeight - startingAvgWeight;
-    const rawObservedTdee = avgCalories - (weightChangeKg * 7700) / daysSpan;
+    const regression = buildWeightRegression(weightRecords);
+    const weightTrendKgPerDay = regression ? regression.slopePerDay : (endingAvgWeight - startingAvgWeight) / daysSpan;
+    // Sign convention: positive trend means gaining weight, so observed TDEE is below intake; negative trend means losing weight, so observed TDEE is above intake.
+    const rawObservedTdee = avgCalories - (weightTrendKgPerDay * 7700);
     const observedTdee = clamp(rawObservedTdee, settings.bmr * 1.1, settings.bmr * 2.4);
     return {
       observedTdee: round1(observedTdee),
@@ -5148,7 +5165,8 @@
       daysSpan,
       startingAvgWeight,
       endingAvgWeight,
-      weightChangeKg: round1(weightChangeKg)
+      weightChangeKg: round2(weightTrendKgPerDay * daysSpan),
+      weightTrendKgPerDay: round2(weightTrendKgPerDay)
     };
   }
 
@@ -5165,9 +5183,10 @@
 
   function macroTargetForCalories(calories, settings, modeConfig, effectiveWeight, warnings = []) {
     const proteinTarget = Math.round(Math.max(modeConfig.minProtein, effectiveWeight * modeConfig.proteinGPerKg));
-    const fatTarget = Math.round(Math.max(modeConfig.minFat, effectiveWeight * modeConfig.fatGPerKg));
-    const minimumCarbs = settings.goalMode === "summerCut" ? 80 : 100;
-    const macroFloorCalories = proteinTarget * 4 + fatTarget * 9 + minimumCarbs * 4;
+    const minimumFatFromBodyWeight = effectiveWeight * 0.7;
+    const minimumFatFromCalories = (calories * 0.2) / 9;
+    const fatTarget = Math.round(Math.max(minimumFatFromBodyWeight, minimumFatFromCalories));
+    const macroFloorCalories = proteinTarget * 4 + fatTarget * 9;
     const adjustedCalories = roundToStep(Math.max(calories, macroFloorCalories), 10);
     if (adjustedCalories > Math.round(calories)) {
       warnings.push(t(settings.goalMode === "summerCut" ? "previewLowCarbWarning" : "previewMinCalorieWarning"));
@@ -5175,7 +5194,7 @@
     return {
       calories: adjustedCalories,
       protein: proteinTarget,
-      carbs: Math.max(80, Math.round((adjustedCalories - proteinTarget * 4 - fatTarget * 9) / 4)),
+      carbs: Math.max(0, Math.round((adjustedCalories - proteinTarget * 4 - fatTarget * 9) / 4)),
       fat: fatTarget
     };
   }
@@ -5257,71 +5276,62 @@
     const recovery = summarizeTargetRecovery(recordsWindow);
     const warnings = [];
     const buffer = TRACKING_BUFFER_CONFIG[targetSettings.trackingAccuracyBuffer] || TRACKING_BUFFER_CONFIG.medium;
-    let trackingBufferCalories = Math.round(buffer.calories || 0);
+    const trackingBufferCalories = 0;
+    const trackingBufferGuidanceCalories = Math.round(buffer.calories || 0);
     let plannedAverageCalories = finalTdee;
     let plannedDailyDeficit = 0;
     let goalPhase = targetSettings.goalMode;
     const modeDetails = {};
     const trend = evaluateTrendAdjustment(targetSettings, 0, options.records || state.records);
-    const minimumAverageCalories = targetSettings.goalMode === "summerCut"
-      ? Math.max(mode.minAverageCalories, round1(targetSettings.bmr * 1.2))
-      : Math.max(1800, round1(targetSettings.bmr * 1.15));
-    const minimumRestCalories = targetSettings.goalMode === "summerCut"
-      ? Math.max(mode.minRestCalories, round1(targetSettings.bmr * 1.1))
-      : minimumAverageCalories;
+    const minimumAverageCalories = Math.max(1600, round1(targetSettings.bmr * 1.15));
+    const minimumRestCalories = minimumAverageCalories;
 
     if (targetSettings.goalMode === "summerCut") {
       const daysRemaining = daysBetween(date, targetSettings.targetDate);
-      const weeksLeft = Math.max(daysRemaining / 7, 1);
       const weightToLose = Math.max(0, effectiveWeightKg - targetSettings.targetWeightKg);
-      const requiredWeeklyLossKg = weightToLose / weeksLeft;
-      const minWeeklyLossKg = effectiveWeightKg * mode.minWeeklyLossRate;
-      const defaultWeeklyLossKg = effectiveWeightKg * mode.defaultWeeklyLossRate;
-      const maxWeeklyLossKg = effectiveWeightKg * mode.maxWeeklyLossRate;
-      let chosenWeeklyLossKg = weightToLose > 0
-        ? clamp(requiredWeeklyLossKg, minWeeklyLossKg, maxWeeklyLossKg)
-        : defaultWeeklyLossKg;
-      if (daysRemaining <= 0 || !/^\d{4}-\d{2}-\d{2}$/.test(String(targetSettings.targetDate || ""))) {
+      const totalRequiredDeficit = weightToLose * 7700;
+      const requiredDailyDeficit = daysRemaining > 0 ? totalRequiredDeficit / daysRemaining : 0;
+      let targetDateValid = daysRemaining > 0 && /^\d{4}-\d{2}-\d{2}$/.test(String(targetSettings.targetDate || ""));
+      if (weightToLose <= 0) {
+        plannedDailyDeficit = 0;
+        warnings.push(t("summerCutTargetReached"));
+      } else if (!targetDateValid) {
         warnings.push(t("previewTargetDateWarning"));
-        chosenWeeklyLossKg = defaultWeeklyLossKg;
-      } else if (weightToLose > 0 && requiredWeeklyLossKg > maxWeeklyLossKg) {
-        warnings.push(t("summerCutTargetTooTight"));
-      } else if (weightToLose > 0 && requiredWeeklyLossKg < minWeeklyLossKg) {
-        warnings.push(t("summerCutTargetLoose"));
+        plannedDailyDeficit = mode.defaultDailyDeficit;
+      } else {
+        plannedDailyDeficit = Math.min(requiredDailyDeficit, mode.maxDailyDeficit);
+        if (requiredDailyDeficit > mode.maxDailyDeficit) {
+          const achievableDays = Math.ceil(totalRequiredDeficit / mode.maxDailyDeficit);
+          const achievableDate = addDays(date, achievableDays);
+          warnings.push(t("summerCutTargetInfeasible", { date: fmtDate(achievableDate) }));
+          modeDetails.infeasible = true;
+          modeDetails.achievableDate = achievableDate;
+        } else if (requiredDailyDeficit > 0 && requiredDailyDeficit < mode.minDailyDeficit) {
+          warnings.push(t("summerCutTargetLoose"));
+        }
       }
-      plannedDailyDeficit = clamp((chosenWeeklyLossKg * 7700) / 7, mode.minDailyDeficit, mode.maxDailyDeficit);
-      plannedDailyDeficit = Math.min(mode.hardMaxDailyDeficit, plannedDailyDeficit);
       if (recovery.recoveryFlag) {
         plannedDailyDeficit = Math.max(0, plannedDailyDeficit * 0.8);
         warnings.push(t("recoveryProtectionActive"));
       }
       plannedAverageCalories = finalTdee - plannedDailyDeficit;
       modeDetails.daysRemaining = Math.max(0, daysRemaining);
-      modeDetails.requiredWeeklyLossKg = round2(requiredWeeklyLossKg);
-      modeDetails.chosenWeeklyLossKg = round2(chosenWeeklyLossKg);
+      modeDetails.requiredDailyDeficit = round1(requiredDailyDeficit);
       modeDetails.dailyDeficit = round1(plannedDailyDeficit);
     } else if (targetSettings.goalMode === "leanGain") {
       plannedAverageCalories = finalTdee + mode.calorieOffset;
-      if (!recovery.recoveryFlag && trend?.evaluated && trend.current7DayAvg && trend.previous7DayAvg) {
+      if (trend?.evaluated && trend.current7DayAvg && trend.previous7DayAvg) {
         const weeklyGainKg = ((trend.current7DayAvg - trend.previous7DayAvg) / Math.max(1, trend.daysSpan || 14)) * 7;
         const weeklyGainRate = weeklyGainKg / Math.max(1, effectiveWeightKg);
-        const trainingOk = (trend.quality?.poorPerformanceDays || 0) === 0;
-        if (weeklyGainRate <= mode.targetWeeklyGainRateMin && trainingOk) {
-          plannedAverageCalories += 75;
-          warnings.push(t("leanGainTrendBoost"));
-        } else if (weeklyGainRate > 0.0035) {
-          plannedAverageCalories -= 75;
-          warnings.push(t("leanGainTrendTrim"));
-        }
         modeDetails.weeklyGainRate = round2(weeklyGainRate * 100);
-      } else if (recovery.recoveryFlag) {
+      }
+      if (recovery.recoveryFlag) {
         warnings.push(t("recoveryProtectionActive"));
       }
     } else {
       plannedAverageCalories = finalTdee + mode.calorieOffset;
       if (recovery.recoveryFlag && plannedAverageCalories < finalTdee) {
         plannedAverageCalories = finalTdee;
-        trackingBufferCalories = 0;
         warnings.push(t("recoveryProtectionActive"));
       }
       if (trend?.evaluated && trend.current7DayAvg && trend.previous7DayAvg) {
@@ -5337,7 +5347,6 @@
       }
     }
 
-    plannedAverageCalories -= trackingBufferCalories;
     if (plannedAverageCalories < minimumAverageCalories) {
       plannedAverageCalories = minimumAverageCalories;
       warnings.push(t("previewMinCalorieWarning"));
@@ -5370,7 +5379,7 @@
       observedTdeeConfidence: observed.confidence,
       finalTdee: round1(finalTdee),
       plannedDailyDeficit: round1(finalTdee - plannedAverageCalories),
-      trackingBufferCalories: -trackingBufferCalories,
+      trackingBufferCalories,
       plannedAverageCalories: round1(plannedAverageCalories),
       trainingTarget,
       restTarget,
@@ -5388,6 +5397,7 @@
         effectiveBoost: round1(split.effectiveBoost),
         minimumAverageCalories,
         minimumRestCalories,
+        trackingBufferGuidanceCalories,
         calibratedTdee: targetSettings.calibratedTdee,
         calibratedTdeeUpdatedAt: targetSettings.calibratedTdeeUpdatedAt,
         modeDetails,
