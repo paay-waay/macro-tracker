@@ -261,4 +261,91 @@ function settings(overrides = {}) {
   assert(Number.isFinite(past.plannedAverageCalories), "past target dates should not produce invalid targets");
 }
 
+function completeRecord(date, overrides = {}) {
+  return hooks.normalizeRecord({
+    date,
+    dayType: "training",
+    bodyWeight: "78.20",
+    trainingPerformance: "normal",
+    hungerLevel: "medium",
+    sleepScore: "80",
+    meals: [
+      {
+        id: 1,
+        entries: [{ name: "Rice bowl", calories: "650", protein: "42", carbs: "78", fat: "18" }]
+      },
+      {
+        id: 2,
+        entries: [{ name: "Shake", calories: "240", protein: "32", carbs: "18", fat: "4" }]
+      }
+    ],
+    ...overrides
+  });
+}
+
+{
+  const yesterday = hooks.addDays(today, -1);
+  const issues = hooks.getIncompleteRecordDates({
+    today,
+    records: {},
+    drafts: {
+      [yesterday]: hooks.normalizeDraft({
+        date: yesterday,
+        dayType: "rest",
+        bodyWeight: "78.00",
+        hungerLevel: "medium",
+        sleepScore: "82",
+        meals: [{ id: 1, entries: [{ name: "Yogurt", calories: "220", protein: "20", carbs: "20", fat: "5" }] }]
+      })
+    }
+  });
+  assert.strictEqual(issues[0].status, "draftOnly", "draft-only past dates should be surfaced");
+}
+
+{
+  const date = hooks.addDays(today, -2);
+  const record = completeRecord(date, { trainingPerformance: "" });
+  const issue = hooks.getIncompleteRecordIssues(date, { records: { [date]: record }, drafts: {} });
+  assert.strictEqual(issue.status, "savedIssues", "saved records with missing required fields should be incomplete");
+  assert(issue.issues.some((item) => item.key === "missingTrainingPerformance"), "training day should require performance");
+}
+
+{
+  const date = hooks.addDays(today, -3);
+  const record = completeRecord(date, { bodyWeight: "" });
+  const issue = hooks.getIncompleteRecordIssues(date, { records: { [date]: record }, drafts: {} });
+  assert(issue.issues.some((item) => item.key === "missingBodyWeight"), "missing body weight should be flagged");
+  assert(hooks.recordHasMeaningfulFood(record), "records with food should not be treated as zero intake");
+}
+
+{
+  const date = hooks.addDays(today, -3);
+  const record = completeRecord(date, {
+    meals: [{ id: 1, entries: [{ name: "Toast", calories: "300", protein: "12", carbs: "45", fat: "8" }] }]
+  });
+  const issue = hooks.getIncompleteRecordIssues(date, { records: { [date]: record }, drafts: {} });
+  assert(issue.issues.some((item) => item.key === "missingFood"), "single-meal past records should be flagged as incomplete");
+  assert(hooks.recordHasMeaningfulFood(record), "single-meal records should still keep their actual intake");
+}
+
+{
+  const firstDate = hooks.addDays(today, -4);
+  const beforeTracking = hooks.addDays(today, -5);
+  const items = hooks.getIncompleteRecordDates({
+    today,
+    records: { [firstDate]: completeRecord(firstDate) },
+    drafts: {}
+  });
+  assert(items.some((item) => item.date === hooks.addDays(today, -1) && item.status === "noRecord"), "missing dates after tracking starts should be flagged");
+  assert(!items.some((item) => item.date === beforeTracking), "dates before first saved record should not be flagged");
+}
+
+{
+  const date = hooks.addDays(today, -1);
+  const record = completeRecord(date);
+  const draft = hooks.normalizeDraft({ ...record, hungerLevel: "high" });
+  const issue = hooks.getIncompleteRecordIssues(date, { records: { [date]: record }, drafts: { [date]: draft } });
+  assert.strictEqual(issue.status, "draftDiffers", "drafts that differ from saved records should be surfaced");
+}
+
 console.log("nutrition-engine tests passed");

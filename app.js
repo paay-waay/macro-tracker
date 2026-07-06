@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "2.2.0";
+  const APP_VERSION = "2.3.0";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -15,6 +15,7 @@
   };
   const DEFAULT_WEEKLY_TRAINING_DAYS = 4;
   const DEFAULT_WEEKLY_REST_DAYS = 3;
+  const INCOMPLETE_REVIEW_DAYS = 14;
   const GOAL_WEIGHT = 75;
   const TARGET_DATE = "2026-06-30";
   const SETTINGS_META_KEY = "settings_v16";
@@ -134,6 +135,25 @@
       dailyDataComplete: "完整",
       dailyDataMissing: "缺 {count} 项",
       mealRecords: "餐食记录",
+      incompleteRecords: "待补全记录",
+      incompleteTodayTitle: "有 {count} 天记录待补全",
+      incompleteTodayBody: "这些日期可能会影响周平均热量和趋势判断。",
+      incompleteOverviewWarning: "近期有未补全记录，周平均热量可能偏低。",
+      incompleteDraftOnly: "草稿未保存",
+      incompleteDraftDiffers: "草稿与保存记录不一致",
+      incompleteSavedIssues: "正式记录缺项",
+      incompleteNoRecord: "无记录",
+      incompleteNone: "最近没有待补全记录。",
+      viewAll: "查看全部",
+      missingBodyWeight: "缺体重",
+      missingDayType: "缺日型",
+      missingHunger: "缺饥饿感",
+      missingSleep: "缺睡眠",
+      missingTrainingPerformance: "缺训练表现",
+      missingFood: "缺餐食",
+      missingFoodName: "{meal}名称",
+      missingFoodCalories: "{meal}热量",
+      missingFoodMacros: "{meal}宏量",
       name: "名称",
       delete: "删除",
       trainingDay: "训练日",
@@ -608,6 +628,25 @@
       dailyDataComplete: "Completo",
       dailyDataMissing: "Faltan {count}",
       mealRecords: "Registro de comidas",
+      incompleteRecords: "Registros pendientes",
+      incompleteTodayTitle: "{count} días por completar",
+      incompleteTodayBody: "Estas fechas pueden afectar promedios y tendencias.",
+      incompleteOverviewWarning: "Hay registros pendientes; el promedio semanal puede verse bajo.",
+      incompleteDraftOnly: "Borrador sin guardar",
+      incompleteDraftDiffers: "Borrador distinto al guardado",
+      incompleteSavedIssues: "Registro incompleto",
+      incompleteNoRecord: "Sin registro",
+      incompleteNone: "No hay registros pendientes recientes.",
+      viewAll: "Ver todo",
+      missingBodyWeight: "Falta peso",
+      missingDayType: "Falta tipo",
+      missingHunger: "Falta hambre",
+      missingSleep: "Falta sueño",
+      missingTrainingPerformance: "Falta rendimiento",
+      missingFood: "Falta comida",
+      missingFoodName: "{meal} nombre",
+      missingFoodCalories: "{meal} calorías",
+      missingFoodMacros: "{meal} macros",
       name: "Nombre",
       delete: "Eliminar",
       trainingDay: "Día de entrenamiento",
@@ -1077,6 +1116,8 @@
     historyFavoritesOpen: false,
     historyShowAll: false,
     historyFavoritesShowAll: false,
+    historyIncompleteOpen: true,
+    todayIncompleteShowAll: false,
     settingsGroup: "planStart",
     settingsGroups: {
       planStart: true,
@@ -1101,6 +1142,7 @@
     sleepScore: "",
     meals: mealTemplate(),
     records: {},
+    drafts: {},
     favorites: [],
     dailyTargets: {},
     settings: null,
@@ -1170,6 +1212,19 @@
       estimateObservedTdee,
       splitCaloriesByDayType,
       macroTargetForCalories,
+      getIncompleteRecordIssues,
+      getIncompleteRecordDates,
+      isEntryIncomplete,
+      recordHasMeaningfulFood,
+      summarizeIncompleteIssues,
+      normalizeRecord,
+      normalizeDraft,
+      normalizeMeals,
+      entryStarted,
+      filledMeal,
+      sameDayData,
+      shouldRestoreDraft,
+      dayHasMeaningfulInput,
       dateRange,
       addDays,
       numberValue
@@ -1866,9 +1921,32 @@
   function renderToday() {
     return `
       ${renderDailyContext()}
+      ${renderIncompleteTodayReminder()}
       <div class="section-label">${t("mealRecords")}</div>
       <div class="meal-accordion" aria-label="${t("mealSwitcherAria")}">
         ${state.meals.map((mealItem) => renderMealRow(mealItem)).join("")}
+      </div>
+    `;
+  }
+
+  function renderIncompleteTodayReminder() {
+    const items = getIncompleteRecordDates();
+    if (!items.length) {
+      return "";
+    }
+    const visibleItems = items.slice(0, 3);
+    return `
+      <div class="card incomplete-reminder-card">
+        <div class="item-top">
+          <div>
+            <h3>${t("incompleteTodayTitle", { count: items.length })}</h3>
+            <div class="small" style="margin-top:6px">${t("incompleteTodayBody")}</div>
+          </div>
+          ${items.length > 3 ? `<button class="mini-btn ghost" type="button" data-view="history">${t("viewAll")}</button>` : ""}
+        </div>
+        <div class="incomplete-chip-row">
+          ${visibleItems.map((item) => `<button class="context-chip incomplete-chip" type="button" data-load-date="${esc(item.date)}">${fmtDate(item.date)}</button>`).join("")}
+        </div>
       </div>
     `;
   }
@@ -2235,7 +2313,9 @@
 
   function renderOverview() {
     const summary = stats();
+    const incompleteItems = getIncompleteRecordDates();
     return `
+      ${incompleteItems.length ? `<div class="overview-note warn">${t("incompleteOverviewWarning")}</div>` : ""}
       ${renderWeeklyExecutionModule(summary)}
       ${renderMacroDeviationModule(summary)}
       ${renderWeightTrendModule(summary)}
@@ -2389,6 +2469,7 @@
     const restCount = monthDates.filter((date) => state.records[date] && normalizeRecord(state.records[date]).dayType === "rest").length;
     const recordedCount = trainingCount + restCount;
     const noRecordCount = Math.max(0, monthDates.length - recordedCount);
+    const incompleteDates = new Set(getIncompleteRecordDates({ reviewDays: 31 }).map((item) => item.date));
     const blanks = Array.from({ length: leadingBlanks }, (_, index) => `<div class="calendar-day blank" aria-hidden="true" data-blank="${index}"></div>`).join("");
     const days = monthDates.map((date) => {
       const record = state.records[date] ? normalizeRecord(state.records[date]) : null;
@@ -2398,6 +2479,7 @@
         dayType === "training" ? "training" : "",
         dayType === "rest" ? "rest" : "",
         !dayType ? "no-record" : "",
+        incompleteDates.has(date) ? "incomplete" : "",
         date === today ? "today" : "",
         date === state.date ? "selected" : ""
       ].filter(Boolean).join(" ");
@@ -2444,6 +2526,7 @@
   function renderHistory() {
     const historyDates = getFilteredHistoryDates();
     const favoriteList = getFilteredFavorites();
+    const incompleteItems = getIncompleteRecordDates();
     const visibleDates = state.ui.historyShowAll ? historyDates : historyDates.slice(0, 3);
     const visibleFavorites = state.ui.historyFavoritesShowAll ? favoriteList : favoriteList.slice(0, 3);
     const latestDate = historyDates[0] ? fmtDate(historyDates[0]) : t("noRecords");
@@ -2482,6 +2565,7 @@
           <div class="small">${t("filteredRecords", { count: historyDates.length })}</div>
         </div>` : ""}
       </div>
+      ${renderIncompleteRecordsSection(incompleteItems)}
       <div class="card">
         <button class="context-summary card-summary" type="button" data-toggle-ui="historyRecordsOpen" aria-expanded="${state.ui.historyRecordsOpen ? "true" : "false"}">
           <span class="context-copy">
@@ -2524,6 +2608,37 @@
           </div>
           ${favoriteList.length > 3 ? `<button class="btn full-width" type="button" data-toggle-ui="historyFavoritesShowAll">${state.ui.historyFavoritesShowAll ? t("collapse") : `${t("showMore")}（${favoriteList.length - 3}）`}</button>` : ""}
         ` : ""}
+      </div>
+    `;
+  }
+
+  function renderIncompleteRecordsSection(items = getIncompleteRecordDates()) {
+    return `
+      <div class="card incomplete-list-card">
+        <button class="context-summary card-summary" type="button" data-toggle-ui="historyIncompleteOpen" aria-expanded="${state.ui.historyIncompleteOpen ? "true" : "false"}">
+          <span class="context-copy">
+            <span class="context-title">${t("incompleteRecords")}</span>
+            <span class="context-helper">${items.length ? t("incompleteTodayTitle", { count: items.length }) : t("incompleteNone")}</span>
+          </span>
+          <span class="expand-affordance"><span>${state.ui.historyIncompleteOpen ? t("collapse") : t("expand")}</span><span class="chevron" aria-hidden="true">${state.ui.historyIncompleteOpen ? "⌃" : "⌄"}</span></span>
+        </button>
+        ${state.ui.historyIncompleteOpen ? `
+          <div class="list compact-list" style="margin-top:12px">
+            ${items.length ? items.map((item) => renderIncompleteRecordRow(item)).join("") : `<div class="hint-box">${t("incompleteNone")}</div>`}
+          </div>
+        ` : ""}
+      </div>
+    `;
+  }
+
+  function renderIncompleteRecordRow(item) {
+    return `
+      <div class="history-item incomplete-row">
+        <div>
+          <div class="item-title">${fmtDate(item.date)}</div>
+          <div class="small" style="margin-top:6px">${incompleteStatusLabel(item.status)} · ${esc(summarizeIncompleteIssues(item.issues))}</div>
+        </div>
+        <button class="mini-btn" type="button" data-load-date="${esc(item.date)}">${t("open")}</button>
       </div>
     `;
   }
@@ -3006,6 +3121,7 @@
 
     if (draft && record && sameDayData(draft, record)) {
       await storage.deleteDraft(state.date);
+      delete state.drafts[state.date];
     }
 
     if (record) {
@@ -3270,6 +3386,7 @@
     await storage.putRecord(record);
     await storage.deleteDraft(state.date);
     state.records[state.date] = record;
+    delete state.drafts[state.date];
     state.lastSavedAt = record.savedAt;
     state.lastDraftSavedAt = "";
     state.dirty = false;
@@ -3285,6 +3402,7 @@
     await storage.deleteRecord(date);
     await storage.deleteDraft(date);
     delete state.records[date];
+    delete state.drafts[date];
     if (state.date === date) {
       state.dayType = "";
       state.bodyWeight = "";
@@ -3655,6 +3773,9 @@
     changedRecords.forEach((record) => {
       state.records[record.date] = record;
     });
+    dates.forEach((date) => {
+      delete state.drafts[date];
+    });
     if (changedFavorites.length) {
       const favoriteMap = new Map(state.favorites.map((favorite) => [favorite.id, normalizeFavorite(favorite)]));
       changedFavorites.forEach((favorite) => {
@@ -3872,12 +3993,14 @@
       const shouldDeleteDraft = (!saved && !dayHasMeaningfulInput(draft)) || (saved && sameDayData(draft, saved));
       if (shouldDeleteDraft) {
         await storage.deleteDraft(state.date);
+        delete state.drafts[state.date];
         state.lastDraftSavedAt = "";
         state.dirty = false;
         return;
       }
       draft.updatedAt = nowIso();
       await storage.putDraft(draft);
+      state.drafts[draft.date] = normalizeDraft(draft);
       state.lastDraftSavedAt = draft.updatedAt;
     } finally {
       state.syncingDraft = false;
@@ -4352,6 +4475,174 @@
 
   function entryStarted(entry) {
     return ENTRY_FIELDS.some((field) => String(entry[field] ?? "").trim() !== "");
+  }
+
+  function isEntryIncomplete(entry) {
+    const normalized = normalizeEntry(entry);
+    if (!entryStarted(normalized)) {
+      return [];
+    }
+    const issues = [];
+    if (!String(normalized.name || "").trim()) {
+      issues.push("name");
+    }
+    if (!String(normalized.calories || "").trim()) {
+      issues.push("calories");
+    }
+    if (["protein", "carbs", "fat"].some((field) => !String(normalized[field] || "").trim())) {
+      issues.push("macros");
+    }
+    return issues;
+  }
+
+  function recordHasMeaningfulFood(record) {
+    return normalizeMeals(record?.meals).some(filledMeal);
+  }
+
+  function incompleteStatusLabel(status) {
+    const labels = {
+      draftOnly: "incompleteDraftOnly",
+      draftDiffers: "incompleteDraftDiffers",
+      savedIssues: "incompleteSavedIssues",
+      noRecord: "incompleteNoRecord"
+    };
+    return t(labels[status] || "incompleteSavedIssues");
+  }
+
+  function incompleteIssue(key, params = {}) {
+    return { key, params };
+  }
+
+  function dayDataIssues(data) {
+    const normalized = normalizeDraft(data);
+    if (!normalized) {
+      return [incompleteIssue("missingFood")];
+    }
+    const issues = [];
+    if (!normalized.bodyWeight) {
+      issues.push(incompleteIssue("missingBodyWeight"));
+    }
+    if (!normalized.dayType) {
+      issues.push(incompleteIssue("missingDayType"));
+    }
+    if (!normalized.hungerLevel) {
+      issues.push(incompleteIssue("missingHunger"));
+    }
+    if (!normalized.sleepScore) {
+      issues.push(incompleteIssue("missingSleep"));
+    }
+    if (normalized.dayType === "training" && !normalized.trainingPerformance) {
+      issues.push(incompleteIssue("missingTrainingPerformance"));
+    }
+    const meaningfulMealCount = normalizeMeals(normalized.meals).filter(filledMeal).length;
+    if (meaningfulMealCount < 2) {
+      issues.push(incompleteIssue("missingFood"));
+    }
+    normalizeMeals(normalized.meals).forEach((meal) => {
+      meal.entries.forEach((entry) => {
+        const entryIssues = isEntryIncomplete(entry);
+        if (!entryIssues.length) {
+          return;
+        }
+        const params = { meal: mealLabel(meal.id) };
+        if (entryIssues.includes("name")) {
+          issues.push(incompleteIssue("missingFoodName", params));
+        }
+        if (entryIssues.includes("calories")) {
+          issues.push(incompleteIssue("missingFoodCalories", params));
+        }
+        if (entryIssues.includes("macros")) {
+          issues.push(incompleteIssue("missingFoodMacros", params));
+        }
+      });
+    });
+    return issues;
+  }
+
+  function summarizeIncompleteIssues(issues = []) {
+    if (!issues.length) {
+      return t("incompleteNone");
+    }
+    const unique = [];
+    const seen = new Set();
+    issues.forEach((issue) => {
+      const key = `${issue.key}:${JSON.stringify(issue.params || {})}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(issue);
+      }
+    });
+    const visible = unique.slice(0, 3).map((issue) => t(issue.key, issue.params || {}));
+    const suffix = unique.length > visible.length ? "…" : "";
+    return `${visible.join(t("listSeparator"))}${suffix}`;
+  }
+
+  function firstSavedRecordDate(records = state.records) {
+    return Object.keys(records).sort((left, right) => left.localeCompare(right))[0] || "";
+  }
+
+  function getIncompleteRecordIssues(date, options = {}) {
+    const records = options.records || state.records;
+    const drafts = options.drafts || state.drafts || {};
+    const record = records[date] ? normalizeRecord(records[date]) : null;
+    const draft = drafts[date] ? normalizeDraft(drafts[date]) : null;
+    if (draft && !record && dayHasMeaningfulInput(draft)) {
+      return {
+        date,
+        status: "draftOnly",
+        issues: dayDataIssues(draft)
+      };
+    }
+    if (draft && record && shouldRestoreDraft(draft, record)) {
+      const draftIssues = dayDataIssues(draft);
+      const recordIssues = dayDataIssues(record);
+      return {
+        date,
+        status: "draftDiffers",
+        issues: draftIssues.length ? draftIssues : recordIssues
+      };
+    }
+    if (record) {
+      const issues = dayDataIssues(record);
+      return issues.length ? {
+        date,
+        status: "savedIssues",
+        issues
+      } : null;
+    }
+    return {
+      date,
+      status: "noRecord",
+      issues: [incompleteIssue("missingFood")]
+    };
+  }
+
+  function getIncompleteRecordDates(options = {}) {
+    const today = options.today || localDateString();
+    const reviewDays = Math.max(1, Math.round(Number(options.reviewDays) || INCOMPLETE_REVIEW_DAYS));
+    const records = options.records || state.records;
+    const drafts = options.drafts || state.drafts || {};
+    const firstSavedDate = firstSavedRecordDate(records);
+    const reviewDates = dateRange(addDays(today, -reviewDays), addDays(today, -1));
+    const candidateDates = new Set(reviewDates);
+    Object.keys(drafts).forEach((date) => {
+      if (date < today && date >= addDays(today, -reviewDays)) {
+        candidateDates.add(date);
+      }
+    });
+    return Array.from(candidateDates)
+      .filter((date) => {
+        if (date >= today) {
+          return false;
+        }
+        if (records[date] || drafts[date]) {
+          return true;
+        }
+        return firstSavedDate && date >= firstSavedDate;
+      })
+      .sort((left, right) => right.localeCompare(left))
+      .map((date) => getIncompleteRecordIssues(date, { records, drafts }))
+      .filter(Boolean);
   }
 
   function entryPlaceholderSuggestions() {
@@ -4892,15 +5183,18 @@
   }
 
   async function refreshPersistedData() {
-    const [records, favorites, targets, settings, legacySettings] = await Promise.all([
+    const [records, favorites, targets, drafts, settings, legacySettings] = await Promise.all([
       storage.getAllRecords(),
       storage.getAllFavorites(),
       storage.getAllTargets(),
+      storage.getAllDrafts(),
       storage.getSettings(),
       storage.getMeta(LEGACY_SETTINGS_META_KEY)
     ]);
     const normalizedRecords = records.map((record) => normalizeRecord(record));
+    const normalizedDrafts = drafts.map((draft) => normalizeDraft(draft)).filter(Boolean);
     state.records = Object.fromEntries(normalizedRecords.map((record) => [record.date, record]));
+    state.drafts = Object.fromEntries(normalizedDrafts.map((draft) => [draft.date, draft]));
     state.favorites = favorites.map(normalizeFavorite).sort(sortFavorites);
     state.dailyTargets = Object.fromEntries(targets.map((targetRow) => {
       const normalizedTarget = normalizeDailyTarget(targetRow);
@@ -5792,6 +6086,9 @@
       },
       async getAllTargets() {
         return (await getAll("dailyTargets")).sort((left, right) => left.date.localeCompare(right.date));
+      },
+      async getAllDrafts() {
+        return (await getAll("drafts")).sort((left, right) => left.date.localeCompare(right.date));
       },
       async getDraft(date) {
         return await get("drafts", date);
