@@ -418,6 +418,18 @@ select:focus-visible {
   color: var(--bad);
 }
 
+.settings-danger-action {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--bad-line);
+  border-radius: 16px;
+}
+
+.settings-danger-action .btn {
+  width: 100%;
+}
+
 .card h3 {
   margin: 0 0 10px;
   font-size: var(--text-lg);

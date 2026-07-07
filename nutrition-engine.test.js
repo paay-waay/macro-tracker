@@ -204,6 +204,18 @@ function settings(overrides = {}) {
 }
 
 {
+  const live = hooks.computeLiveTargets(today, "training", {
+    settings: settings({ goalMode: "maintain", trackingAccuracyBuffer: 300 }),
+    records: {},
+    bodyWeight: 78,
+    allowInitialFallback: false,
+    ignoreManualOverride: true
+  });
+  assert.strictEqual(live.plannedAverageCalories, 2200, "manual calorie buffer should subtract from daily targets");
+  assert.strictEqual(live.trackingBufferCalories, 300);
+}
+
+{
   const split = hooks.splitCaloriesByDayType(settings({ trainingDaysPerWeek: 4 }), 2200, 1600, [], 100);
   const weekly = split.trainingCalories * 4 + split.restCalories * 3;
   assert(Math.abs(weekly - 2200 * 7) <= 20, "training/rest split should preserve weekly calories after rounding");

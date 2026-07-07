@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "2.3.0";
+  const APP_VERSION = "2.3.1";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -31,7 +31,7 @@
     goalMode: "maintain",
     activityLevel: "medium",
     trainingDaysPerWeek: DEFAULT_WEEKLY_TRAINING_DAYS,
-    trackingAccuracyBuffer: "medium",
+    trackingAccuracyBuffer: 0,
     calibratedTdee: "",
     calibratedTdeeUpdatedAt: "",
     calibratedTdeeSource: "",
@@ -116,6 +116,11 @@
       closeSettings: "关闭设置",
       closeHelp: "关闭使用说明",
       saveSettings: "保存设置并重新计算目标",
+      dangerZone: "危险操作",
+      clearAllRecords: "清除所有记录",
+      clearAllRecordsHint: "会删除历史记录、草稿和每日目标覆盖；设置与常用餐会保留。",
+      clearAllRecordsConfirm: "确定清除所有历史记录、草稿和每日目标覆盖吗？此操作不能撤销。建议先导出备份。",
+      allRecordsCleared: "所有记录已清除",
       calories: "热量",
       protein: "蛋白质",
       carbs: "碳水",
@@ -332,7 +337,8 @@
       weeklyTrainingDays: "每周默认训练天数",
       goalMode: "目标模式",
       dailyActivity: "日常活动水平",
-      trackingBuffer: "记录误差缓冲",
+      trackingBuffer: "手动记录卡路里",
+      trackingBufferHint: "填入你想从每日目标中手动扣除的 kcal，例如 300 会让 2300 kcal 显示为 2000 kcal。",
       settingsAutoEstimateHint: "系统按手动 BMR、活动水平和训练天数实时计算目标；BMR 与活动水平不会被自动改写。",
       recentWeight: "最近体重",
       requiredWeeklyPace: "所需每周速度",
@@ -343,7 +349,7 @@
       calibratedTdeeUpdated: "最近校准",
       calibratedTdeeNever: "尚未校准",
       plannedAverageCalories: "计划日均热量",
-      trackingBufferIncluded: "含记录误差缓冲",
+      trackingBufferIncluded: "含手动扣减",
       trainingDayTarget: "训练日目标",
       restDayTarget: "休息日目标",
       expectedWeeklyChange: "预计每周变化",
@@ -362,7 +368,7 @@
       finalTdee: "最终 TDEE",
       bmrManualBaseline: "BMR 为手动基准，不会自动调整。",
       plannedDeficit: "计划缺口",
-      trackingBuffer: "记录缓冲",
+      trackingBuffer: "手动记录卡路里",
       dataSource: "数据来源",
       sourceFormula: "公式",
       sourceBlended: "公式+实际记录校准",
@@ -577,7 +583,7 @@
       maintainTrendFalling: "体重趋势略下降，先观察恢复和记录质量。",
       observedTdeeNotFollowing: "近期摄入与目标偏差较大，暂不校准 TDEE。",
       previewLowCarbWarning: "当前训练频率下碳水偏低。可考虑降低缺口、提高热量，或下调脂肪目标。",
-      previewBufferLowCarbWarning: "记录误差缓冲已生效，但当前碳水空间偏紧。",
+      previewBufferLowCarbWarning: "手动热量扣减已生效，但当前碳水空间偏紧。",
       previewMinCalorieWarning: "计划热量触及最低保护线，系统已避免继续下调。",
       previewRestProtectionWarning: "休息日热量触及最低保护线，已自动降低训练日热量加成。",
       trendAdjustIncomplete: "完整记录不足，暂不自动调整目标。",
@@ -609,6 +615,11 @@
       closeSettings: "Cerrar ajustes",
       closeHelp: "Cerrar ayuda",
       saveSettings: "Guardar y recalcular metas",
+      dangerZone: "Zona de riesgo",
+      clearAllRecords: "Borrar registros",
+      clearAllRecordsHint: "Borra historial, borradores y metas manuales; conserva ajustes y frecuentes.",
+      clearAllRecordsConfirm: "¿Borrar todo el historial, borradores y metas manuales? No se puede deshacer. Conviene exportar respaldo antes.",
+      allRecordsCleared: "Registros borrados",
       calories: "Calorías",
       protein: "Proteína",
       carbs: "Carbos",
@@ -825,7 +836,8 @@
       weeklyTrainingDays: "Días de entreno por defecto",
       goalMode: "Modo de meta",
       dailyActivity: "Actividad diaria",
-      trackingBuffer: "Margen de registro",
+      trackingBuffer: "Calorías manuales",
+      trackingBufferHint: "Ingresa las kcal que quieres restar de la meta diaria. Ej.: 300 hace que 2300 kcal se muestren como 2000 kcal.",
       settingsAutoEstimateHint: "El sistema usa BMR manual, actividad y días de entreno; no cambia BMR ni actividad automáticamente.",
       recentWeight: "Peso reciente",
       requiredWeeklyPace: "Ritmo semanal requerido",
@@ -836,7 +848,7 @@
       calibratedTdeeUpdated: "Última calibración",
       calibratedTdeeNever: "Sin calibrar",
       plannedAverageCalories: "Calorías promedio",
-      trackingBufferIncluded: "Incluye margen",
+      trackingBufferIncluded: "Incluye ajuste manual",
       trainingDayTarget: "Meta de entreno",
       restDayTarget: "Meta de descanso",
       expectedWeeklyChange: "Cambio semanal previsto",
@@ -855,7 +867,7 @@
       finalTdee: "TDEE final",
       bmrManualBaseline: "El BMR es una base manual; no se ajusta solo.",
       plannedDeficit: "Déficit plan",
-      trackingBuffer: "Margen de registro",
+      trackingBuffer: "Calorías manuales",
       dataSource: "Fuente de datos",
       sourceFormula: "Fórmula",
       sourceBlended: "Fórmula + registros",
@@ -1070,7 +1082,7 @@
       maintainTrendFalling: "El peso baja un poco; revisa recuperación y registros.",
       observedTdeeNotFollowing: "La ingesta se aleja de la meta; no se calibra TDEE.",
       previewLowCarbWarning: "Los carbos quedan bajos para esta frecuencia. Considera menor déficit, más calorías o menos grasa.",
-      previewBufferLowCarbWarning: "El margen de registro está activo, pero el espacio de carbos está justo.",
+      previewBufferLowCarbWarning: "El ajuste manual de kcal está activo, pero el espacio de carbos está justo.",
       previewMinCalorieWarning: "Las calorías tocaron el mínimo protegido; no se bajan más.",
       previewRestProtectionWarning: "El día de descanso llegó al mínimo; se redujo el extra de entreno.",
       trendAdjustIncomplete: "Faltan registros completos; no se ajustan metas.",
@@ -1365,6 +1377,10 @@
     }
     if (button.id === "saveSettingsBtn") {
       await saveSettings();
+      return;
+    }
+    if (button.hasAttribute("data-clear-all-records")) {
+      await clearAllRecords();
       return;
     }
     if (button.id === "closeHelpBtn") {
@@ -2789,17 +2805,22 @@
               ${Object.keys(ACTIVITY_LEVEL_CONFIG).map((key) => `<option value="${key}" ${settings.activityLevel === key ? "selected" : ""}>${t(`activity${capitalize(key)}`)} · ${t(`activity${capitalize(key)}Desc`)}</option>`).join("")}
             </select>
           </div>
-          <div>
-            <label class="label" for="setting-trackingAccuracyBuffer">${t("trackingBuffer")}</label>
-            <select id="setting-trackingAccuracyBuffer" data-setting="trackingAccuracyBuffer">
-              ${Object.keys(TRACKING_BUFFER_CONFIG).map((key) => `<option value="${key}" ${settings.trackingAccuracyBuffer === key ? "selected" : ""}>${t(`tracking${capitalize(key)}`)}</option>`).join("")}
-            </select>
-          </div>
+          ${renderSettingInput(t("trackingBuffer"), "trackingAccuracyBuffer", settings.trackingAccuracyBuffer, "number", false, "", "", "kcal")}
         </div>
         <div class="hint-box" style="margin-top:10px">${t("settingsAutoEstimateHint")}</div>
+        <div class="hint-box" style="margin-top:10px">${t("trackingBufferHint")}</div>
       `)}
       ${renderSettingsGroup("trend", t("trendReference"), `<div id="settingsTrendBody">${renderSettingsTrendReference()}</div>`)}
       ${renderSettingsGroup("preview", t("targetCalcDetails"), `<div id="settingsPreviewBody">${renderSettingsPreview(draft)}</div>`)}
+      ${renderSettingsGroup("danger", t("dangerZone"), `
+        <div class="danger-card settings-danger-action">
+          <div>
+            <h3>${t("clearAllRecords")}</h3>
+            <div class="small">${t("clearAllRecordsHint")}</div>
+          </div>
+          <button class="btn danger" type="button" data-clear-all-records>${t("clearAllRecords")}</button>
+        </div>
+      `)}
     `;
   }
 
@@ -3420,6 +3441,30 @@
       render();
     }
     setNotice(t("deleted"), { tone: "ok" });
+  }
+
+  async function clearAllRecords() {
+    const confirmed = window.confirm(t("clearAllRecordsConfirm"));
+    if (!confirmed) {
+      return;
+    }
+    await storage.clearTrackingData();
+    state.records = {};
+    state.drafts = {};
+    state.dailyTargets = {};
+    state.dayType = "";
+    state.bodyWeight = "";
+    state.trainingPerformance = "";
+    state.hungerLevel = "";
+    state.sleepScore = "";
+    state.meals = mealTemplate();
+    state.activeMeal = 1;
+    state.lastSavedAt = "";
+    state.lastDraftSavedAt = "";
+    state.dirty = false;
+    closeSettingsModal();
+    render();
+    setNotice(t("allRecordsCleared"), { tone: "ok", duration: 3600 });
   }
 
   function exportAll() {
@@ -4831,6 +4876,10 @@
     if (!Number.isFinite(trainingDays) || trainingDays < 0 || trainingDays > 7) {
       return { valid: false, message: t("weeklyTrainingDaysRange"), selector: "#setting-trainingDaysPerWeek" };
     }
+    const bufferValidation = validateNumericText(settings.trackingAccuracyBuffer, { label: t("trackingBuffer"), min: 0, max: 1500, decimals: 0 }, t("trackingBuffer"));
+    if (!bufferValidation.valid) {
+      return { valid: false, message: bufferValidation.message, selector: "#setting-trackingAccuracyBuffer" };
+    }
     return { valid: true };
   }
 
@@ -5265,6 +5314,9 @@
       ...settings
     };
     const trainingDays = Math.min(7, Math.max(0, Math.round(Number(merged.trainingDaysPerWeek ?? DEFAULT_SETTINGS.trainingDaysPerWeek) || 0)));
+    const manualCalorieBuffer = Number.isFinite(Number(normalizeLooseNumericText(merged.trackingAccuracyBuffer)))
+      ? normalizeSettingNumber(merged.trackingAccuracyBuffer, 0, 0, 1500, 0)
+      : 0;
     const goalMode = normalizeGoalMode(merged.goalMode);
     const activityLevel = ACTIVITY_LEVEL_CONFIG[merged.activityLevel] ? merged.activityLevel : DEFAULT_SETTINGS.activityLevel;
     const activityFactor = estimateActivityFactor(activityLevel);
@@ -5286,7 +5338,7 @@
       activityLevel,
       activityFactor,
       trainingDaysPerWeek: trainingDays,
-      trackingAccuracyBuffer: TRACKING_BUFFER_CONFIG[merged.trackingAccuracyBuffer] ? merged.trackingAccuracyBuffer : DEFAULT_SETTINGS.trackingAccuracyBuffer,
+      trackingAccuracyBuffer: manualCalorieBuffer,
       calibratedTdee,
       calibratedTdeeUpdatedAt: /^\d{4}-\d{2}-\d{2}$/.test(String(merged.calibratedTdeeUpdatedAt || "")) ? String(merged.calibratedTdeeUpdatedAt) : "",
       calibratedTdeeSource: ["formula", "observed", "manual"].includes(String(merged.calibratedTdeeSource || "")) ? String(merged.calibratedTdeeSource) : "",
@@ -5569,9 +5621,8 @@
     const finalTdee = round1(Number.isFinite(calibratedTdeeNumber) && calibratedTdeeNumber > 0 ? calibratedTdeeNumber : formulaTdee);
     const recovery = summarizeTargetRecovery(recordsWindow);
     const warnings = [];
-    const buffer = TRACKING_BUFFER_CONFIG[targetSettings.trackingAccuracyBuffer] || TRACKING_BUFFER_CONFIG.medium;
-    const trackingBufferCalories = 0;
-    const trackingBufferGuidanceCalories = Math.round(buffer.calories || 0);
+    const trackingBufferCalories = Math.max(0, Math.round(Number(targetSettings.trackingAccuracyBuffer) || 0));
+    const trackingBufferGuidanceCalories = trackingBufferCalories;
     let plannedAverageCalories = finalTdee;
     let plannedDailyDeficit = 0;
     let goalPhase = targetSettings.goalMode;
@@ -5639,6 +5690,10 @@
           warnings.push(t("maintainTrendFalling"));
         }
       }
+    }
+
+    if (trackingBufferCalories > 0) {
+      plannedAverageCalories -= trackingBufferCalories;
     }
 
     if (plannedAverageCalories < minimumAverageCalories) {
@@ -6068,6 +6123,16 @@
       });
     }
 
+    async function clear(storeName) {
+      const db = await dbPromise;
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, "readwrite");
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error || new Error(t("indexedDbDeleteManyFailed", { store: storeName })));
+        tx.objectStore(storeName).clear();
+      });
+    }
+
     async function count(storeName) {
       const db = await dbPromise;
       return new Promise((resolve, reject) => {
@@ -6125,6 +6190,13 @@
       },
       async deleteFavorite(id) {
         await remove("favorites", id);
+      },
+      async clearTrackingData() {
+        await Promise.all([
+          clear("records"),
+          clear("drafts"),
+          clear("dailyTargets")
+        ]);
       },
       async getSettings() {
         return await this.getMeta(SETTINGS_META_KEY);
