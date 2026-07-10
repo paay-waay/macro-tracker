@@ -263,6 +263,39 @@ function settings(overrides = {}) {
 }
 
 {
+  const startDate = hooks.addDays(today, -119);
+  const historicalRecords = hooks.dateRange(startDate, today).map((date, index) => ({
+    date,
+    dayType: index % 3 === 0 ? "rest" : "training",
+    bodyWeight: String(82 - index * 0.025),
+    trainingPerformance: index % 3 === 0 ? "" : "normal",
+    hungerLevel: "medium",
+    sleepScore: 76,
+    totals: { calories: 2250 + (index % 5) * 20, protein: 150, carbs: 250, fat: 65 }
+  }));
+  const historicalByDate = recordsByDate(historicalRecords);
+  hooks.state.records = historicalByDate;
+  hooks.rebuildRecordIndexes();
+  const indexed = hooks.computeLiveTargets(today, "training", {
+    settings: settings({ goalMode: "maintain", calibratedTdee: "" }),
+    bodyWeight: 79,
+    allowInitialFallback: false,
+    ignoreManualOverride: true
+  });
+  const direct = hooks.computeLiveTargets(today, "training", {
+    settings: settings({ goalMode: "maintain", calibratedTdee: "" }),
+    records: historicalByDate,
+    bodyWeight: 79,
+    allowInitialFallback: false,
+    ignoreManualOverride: true
+  });
+  assert.deepStrictEqual(indexed.selectedTarget, direct.selectedTarget, "indexed record access must preserve target results");
+  assert.strictEqual(hooks.recordsInDateRange(hooks.addDays(today, -6), today).length, 7, "date range index should return only requested records");
+  hooks.state.records = {};
+  hooks.rebuildRecordIndexes();
+}
+
+{
   const past = hooks.computeLiveTargets(today, "training", {
     settings: settings({ goalMode: "summerCut", targetDate: hooks.addDays(today, -1), targetWeightKg: 74 }),
     records: {},

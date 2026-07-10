@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "2.3.1";
+  const APP_VERSION = "2.3.2";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -1212,6 +1212,9 @@
   let draftTimer = 0;
   let favoriteSearchTimer = 0;
   let lastModalTrigger = null;
+  let recordDateIndex = [];
+  let recordWeightDateIndex = [];
+  let recordIndexVersion = 0;
 
   if (globalThis.__MACRO_TRACKER_TEST__) {
     globalThis.__MACRO_TRACKER_TEST_HOOKS__ = {
@@ -1237,6 +1240,8 @@
       sameDayData,
       shouldRestoreDraft,
       dayHasMeaningfulInput,
+      rebuildRecordIndexes,
+      recordsInDateRange,
       dateRange,
       addDays,
       numberValue
@@ -2594,7 +2599,7 @@
           <div class="list compact-list" style="margin-top:12px">
             ${visibleDates.length
               ? visibleDates.map((date) => renderHistoryItem(date)).join("")
-              : `<div class="hint-box">${Object.keys(state.records).length ? t("noHistoryFiltered") : t("noHistory")}</div>`}
+              : `<div class="hint-box">${recordDateIndex.length ? t("noHistoryFiltered") : t("noHistory")}</div>`}
           </div>
           ${historyDates.length > 3 ? `<button class="btn full-width" type="button" data-toggle-ui="historyShowAll">${state.ui.historyShowAll ? t("collapse") : `${t("showMore")}（${historyDates.length - 3}）`}</button>` : ""}
         ` : ""}
@@ -3406,7 +3411,7 @@
 
     await storage.putRecord(record);
     await storage.deleteDraft(state.date);
-    state.records[state.date] = record;
+    upsertRecordState(record);
     delete state.drafts[state.date];
     state.lastSavedAt = record.savedAt;
     state.lastDraftSavedAt = "";
@@ -3422,7 +3427,7 @@
     }
     await storage.deleteRecord(date);
     await storage.deleteDraft(date);
-    delete state.records[date];
+    removeRecordState(date);
     delete state.drafts[date];
     if (state.date === date) {
       state.dayType = "";
@@ -3450,6 +3455,7 @@
     }
     await storage.clearTrackingData();
     state.records = {};
+    rebuildRecordIndexes();
     state.drafts = {};
     state.dailyTargets = {};
     state.dayType = "";
@@ -3469,7 +3475,7 @@
 
   function exportAll() {
     const rows = [EXPORT_HEADER];
-    Object.keys(state.records).sort().forEach((date) => {
+    recordDates().forEach((date) => {
       const record = normalizeRecord(state.records[date]);
       record.meals.forEach((meal, mealIndex) => {
         meal.entries.forEach((entry, entryIndex) => {
@@ -3816,7 +3822,7 @@
       dates.length ? storage.deleteDrafts(dates) : Promise.resolve()
     ]);
     changedRecords.forEach((record) => {
-      state.records[record.date] = record;
+      upsertRecordState(record);
     });
     dates.forEach((date) => {
       delete state.drafts[date];
@@ -4108,10 +4114,7 @@
       fat: 0
     };
 
-    const recent = Object.values(state.records)
-      .map(normalizeRecord)
-      .filter((record) => record.bodyWeight !== "" && Number.isFinite(numberValue(record.bodyWeight)) && record.date <= state.date)
-      .sort((left, right) => left.date.localeCompare(right.date));
+    const recent = weightRecordsUntil(state.date);
     const recent7 = recent.slice(-7);
     const prev7 = recent.slice(-14, -7);
     const averageWeight = (records) => {
@@ -5143,7 +5146,7 @@
     if (!state.ready) {
       return false;
     }
-    if (!Object.keys(state.records || {}).length && !state.favorites.length) {
+    if (!recordDateIndex.length && !state.favorites.length) {
       return false;
     }
     if (!state.ui.lastExportAt) {
@@ -5243,6 +5246,7 @@
     const normalizedRecords = records.map((record) => normalizeRecord(record));
     const normalizedDrafts = drafts.map((draft) => normalizeDraft(draft)).filter(Boolean);
     state.records = Object.fromEntries(normalizedRecords.map((record) => [record.date, record]));
+    rebuildRecordIndexes();
     state.drafts = Object.fromEntries(normalizedDrafts.map((draft) => [draft.date, draft]));
     state.favorites = favorites.map(normalizeFavorite).sort(sortFavorites);
     state.dailyTargets = Object.fromEntries(targets.map((targetRow) => {
@@ -5256,7 +5260,7 @@
     if (!state.settings?.settingsVersion) {
       return;
     }
-    const settings = normalizeSettings(state.settings, recordsArray(state.records));
+    const settings = normalizeSettings(state.settings, recordsArray());
     const mode = GOAL_MODE_CONFIG[settings.goalMode] || GOAL_MODE_CONFIG.maintain;
     const today = localDateString();
     if (settings.calibratedTdeeUpdatedAt && daysBetween(settings.calibratedTdeeUpdatedAt, today) < mode.trendWindowDays) {
@@ -5374,10 +5378,13 @@
     return round2(config.factor || ACTIVITY_LEVEL_CONFIG.medium.factor);
   }
 
-  function latestLoggedWeight(records = Object.values(state.records || {})) {
-    const latest = records
-      .map(normalizeRecord)
-      .filter((record) => record.bodyWeight !== "" && Number.isFinite(numberValue(record.bodyWeight)))
+  function latestLoggedWeight(records = null) {
+    if (!records) {
+      const latestDate = recordWeightDateIndex[recordWeightDateIndex.length - 1];
+      return latestDate ? round2(numberValue(state.records[latestDate].bodyWeight)) : 0;
+    }
+    const latest = recordsArray(records)
+      .filter(recordHasValidWeight)
       .sort((left, right) => right.date.localeCompare(left.date))[0];
     return latest ? round2(numberValue(latest.bodyWeight)) : 0;
   }
@@ -5390,9 +5397,8 @@
 
   function effectiveTrainingDaysForTarget(date, settings = currentSettings(), recordsInput = state.records) {
     const fallbackDays = effectiveTrainingDays(settings);
-    const records = recordsArray(recordsInput)
-      .map(normalizeRecord)
-      .filter((record) => record.date <= date && record.date >= addDays(date, -27) && (record.dayType === "training" || record.dayType === "rest"))
+    const records = recordsInDateRange(addDays(date, -27), date, recordsInput)
+      .filter((record) => record.dayType === "training" || record.dayType === "rest")
       .sort((left, right) => left.date.localeCompare(right.date));
     if (records.length < 14) {
       return { days: fallbackDays, source: "settings", sampleDays: records.length };
@@ -5415,6 +5421,9 @@
   }
 
   function recordsArray(recordsInput = state.records) {
+    if (recordsInput === state.records) {
+      return recordDateIndex.map((date) => state.records[date]).filter(Boolean);
+    }
     if (Array.isArray(recordsInput)) {
       return recordsInput.map(normalizeRecord);
     }
@@ -5438,9 +5447,7 @@
   function getEffectiveWeightForTarget(date, options = {}) {
     const settings = normalizeSettings(options.settings || currentSettings());
     const liveWeight = options.bodyWeight ?? (date === state.date ? state.bodyWeight : "");
-    const weightRecords = recordsArray(options.records)
-      .filter((record) => record.date <= date && record.bodyWeight !== "" && Number.isFinite(numberValue(record.bodyWeight)))
-      .sort((left, right) => right.date.localeCompare(left.date));
+    const weightRecords = weightRecordsUntil(date, options.records).slice().reverse();
     if (weightRecords.length) {
       const recent = weightRecords.slice(0, Math.min(7, weightRecords.length));
       return round1(recent.reduce((sum, record) => sum + numberValue(record.bodyWeight), 0) / recent.length);
@@ -5457,9 +5464,7 @@
   function targetRecordsWindow(date, options = {}) {
     const mode = GOAL_MODE_CONFIG[normalizeGoalMode(options.settings?.goalMode || currentSettings().goalMode)] || GOAL_MODE_CONFIG.maintain;
     const startDate = addDays(date, -(mode.trendWindowDays - 1));
-    return recordsArray(options.records)
-      .filter((record) => record.date >= startDate && record.date <= date)
-      .sort((left, right) => left.date.localeCompare(right.date));
+    return recordsInDateRange(startDate, date, options.records);
   }
 
   function estimateObservedTdee(recordsWindow, settings, options = {}) {
@@ -6314,14 +6319,84 @@
     };
   }
 
+  function rebuildRecordIndexes() {
+    recordDateIndex = Object.keys(state.records || {}).sort((left, right) => left.localeCompare(right));
+    recordWeightDateIndex = recordDateIndex.filter((date) => recordHasValidWeight(state.records[date]));
+    recordIndexVersion += 1;
+  }
+
+  function recordHasValidWeight(record) {
+    return record?.bodyWeight !== "" && Number.isFinite(numberValue(record?.bodyWeight));
+  }
+
+  function insertSortedDate(list, date) {
+    const existingIndex = list.indexOf(date);
+    if (existingIndex !== -1) {
+      list.splice(existingIndex, 1);
+    }
+    const insertAt = list.findIndex((item) => item.localeCompare(date) > 0);
+    if (insertAt === -1) {
+      list.push(date);
+    } else {
+      list.splice(insertAt, 0, date);
+    }
+  }
+
+  function upsertRecordState(recordInput) {
+    const record = normalizeRecord(recordInput);
+    state.records[record.date] = record;
+    insertSortedDate(recordDateIndex, record.date);
+    if (recordHasValidWeight(record)) {
+      insertSortedDate(recordWeightDateIndex, record.date);
+    } else {
+      recordWeightDateIndex = recordWeightDateIndex.filter((date) => date !== record.date);
+    }
+    recordIndexVersion += 1;
+    return record;
+  }
+
+  function removeRecordState(date) {
+    delete state.records[date];
+    recordDateIndex = recordDateIndex.filter((item) => item !== date);
+    recordWeightDateIndex = recordWeightDateIndex.filter((item) => item !== date);
+    recordIndexVersion += 1;
+  }
+
+  function recordDates(desc = false) {
+    return desc ? recordDateIndex.slice().reverse() : recordDateIndex.slice();
+  }
+
+  function recordsInDateRange(startDate, endDate, recordsInput = state.records) {
+    if (recordsInput === state.records) {
+      return recordDateIndex
+        .filter((date) => date >= startDate && date <= endDate)
+        .map((date) => state.records[date])
+        .filter(Boolean);
+    }
+    return recordsArray(recordsInput)
+      .filter((record) => record.date >= startDate && record.date <= endDate)
+      .sort((left, right) => left.date.localeCompare(right.date));
+  }
+
+  function weightRecordsUntil(date, recordsInput = state.records) {
+    if (recordsInput === state.records) {
+      return recordWeightDateIndex
+        .filter((recordDate) => recordDate <= date)
+        .map((recordDate) => state.records[recordDate])
+        .filter(Boolean);
+    }
+    return recordsArray(recordsInput)
+      .filter((record) => record.date <= date && recordHasValidWeight(record))
+      .sort((left, right) => left.date.localeCompare(right.date));
+  }
+
   function hasUnsavedFormalChanges() {
     return !!state.dirty;
   }
 
   function getFilteredHistoryDates() {
     const search = state.historySearchText.trim().toLowerCase();
-    return Object.keys(state.records)
-      .sort((left, right) => right.localeCompare(left))
+    return recordDates(true)
       .filter((date) => {
         const record = state.records[date];
         if (state.historyDateFilter && date !== state.historyDateFilter) {
