@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "2.3.2";
+  const APP_VERSION = "2.3.3";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -1275,6 +1275,7 @@
 
   function bindEvents() {
     bindZoomGuard();
+    bindFloatingDockViewport();
 
     document.addEventListener("click", (event) => {
       handleClick(event).catch(handleAsyncError);
@@ -1338,6 +1339,31 @@
         event.returnValue = "";
       }
     });
+  }
+
+  function bindFloatingDockViewport() {
+    const viewport = window.visualViewport;
+    if (!viewport) {
+      document.documentElement.style.setProperty("--dock-keyboard-offset", "0px");
+      return;
+    }
+    let frame = 0;
+    const updateDockOffset = () => {
+      if (frame) {
+        window.cancelAnimationFrame(frame);
+      }
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        const keyboardOffset = Math.max(0, Math.round(window.innerHeight - viewport.height - viewport.offsetTop));
+        document.documentElement.style.setProperty("--dock-keyboard-offset", `${keyboardOffset}px`);
+      });
+    };
+    viewport.addEventListener("resize", updateDockOffset);
+    viewport.addEventListener("scroll", updateDockOffset);
+    window.addEventListener("orientationchange", () => {
+      window.setTimeout(updateDockOffset, 220);
+    });
+    updateDockOffset();
   }
 
   function bindZoomGuard() {
