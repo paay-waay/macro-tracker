@@ -111,6 +111,24 @@ const today = "2026-06-12";
   );
 }
 
+{
+  assert.strictEqual(
+    hooks.shouldPreventOverscroll(0, 1800, 844, 12),
+    true,
+    "pulling down at the top should not move the page past its boundary"
+  );
+  assert.strictEqual(
+    hooks.shouldPreventOverscroll(420, 1800, 844, 12),
+    false,
+    "normal scrolling inside the page should remain available"
+  );
+  assert.strictEqual(
+    hooks.shouldPreventOverscroll(956, 1800, 844, -12),
+    true,
+    "pushing past the bottom should not move the page past its boundary"
+  );
+}
+
 function makeRecords(days, startWeight, dailyWeightDelta, calories) {
   const dates = hooks.dateRange(today, hooks.addDays(today, days - 1));
   return dates.map((date, index) => ({

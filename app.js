@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "2.3.4";
+  const APP_VERSION = "2.3.5";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -1245,6 +1245,7 @@
       dateRange,
       addDays,
       shouldHideFloatingDock,
+      shouldPreventOverscroll,
       numberValue
     };
     return;
@@ -1277,6 +1278,7 @@
   function bindEvents() {
     bindZoomGuard();
     bindFloatingDockViewport();
+    bindOverscrollGuard();
 
     document.addEventListener("click", (event) => {
       handleClick(event).catch(handleAsyncError);
@@ -1385,6 +1387,78 @@
     const viewportReduction = Math.max(0, safeLayoutHeight - safeViewportHeight);
     const keyboardThreshold = Math.max(120, Math.round(safeLayoutHeight * 0.16));
     return !!textEntryFocused && viewportReduction >= keyboardThreshold;
+  }
+
+  function bindOverscrollGuard() {
+    let previousPoint = null;
+    document.addEventListener("touchstart", (event) => {
+      if (event.touches.length !== 1) {
+        previousPoint = null;
+        return;
+      }
+      previousPoint = {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY
+      };
+    }, { passive: true });
+    document.addEventListener("touchmove", (event) => {
+      if (!previousPoint || event.touches.length !== 1) {
+        return;
+      }
+      const point = {
+        x: event.touches[0].clientX,
+        y: event.touches[0].clientY
+      };
+      const deltaX = point.x - previousPoint.x;
+      const deltaY = point.y - previousPoint.y;
+      previousPoint = point;
+      if (Math.abs(deltaY) <= Math.abs(deltaX) || Math.abs(deltaY) < 1) {
+        return;
+      }
+      const target = event.target instanceof Element ? event.target : null;
+      if (target?.closest('input[type="range"]')) {
+        return;
+      }
+      const scrollContainer = findScrollContainer(target);
+      if (shouldPreventOverscroll(
+        scrollContainer.scrollTop,
+        scrollContainer.scrollHeight,
+        scrollContainer.clientHeight,
+        deltaY
+      )) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    document.addEventListener("touchend", () => {
+      previousPoint = null;
+    }, { passive: true });
+    document.addEventListener("touchcancel", () => {
+      previousPoint = null;
+    }, { passive: true });
+  }
+
+  function findScrollContainer(target) {
+    let node = target;
+    while (node && node !== document.body && node !== document.documentElement) {
+      const style = window.getComputedStyle(node);
+      const scrollable = /(auto|scroll)/.test(style.overflowY)
+        && node.scrollHeight > node.clientHeight + 1;
+      if (scrollable) {
+        return node;
+      }
+      node = node.parentElement;
+    }
+    return document.scrollingElement || document.documentElement;
+  }
+
+  function shouldPreventOverscroll(scrollTop, scrollHeight, clientHeight, deltaY) {
+    const top = Math.max(0, Number(scrollTop) || 0);
+    const height = Math.max(0, Number(scrollHeight) || 0);
+    const viewport = Math.max(0, Number(clientHeight) || 0);
+    const movement = Number(deltaY) || 0;
+    const maxScroll = Math.max(0, height - viewport);
+    return (movement > 0 && top <= 0)
+      || (movement < 0 && top >= maxScroll - 1);
   }
 
   function bindZoomGuard() {
