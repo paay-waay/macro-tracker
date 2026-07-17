@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "2.3.3";
+  const APP_VERSION = "2.3.4";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -1244,6 +1244,7 @@
       recordsInDateRange,
       dateRange,
       addDays,
+      shouldHideFloatingDock,
       numberValue
     };
     return;
@@ -1344,26 +1345,46 @@
   function bindFloatingDockViewport() {
     const viewport = window.visualViewport;
     if (!viewport) {
-      document.documentElement.style.setProperty("--dock-keyboard-offset", "0px");
       return;
     }
     let frame = 0;
-    const updateDockOffset = () => {
+    const updateDockVisibility = () => {
       if (frame) {
         window.cancelAnimationFrame(frame);
       }
       frame = window.requestAnimationFrame(() => {
         frame = 0;
-        const keyboardOffset = Math.max(0, Math.round(window.innerHeight - viewport.height - viewport.offsetTop));
-        document.documentElement.style.setProperty("--dock-keyboard-offset", `${keyboardOffset}px`);
+        const activeElement = document.activeElement;
+        const textEntryFocused = activeElement instanceof HTMLElement
+          && activeElement.matches('textarea, [contenteditable="true"], input:not([type="button"]):not([type="checkbox"]):not([type="date"]):not([type="file"]):not([type="radio"]):not([type="range"]):not([type="submit"])');
+        const layoutHeight = Math.max(window.innerHeight, document.documentElement.clientHeight || 0);
+        const keyboardOpen = shouldHideFloatingDock(layoutHeight, viewport.height, textEntryFocused);
+        const dock = document.querySelector(".bottom");
+        document.body.classList.toggle("keyboard-open", keyboardOpen);
+        if (dock) {
+          dock.toggleAttribute("inert", keyboardOpen);
+          dock.setAttribute("aria-hidden", keyboardOpen ? "true" : "false");
+        }
       });
     };
-    viewport.addEventListener("resize", updateDockOffset);
-    viewport.addEventListener("scroll", updateDockOffset);
-    window.addEventListener("orientationchange", () => {
-      window.setTimeout(updateDockOffset, 220);
+    viewport.addEventListener("resize", updateDockVisibility);
+    viewport.addEventListener("scroll", updateDockVisibility);
+    document.addEventListener("focusin", updateDockVisibility);
+    document.addEventListener("focusout", () => {
+      window.setTimeout(updateDockVisibility, 80);
     });
-    updateDockOffset();
+    window.addEventListener("orientationchange", () => {
+      window.setTimeout(updateDockVisibility, 220);
+    });
+    updateDockVisibility();
+  }
+
+  function shouldHideFloatingDock(layoutHeight, viewportHeight, textEntryFocused) {
+    const safeLayoutHeight = Math.max(0, Number(layoutHeight) || 0);
+    const safeViewportHeight = Math.max(0, Number(viewportHeight) || 0);
+    const viewportReduction = Math.max(0, safeLayoutHeight - safeViewportHeight);
+    const keyboardThreshold = Math.max(120, Math.round(safeLayoutHeight * 0.16));
+    return !!textEntryFocused && viewportReduction >= keyboardThreshold;
   }
 
   function bindZoomGuard() {

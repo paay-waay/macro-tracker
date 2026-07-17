@@ -93,6 +93,24 @@ function loadHooks() {
 const hooks = loadHooks();
 const today = "2026-06-12";
 
+{
+  assert.strictEqual(
+    hooks.shouldHideFloatingDock(844, 510, true),
+    true,
+    "the floating dock should hide when a focused text field opens the software keyboard"
+  );
+  assert.strictEqual(
+    hooks.shouldHideFloatingDock(844, 760, true),
+    false,
+    "small visual viewport changes should not be mistaken for the software keyboard"
+  );
+  assert.strictEqual(
+    hooks.shouldHideFloatingDock(844, 510, false),
+    false,
+    "the floating dock should remain available when no text-entry control is focused"
+  );
+}
+
 function makeRecords(days, startWeight, dailyWeightDelta, calories) {
   const dates = hooks.dateRange(today, hooks.addDays(today, days - 1));
   return dates.map((date, index) => ({
