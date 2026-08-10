@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "2.3.5";
+  const APP_VERSION = "2.3.6";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -474,7 +474,7 @@
       draftRestored: "已恢复 {date} 的未保存草稿",
       confirmLeaveDraft: "当前日期还有未正式保存的修改。草稿虽已自动保存，但仍建议确认后再切换日期。确定继续吗？",
       confirmOverwriteSave: "你正在修改 {date} 已保存过的内容。确定覆盖保存吗？",
-      confirmDeleteRecord: "确定删除 {date} 的记录吗？此操作不能撤销。",
+      confirmDeleteRecord: "确定删除 {date} 的历史记录吗？常用餐会保留；此操作不能撤销。",
       confirmImportOverwriting: "导入会覆盖当前日期，并清除当前日期的未正式保存修改。确定继续导入吗？",
       importSuccessDetails: "{records} 个日期的记录{favorites}",
       importSuccessFavorites: "，{count} 个常用餐",
@@ -973,7 +973,7 @@
       draftRestored: "Se restauró el borrador de {date}",
       confirmLeaveDraft: "Esta fecha tiene cambios no guardados. El borrador se guardó, pero conviene confirmar antes de cambiar. ¿Continuar?",
       confirmOverwriteSave: "Vas a sobrescribir el registro de {date}. ¿Confirmas?",
-      confirmDeleteRecord: "¿Eliminar el registro de {date}? Esta acción no se puede deshacer.",
+      confirmDeleteRecord: "¿Eliminar el registro de {date}? Las comidas frecuentes se conservarán; esta acción no se puede deshacer.",
       confirmImportOverwriting: "La importación reemplazará la fecha actual y borrará cambios no guardados. ¿Continuar?",
       importSuccessDetails: "Registros de {records} fechas{favorites}",
       importSuccessFavorites: ", {count} frecuentes",
@@ -1240,6 +1240,10 @@
       sameDayData,
       shouldRestoreDraft,
       dayHasMeaningfulInput,
+      buildOverviewSnapshot,
+      renderHistoryItem,
+      renderIncompleteRecordRow,
+      removeRecordDataFromState,
       rebuildRecordIndexes,
       recordsInDateRange,
       dateRange,
@@ -1906,14 +1910,13 @@
   function loadUiState() {
     try {
       const parsed = JSON.parse(window.localStorage.getItem(UI_STATE_KEY) || "{}");
-      const versionFresh = parsed.uiVersion === APP_VERSION;
       return {
         ...DEFAULT_UI_STATE,
         ...parsed,
         uiVersion: APP_VERSION,
-        historyToolsOpen: versionFresh ? (parsed.historyToolsOpen ?? DEFAULT_UI_STATE.historyToolsOpen) : DEFAULT_UI_STATE.historyToolsOpen,
-        historyRecordsOpen: versionFresh ? (parsed.historyRecordsOpen ?? DEFAULT_UI_STATE.historyRecordsOpen) : DEFAULT_UI_STATE.historyRecordsOpen,
-        historyFavoritesOpen: versionFresh ? (parsed.historyFavoritesOpen ?? DEFAULT_UI_STATE.historyFavoritesOpen) : DEFAULT_UI_STATE.historyFavoritesOpen,
+        historyToolsOpen: parsed.historyToolsOpen ?? DEFAULT_UI_STATE.historyToolsOpen,
+        historyRecordsOpen: parsed.historyRecordsOpen ?? DEFAULT_UI_STATE.historyRecordsOpen,
+        historyFavoritesOpen: parsed.historyFavoritesOpen ?? DEFAULT_UI_STATE.historyFavoritesOpen,
         settingsGroups: {
           ...DEFAULT_UI_STATE.settingsGroups,
           ...(parsed && typeof parsed.settingsGroups === "object" && parsed.settingsGroups ? parsed.settingsGroups : {}),
@@ -2454,22 +2457,92 @@
   }
 
   function renderOverview() {
-    const summary = stats();
+    const summary = buildOverviewSnapshot();
     const incompleteItems = getIncompleteRecordDates();
+    const weightDelta = summary.weightEntryCount >= 14 && summary.prev7Avg && summary.recent7Avg
+      ? round2(summary.recent7Avg - summary.prev7Avg)
+      : null;
+    const weightTone = weightDelta === null ? "warn" : (Math.abs(weightDelta) <= 0.5 ? "ok" : "warn");
     return `
       ${incompleteItems.length ? `<div class="overview-note warn">${t("incompleteOverviewWarning")}</div>` : ""}
-      ${renderWeeklyExecutionModule(summary)}
-      ${renderMacroDeviationModule(summary)}
-      ${renderWeightTrendModule(summary)}
-      ${renderRecoveryQualityModule(summary)}
-      ${renderOverviewDetails(summary)}
-      ${summary.anomalies.length ? `
-        <div class="card danger-card">
-          <h3>${t("anomalyTitle")}</h3>
-          <div class="list">${summary.anomalies.map((item) => `<div class="warn-box">${esc(item)}</div>`).join("")}</div>
+      <div class="card compact-overview-card overview-conclusion-card">
+        <div class="item-top">
+          <div>
+            <h3>${t("weeklyConclusion")}</h3>
+            <div class="small" style="margin-top:6px">${t("rollingCoverage", { count: summary.rolling7.coveredDays, datePart: summary.rolling7.latestDate ? t("rollingCoverageDatePart", { date: fmtDate(summary.rolling7.latestDate) }) : "" })}</div>
+          </div>
+          <span class="badge ${summary.rolling7.coveredDays >= 6 ? "ok" : "warn"}">${t("recordedDaysShort", { count: summary.rolling7.coveredDays })}</span>
         </div>
-      ` : ""}
+        ${renderRecordQualityReminder(summary)}
+      </div>
+      <div class="card compact-overview-card">
+        <div class="item-top">
+          <div>
+            <h3>${t("macroDeviation")}</h3>
+            <div class="small" style="margin-top:6px">${t("averageCaloriesVsTarget")}</div>
+          </div>
+        </div>
+        ${summary.rolling7.coveredDays ? `
+          <div class="overview-delta-grid" style="margin-top:12px">
+            ${renderMacroDeltaPill(t("calories"), summary.rolling7.average.calories, summary.rolling7.target.calories, "kcal", "kcal")}
+            ${renderMacroDeltaPill(t("protein"), summary.rolling7.average.protein, summary.rolling7.target.protein, "g", "g")}
+            ${renderMacroDeltaPill(t("carbs"), summary.rolling7.average.carbs, summary.rolling7.target.carbs, "g", "g")}
+            ${renderMacroDeltaPill(t("fat"), summary.rolling7.average.fat, summary.rolling7.target.fat, "g", "g")}
+          </div>
+        ` : `<div class="hint-box" style="margin-top:12px">${t("noHistory")}</div>`}
+      </div>
+      <div class="card compact-overview-card">
+        <div class="item-top">
+          <h3>${t("weightTrend")}</h3>
+          <span class="badge ${weightTone}">${t("weightEntryCount", { count: summary.weightEntryCount })}</span>
+        </div>
+        <div class="stat-grid" style="margin-top:12px">
+          <div class="stat"><div class="k">${t("latestWeight")}</div><div class="v">${summary.latestWeight ? formatWeight(summary.latestWeight) : "—"}</div><div class="h">kg</div></div>
+          <div class="stat"><div class="k">${t("avg7Weight")}</div><div class="v">${summary.recent7Avg ? formatWeight(summary.recent7Avg) : "—"}</div><div class="h">kg</div></div>
+          <div class="stat"><div class="k">${t("weeklyChange")}</div><div class="v">${weightDelta === null ? "—" : formatDelta(weightDelta)}</div><div class="h">kg</div></div>
+        </div>
+      </div>
     `;
+  }
+
+  function buildOverviewSnapshot() {
+    const rollingWindowDates = lastNDates(state.date, 7);
+    const rollingRecords = rollingWindowDates
+      .map((date) => state.records[date] ? normalizeRecord(state.records[date]) : null)
+      .filter(Boolean);
+    const sum = rollingRecords.reduce((totals, record) => {
+      totals.calories += numberValue(record.totals.calories);
+      totals.protein += numberValue(record.totals.protein);
+      totals.carbs += numberValue(record.totals.carbs);
+      totals.fat += numberValue(record.totals.fat);
+      return totals;
+    }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+    const divisor = Math.max(1, rollingRecords.length);
+    const weights = weightRecordsUntil(state.date);
+    const recent7 = weights.slice(-7);
+    const prev7 = weights.slice(-14, -7);
+    const averageWeight = (records) => records.length
+      ? round2(records.reduce((total, record) => total + numberValue(record.bodyWeight), 0) / records.length)
+      : 0;
+    return {
+      weightEntryCount: weights.length,
+      latestWeight: weights.length ? round2(numberValue(weights[weights.length - 1].bodyWeight)) : 0,
+      recent7Avg: averageWeight(recent7),
+      prev7Avg: averageWeight(prev7),
+      rolling7: {
+        coveredDays: rollingRecords.length,
+        latestDate: rollingRecords.length ? rollingRecords[rollingRecords.length - 1].date : "",
+        average: {
+          calories: round1(sum.calories / divisor),
+          protein: round1(sum.protein / divisor),
+          carbs: round1(sum.carbs / divisor),
+          fat: round1(sum.fat / divisor)
+        },
+        target: rollingRecords.length
+          ? averageTargetForDates(rollingRecords.map((record) => record.date))
+          : { calories: 0, protein: 0, carbs: 0, fat: 0 }
+      }
+    };
   }
 
   function renderWeeklyExecutionModule(summary) {
@@ -2774,13 +2847,17 @@
   }
 
   function renderIncompleteRecordRow(item) {
+    const hasSavedRecord = !!state.records[item.date];
     return `
       <div class="history-item incomplete-row">
         <div>
           <div class="item-title">${fmtDate(item.date)}</div>
           <div class="small" style="margin-top:6px">${incompleteStatusLabel(item.status)} · ${esc(summarizeIncompleteIssues(item.issues))}</div>
         </div>
-        <button class="mini-btn" type="button" data-load-date="${esc(item.date)}">${t("open")}</button>
+        <div class="item-actions">
+          <button class="mini-btn" type="button" data-load-date="${esc(item.date)}">${t("open")}</button>
+          ${hasSavedRecord ? `<button class="mini-btn danger" type="button" data-delete-record="${esc(item.date)}" aria-label="${t("deleteRecordAria", { date: fmtDate(item.date) })}">${t("delete")}</button>` : ""}
+        </div>
       </div>
     `;
   }
@@ -3548,8 +3625,7 @@
     }
     await storage.deleteRecord(date);
     await storage.deleteDraft(date);
-    removeRecordState(date);
-    delete state.drafts[date];
+    removeRecordDataFromState(date);
     if (state.date === date) {
       state.dayType = "";
       state.bodyWeight = "";
@@ -3567,6 +3643,11 @@
       render();
     }
     setNotice(t("deleted"), { tone: "ok" });
+  }
+
+  function removeRecordDataFromState(date) {
+    removeRecordState(date);
+    delete state.drafts[date];
   }
 
   async function clearAllRecords() {

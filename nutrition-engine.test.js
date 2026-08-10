@@ -429,4 +429,38 @@ function completeRecord(date, overrides = {}) {
   assert.strictEqual(issue.status, "draftDiffers", "drafts that differ from saved records should be surfaced");
 }
 
+{
+  const dates = [hooks.addDays(today, -2), hooks.addDays(today, -1), today];
+  hooks.state.date = today;
+  hooks.state.records = Object.fromEntries(dates.map((date, index) => [date, completeRecord(date, {
+    bodyWeight: String(78.4 - index * 0.1),
+    targetSnapshot: {
+      date,
+      dayType: "training",
+      calories: 2000,
+      protein: 150,
+      carbs: 220,
+      fat: 60,
+      sourceVersion: "2.3.5"
+    }
+  })]));
+  hooks.state.drafts = { [dates[0]]: hooks.normalizeDraft({ date: dates[0], dayType: "training" }) };
+  hooks.state.favorites = [{ id: "fav-legacy", name: "常用早餐", entries: [] }];
+  hooks.rebuildRecordIndexes();
+
+  const overview = hooks.buildOverviewSnapshot();
+  assert.strictEqual(overview.rolling7.coveredDays, 3, "overview coverage should count actual saved days");
+  assert.strictEqual(overview.rolling7.average.calories, 890, "overview averages must not dilute logged intake across missing days");
+  assert.strictEqual(overview.rolling7.target.calories, 2000, "overview must honor targets saved by older versions");
+
+  assert(hooks.renderHistoryItem(dates[0]).includes(`data-delete-record="${dates[0]}"`), "every saved history row should expose deletion");
+  assert(hooks.renderIncompleteRecordRow({ date: dates[0], status: "savedIssues", issues: [] }).includes(`data-delete-record="${dates[0]}"`), "saved records in the incomplete list should expose deletion");
+  assert(!hooks.renderIncompleteRecordRow({ date: hooks.addDays(today, -4), status: "draftOnly", issues: [] }).includes("data-delete-record"), "draft-only reminders should not claim to delete a saved history record");
+
+  hooks.removeRecordDataFromState(dates[0]);
+  assert.strictEqual(hooks.state.records[dates[0]], undefined, "record deletion should remove the selected history record");
+  assert.strictEqual(hooks.state.drafts[dates[0]], undefined, "record deletion should remove the matching draft");
+  assert.strictEqual(hooks.state.favorites[0].id, "fav-legacy", "record deletion must preserve frequent meals");
+}
+
 console.log("nutrition-engine tests passed");
