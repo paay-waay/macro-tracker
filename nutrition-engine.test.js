@@ -454,13 +454,23 @@ function completeRecord(date, overrides = {}) {
   assert.strictEqual(overview.rolling7.target.calories, 2000, "overview must honor targets saved by older versions");
 
   assert(hooks.renderHistoryItem(dates[0]).includes(`data-delete-record="${dates[0]}"`), "every saved history row should expose deletion");
+  assert(hooks.renderHistoryItem(dates[0]).includes(`data-select-history-date="${dates[0]}"`), "every saved history row should expose batch selection");
   assert(hooks.renderIncompleteRecordRow({ date: dates[0], status: "savedIssues", issues: [] }).includes(`data-delete-record="${dates[0]}"`), "saved records in the incomplete list should expose deletion");
   assert(!hooks.renderIncompleteRecordRow({ date: hooks.addDays(today, -4), status: "draftOnly", issues: [] }).includes("data-delete-record"), "draft-only reminders should not claim to delete a saved history record");
 
-  hooks.removeRecordDataFromState(dates[0]);
+  hooks.state.ui.historyRecordsOpen = true;
+  const historyMarkup = hooks.renderHistory();
+  assert(historyMarkup.includes("deleteSelectedRecordsBtn"), "history should expose a batch-delete action");
+  assert(historyMarkup.includes("deleteAllHistoryBtn"), "history should expose a one-click delete-all action");
+
+  hooks.state.selectedHistoryDates = [dates[0], dates[1]];
+  hooks.removeRecordsDataFromState([dates[0], dates[1]]);
   assert.strictEqual(hooks.state.records[dates[0]], undefined, "record deletion should remove the selected history record");
+  assert.strictEqual(hooks.state.records[dates[1]], undefined, "batch deletion should remove every selected history record");
+  assert(hooks.state.records[dates[2]], "batch deletion should preserve unselected history records");
   assert.strictEqual(hooks.state.drafts[dates[0]], undefined, "record deletion should remove the matching draft");
   assert.strictEqual(hooks.state.favorites[0].id, "fav-legacy", "record deletion must preserve frequent meals");
+  assert.strictEqual(hooks.state.selectedHistoryDates.length, 0, "deleted records should leave the batch selection");
 }
 
 console.log("nutrition-engine tests passed");

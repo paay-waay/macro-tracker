@@ -1822,6 +1822,53 @@ input.big {
   margin-top: 10px;
 }
 
+.history-batch-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(245, 241, 234, 0.5);
+}
+
+.history-select-all,
+.history-record-selector {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.history-select-all input,
+.history-record-selector input {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  flex: 0 0 auto;
+  accent-color: var(--accent-dark);
+}
+
+.history-batch-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.history-record-item.is-selected {
+  border-color: rgba(95, 111, 106, 0.5);
+  background: rgba(228, 235, 229, 0.58);
+}
+
+.history-record-selector {
+  padding-top: 1px;
+}
+
 .compact-list {
   gap: 8px;
 }

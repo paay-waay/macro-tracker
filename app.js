@@ -1,5 +1,5 @@
 (() => {
-  const APP_VERSION = "2.3.6";
+  const APP_VERSION = "2.3.7";
   const DB_NAME = "macro-tracker-v13";
   const DB_VERSION = 2;
   const LEGACY_RECORD_KEY = "macro_tracker_records_v8";
@@ -121,6 +121,12 @@
       clearAllRecordsHint: "会删除历史记录、草稿和每日目标覆盖；设置与常用餐会保留。",
       clearAllRecordsConfirm: "确定清除所有历史记录、草稿和每日目标覆盖吗？此操作不能撤销。建议先导出备份。",
       allRecordsCleared: "所有记录已清除",
+      selectAllRecords: "全选当前结果",
+      selectedRecords: "已选 {count} 条",
+      deleteSelectedRecords: "批量删除",
+      deleteAllHistory: "一键删除全部历史",
+      confirmDeleteSelectedRecords: "确定删除选中的 {count} 条历史记录吗？常用餐会保留；此操作不能撤销。",
+      selectedRecordsDeleted: "已删除 {count} 条历史记录",
       calories: "热量",
       protein: "蛋白质",
       carbs: "碳水",
@@ -620,6 +626,12 @@
       clearAllRecordsHint: "Borra historial, borradores y metas manuales; conserva ajustes y frecuentes.",
       clearAllRecordsConfirm: "¿Borrar todo el historial, borradores y metas manuales? No se puede deshacer. Conviene exportar respaldo antes.",
       allRecordsCleared: "Registros borrados",
+      selectAllRecords: "Seleccionar resultados",
+      selectedRecords: "{count} seleccionados",
+      deleteSelectedRecords: "Borrar selección",
+      deleteAllHistory: "Borrar todo el historial",
+      confirmDeleteSelectedRecords: "¿Eliminar los {count} registros seleccionados? Las comidas frecuentes se conservarán; no se puede deshacer.",
+      selectedRecordsDeleted: "Se eliminaron {count} registros",
       calories: "Calorías",
       protein: "Proteína",
       carbs: "Carbos",
@@ -1174,6 +1186,7 @@
     historyDateFilter: "",
     historySearchText: "",
     historyDayTypeFilter: "all",
+    selectedHistoryDates: [],
     favoriteSearchText: "",
     favoriteSearchDraftText: null,
     lastSavedAt: "",
@@ -1241,9 +1254,11 @@
       shouldRestoreDraft,
       dayHasMeaningfulInput,
       buildOverviewSnapshot,
+      renderHistory,
       renderHistoryItem,
       renderIncompleteRecordRow,
       removeRecordDataFromState,
+      removeRecordsDataFromState,
       rebuildRecordIndexes,
       recordsInDateRange,
       dateRange,
@@ -1665,6 +1680,14 @@
       await deleteRecord(button.dataset.deleteRecord);
       return;
     }
+    if (button.id === "deleteSelectedRecordsBtn") {
+      await deleteSelectedRecords();
+      return;
+    }
+    if (button.id === "deleteAllHistoryBtn") {
+      await clearAllRecords();
+      return;
+    }
     if (button.id === "exportAllBtn") {
       exportAll();
       return;
@@ -1756,6 +1779,28 @@
 
     if (target.id === "historyDayTypeFilter" && target instanceof HTMLSelectElement) {
       state.historyDayTypeFilter = target.value;
+      render();
+      return;
+    }
+
+    if (target.dataset.selectHistoryDate && target instanceof HTMLInputElement) {
+      const date = target.dataset.selectHistoryDate;
+      const selected = new Set(state.selectedHistoryDates);
+      if (target.checked) {
+        selected.add(date);
+      } else {
+        selected.delete(date);
+      }
+      state.selectedHistoryDates = Array.from(selected).filter((item) => !!state.records[item]);
+      render();
+      return;
+    }
+
+    if (target.id === "selectAllHistoryRecords" && target instanceof HTMLInputElement) {
+      const filteredDates = getFilteredHistoryDates();
+      const selected = new Set(state.selectedHistoryDates);
+      filteredDates.forEach((date) => target.checked ? selected.add(date) : selected.delete(date));
+      state.selectedHistoryDates = Array.from(selected).filter((item) => !!state.records[item]);
       render();
       return;
     }
@@ -2745,6 +2790,9 @@
     const visibleDates = state.ui.historyShowAll ? historyDates : historyDates.slice(0, 3);
     const visibleFavorites = state.ui.historyFavoritesShowAll ? favoriteList : favoriteList.slice(0, 3);
     const latestDate = historyDates[0] ? fmtDate(historyDates[0]) : t("noRecords");
+    state.selectedHistoryDates = state.selectedHistoryDates.filter((date) => !!state.records[date]);
+    const selectedCount = state.selectedHistoryDates.length;
+    const allFilteredSelected = historyDates.length > 0 && historyDates.every((date) => state.selectedHistoryDates.includes(date));
     return `
       <div class="history-tools-card">
         <button class="context-summary tools-summary" type="button" data-toggle-ui="historyToolsOpen" aria-expanded="${state.ui.historyToolsOpen ? "true" : "false"}">
@@ -2790,6 +2838,17 @@
           <span class="expand-affordance"><span>${state.ui.historyRecordsOpen ? t("collapse") : t("expand")}</span><span class="chevron" aria-hidden="true">${state.ui.historyRecordsOpen ? "⌃" : "⌄"}</span></span>
         </button>
         ${state.ui.historyRecordsOpen ? `
+          <div class="history-batch-toolbar">
+            <label class="history-select-all">
+              <input id="selectAllHistoryRecords" type="checkbox" ${allFilteredSelected ? "checked" : ""} ${historyDates.length ? "" : "disabled"} />
+              <span>${t("selectAllRecords")}</span>
+            </label>
+            <span class="small">${t("selectedRecords", { count: selectedCount })}</span>
+            <div class="history-batch-actions">
+              <button class="mini-btn danger" id="deleteSelectedRecordsBtn" type="button" ${selectedCount ? "" : "disabled"}>${t("deleteSelectedRecords")}</button>
+              <button class="mini-btn danger" id="deleteAllHistoryBtn" type="button" ${recordDateIndex.length ? "" : "disabled"}>${t("deleteAllHistory")}</button>
+            </div>
+          </div>
           <div class="list compact-list" style="margin-top:12px">
             ${visibleDates.length
               ? visibleDates.map((date) => renderHistoryItem(date)).join("")
@@ -2865,9 +2924,13 @@
   function renderHistoryItem(date) {
     const record = state.records[date];
     const totals = record.totals || mealTotals({ entries: [] });
+    const selected = state.selectedHistoryDates.includes(date);
     return `
-      <div class="item">
+      <div class="item history-record-item ${selected ? "is-selected" : ""}">
         <div class="item-top">
+          <label class="history-record-selector" aria-label="${t("selectAllRecords")} ${fmtDate(date)}">
+            <input type="checkbox" data-select-history-date="${date}" ${selected ? "checked" : ""} />
+          </label>
           <div>
             <div class="item-title">${fmtDate(date)}</div>
             <div class="item-sub">${dayTypeLabel(record.dayType)} · ${round1(totals.calories || 0)} kcal · ${record.bodyWeight ? `${formatWeight(record.bodyWeight)} kg` : t("noWeight")}</div>
@@ -3627,27 +3690,59 @@
     await storage.deleteDraft(date);
     removeRecordDataFromState(date);
     if (state.date === date) {
-      state.dayType = "";
-      state.bodyWeight = "";
-      state.trainingPerformance = "";
-      state.hungerLevel = "";
-      state.sleepScore = "";
-      state.meals = mealTemplate();
-      state.activeMeal = 1;
-      state.ui.mealEditorOpen = true;
-      state.dirty = false;
-      state.lastSavedAt = "";
-      state.lastDraftSavedAt = "";
-      render();
-    } else {
-      render();
+      resetCurrentDayAfterDeletion();
     }
+    render();
     setNotice(t("deleted"), { tone: "ok" });
   }
 
   function removeRecordDataFromState(date) {
-    removeRecordState(date);
-    delete state.drafts[date];
+    removeRecordsDataFromState([date]);
+  }
+
+  function removeRecordsDataFromState(dates) {
+    const uniqueDates = Array.from(new Set(dates)).filter(Boolean);
+    uniqueDates.forEach((date) => {
+      removeRecordState(date);
+      delete state.drafts[date];
+    });
+    const deleted = new Set(uniqueDates);
+    state.selectedHistoryDates = state.selectedHistoryDates.filter((date) => !deleted.has(date));
+  }
+
+  async function deleteSelectedRecords() {
+    const dates = state.selectedHistoryDates.filter((date) => !!state.records[date]);
+    if (!dates.length) {
+      return;
+    }
+    const confirmed = window.confirm(t("confirmDeleteSelectedRecords", { count: dates.length }));
+    if (!confirmed) {
+      return;
+    }
+    await Promise.all([
+      storage.deleteRecords(dates),
+      storage.deleteDrafts(dates)
+    ]);
+    removeRecordsDataFromState(dates);
+    if (dates.includes(state.date)) {
+      resetCurrentDayAfterDeletion();
+    }
+    render();
+    setNotice(t("selectedRecordsDeleted", { count: dates.length }), { tone: "ok" });
+  }
+
+  function resetCurrentDayAfterDeletion() {
+    state.dayType = "";
+    state.bodyWeight = "";
+    state.trainingPerformance = "";
+    state.hungerLevel = "";
+    state.sleepScore = "";
+    state.meals = mealTemplate();
+    state.activeMeal = 1;
+    state.ui.mealEditorOpen = true;
+    state.dirty = false;
+    state.lastSavedAt = "";
+    state.lastDraftSavedAt = "";
   }
 
   async function clearAllRecords() {
@@ -3660,6 +3755,7 @@
     rebuildRecordIndexes();
     state.drafts = {};
     state.dailyTargets = {};
+    state.selectedHistoryDates = [];
     state.dayType = "";
     state.bodyWeight = "";
     state.trainingPerformance = "";
@@ -6382,6 +6478,9 @@
       },
       async deleteRecord(date) {
         await remove("records", date);
+      },
+      async deleteRecords(dates) {
+        await removeMany("records", dates);
       },
       async putFavorite(favorite) {
         await put("favorites", favorite);
