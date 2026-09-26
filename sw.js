@@ -1,7 +1,7 @@
 /* All current assets have immutable release filenames. IndexedDB is never cleared. */
 const PREFIX='macro-minimal-'+self.registration.scope+'-';
-const CACHE=PREFIX+'3.2.0-r1';
-const FILES=['./','index.html','styles-3.2.0.css','core-3.1.0.js','storage-3.1.0.js','app-3.2.0.js','manifest.json','icon-192.png','icon-512.png','apple-touch-icon.png'];
+const CACHE=PREFIX+'3.2.1-r1';
+const FILES=['./','index.html','styles-3.2.1.css','core-3.1.0.js','storage-3.1.0.js','app-3.2.1.js','manifest.json','icon-192.png','icon-512.png','apple-touch-icon.png'];
 const shell=FILES.map(p=>new URL(p,self.registration.scope).href);
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(shell.map(url=>new Request(url,{cache:'reload'})))).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));
