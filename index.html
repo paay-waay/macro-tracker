@@ -1,2 +1,29 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#f3f0ea"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="description" content="记下热量与蛋白质，复用常吃的一餐。离线、即时保存、兼容旧数据。"><title>宏量 · 极简记录</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="icon-192.png"><link rel="stylesheet" href="styles.css?v=3.0.0-r4"><script defer src="core.js?v=3.0.0-r4"></script><script defer src="storage.js?v=3.0.0-r4"></script><script defer src="app.js?v=3.0.0-r4"></script></head><body><div class="app"><header><a class="brand" href="./">宏量<span>每天，简单一点。</span></a><button id="settings" aria-label="目标与数据设置">设置</button></header><div id="notice" role="status" aria-live="polite"></div><main id="view"><p>正在读取本机记录…</p></main><nav aria-label="主导航"><button data-page="today" aria-current="page">今天</button><button data-page="review">回顾</button></nav></div><dialog id="sheet" aria-labelledby="sheet-title"><div class="sheet-head"><h2 id="sheet-title"></h2><button id="close-sheet" aria-label="关闭">关闭</button></div><div id="sheet-body"></div></dialog><input type="file" id="import-file" accept=".json,.csv,application/json,text/csv" hidden><noscript>此应用需要启用 JavaScript。所有饮食数据保存在本机浏览器中。</noscript></body></html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#eff2ef">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="description" content="记下热量与宏量，一眼看清今天。">
+<title>宏量</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="styles-3.1.0.css">
+<script defer src="core-3.1.0.js"></script>
+<script defer src="storage-3.1.0.js"></script>
+<script defer src="app-3.1.0.js"></script>
+</head>
+<body>
+<div class="app">
+<header class="app-header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true"></span>宏量</a><button class="icon-button" id="settings" aria-label="设置"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 3-.7 2.2-2 .9L4 5.8 2 9l1.6 1.8v2.4L2 15l2 3.2 2.3-.3 2 .9L9 21h6l.7-2.2 2-.9 2.3.3 2-3.2-1.6-1.8v-2.4L22 9l-2-3.2-2.3.3-2-.9L15 3Z"/><circle cx="12" cy="12" r="3"/></svg></button></header>
+<main id="view"><div class="card">正在读取记录…</div></main>
+</div>
+<div class="dock"><nav aria-label="主导航"><button data-page="today" aria-current="page">今天</button><button data-page="review">回顾</button></nav><button class="record-button" data-action="add"><span aria-hidden="true">＋</span>记一餐</button></div>
+<div id="notice" role="status" aria-live="polite"></div>
+<dialog id="sheet" aria-labelledby="sheet-title"><div class="sheet-head"><h2 id="sheet-title"></h2><button id="close-sheet" aria-label="关闭">×</button></div><div id="sheet-body"></div></dialog>
+<input type="file" id="import-file" accept=".json,.csv,application/json,text/csv" hidden>
+<noscript>请启用 JavaScript 以使用记录功能。</noscript>
+</body></html>
